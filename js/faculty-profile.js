@@ -9,19 +9,19 @@ const OPT={
  subjects:['Mathematics','Physics','Chemistry','Biology','Computer Science','Data Science','English','Commerce','Economics','Management','History','Geography','Political Science','Languages','Physical Education','Fine Arts','Statistics','Electronics','Mechanical Engineering','Civil Engineering','Anatomy','Pharmacology','Other'],
  boards:['CBSE','ICSE','State Board','IB','Cambridge','University / College Curriculum','Other'],
  medium:['English','Hindi','Telugu','Other'],
- jobtype:['Full Time','Part Time','Contract','Visiting Faculty','Guest Faculty','Other'],
+ jobtype:['Full Time','Part Time','Contract','Visiting Faculty','Guest Faculty'],
  emp:['Full Time','Part Time','Contract','Visiting Faculty','Guest Faculty','Temporary','Internship / Trainee','Other'],
- cities:['Hyderabad','Nagpur','Bengaluru','Mumbai','Pune','Delhi NCR','Chennai','Kolkata','Telangana','Maharashtra','Karnataka','Anywhere in India','Other'],
+ cities:['Hyderabad','Nagpur','Bengaluru','Mumbai','Pune','Delhi NCR','Chennai','Kolkata','Telangana','Maharashtra','Karnataka','Anywhere in India'],
  high:['10th / SSC','12th / Intermediate','Diploma',"Bachelor's Degree","Master's Degree",'M.Phil','Ph.D.','Postdoctoral','Other'],
  ug:['BA','BSc','BCom','BBA','BCA','BE','BTech','BEd','LLB','MBBS','BPharm','BPEd','Other'],
  pg:['MA','MSc','MCom','MBA','MCA','MTech','ME','MEd','MPharm','MPEd','MS','Other'],
  mode:['Regular','Distance','Online','Part Time'],stream:['Science','Commerce','Arts / Humanities','Vocational','Other'],
  tq:['B.Ed.','M.Ed.','D.El.Ed.','B.P.Ed.','M.P.Ed.','Special Education Qualification','CTET','TET','State TET','NET','SET','SLET','Other'],
  linkt:['LinkedIn','Google Scholar','ORCID','ResearchGate','Personal Website','Portfolio','YouTube / Teaching Channel','Other'],
- pref:['Pre-Primary','Primary','Middle School','Secondary School','Senior Secondary','Junior College','Undergraduate / UG','Postgraduate / PG','PhD / Research','Other'],
+ pref:['Pre-Primary','Primary','Middle School','Secondary School','Senior Secondary','Junior College','Undergraduate / UG','Postgraduate / PG','PhD / Research'],
  exp:['Fresher','1–2 Years','3–5 Years','6–10 Years','11–15 Years','15+ Years']};
-const SEC=['Personal Details','Account & Contact','Professional Profile','Education & Qualifications','Teaching Qualifications','Employment History','Teaching Experience','Documents','CV / Resume','Professional Links','Teaching Preferences','Verification','Profile Preview'];
-const ICON=['user','lock','cap','book','award','briefcase','hourglass','folder','file','link','target','shield','eye'];
+const SEC=['Personal Details','Account & Contact','Professional Profile','Education & Qualifications','Teaching Qualifications','Employment History','Teaching Experience','Documents','Professional Links','Teaching Preferences','Verification','Profile Preview'];
+const ICON=['user','lock','cap','book','award','briefcase','hourglass','folder','link','target','shield','eye'];
 /* inline SVG icons (Lucide-style, stroke = currentColor) — no emoji anywhere */
 const SVG={
 user:'<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
@@ -61,7 +61,7 @@ const set=(p,v)=>{const k=p.split('.'),l=k.pop();let o=S;k.forEach(x=>{if(o[x]==
 const tag=(t,txt)=>{const x=TAG[t]||['t-some',t];return `<span class="fp-tag ${x[0]}">${esc(txt||x[1])}</span>`};
 const F=(label,t,inner,o={})=>`<div class="fp-f ${o.full?'full':''}"><label>${label}${t?tag(t,o.tt):''}</label>${inner}${o.hint?`<div class="fp-hint">${o.hint}</div>`:''}<div class="fp-err" data-e></div></div>`;
 const I=(p,o={})=>`<input class="fp-in" data-k="${p}" ${o.v?`data-v="${o.v}"`:''} value="${esc(get(p))}" placeholder="${esc(o.ph||'')}" ${o.type?`type="${o.type}"`:''} ${o.dis?'disabled':''}>`;
-const SEL=(p,opts,o={})=>`<select class="fp-in" data-k="${p}" ${o.v?`data-v="${o.v}"`:''} ${o.re?`data-re="${o.re}"`:''}><option value="">${o.ph||'Select…'}</option>${opts.map(x=>`<option ${get(p)===x?'selected':''}>${esc(x)}</option>`).join('')}</select>${get(p)==='Other'?`<input class="fp-in" style="margin-top:8px" data-k="${p}Other" value="${esc(get(p+'Other')||'')}" placeholder="Please specify">`:''}`;
+const SEL=(p,opts,o={})=>`<select class="fp-in" data-k="${p}" ${o.v?`data-v="${o.v}"`:''} ${o.re?`data-re="${o.re}"`:''}><option value="">${o.ph||'Select…'}</option>${opts.map(x=>`<option ${get(p)===x?'selected':''}>${esc(x)}</option>`).join('')}</select>`;
 const RAD=(p,opts)=>`<div class="fp-radio">${opts.map(x=>`<label><input type="radio" name="${p}" data-k="${p}" value="${esc(x)}" ${get(p)===x?'checked':''}>${esc(x)}</label>`).join('')}</div>`;
 const MS=(p,opts,ph)=>{const v=get(p)||[];return `<div class="fp-ms" data-ms="${p}" data-opts="${opts}"><div class="box">${v.map(x=>`<span class="fp-chip">${esc(x)}<u data-rm="${esc(x)}">${ic('x',11)}</u></span>`).join('')}<input placeholder="${v.length?'':esc(ph||'Search & select…')}"></div></div>`};
 const UP=(p,label,t)=>{const f=S.files[p];return `<div class="fp-f"><label>${label}${t?tag(t):''}</label><div class="fp-up ${f?'has':''}" data-up="${p}">${UPin(p)}</div><div class="fp-hint">Accepted: ${RULES[kindOf(p)].label}</div></div>`};
@@ -75,7 +75,7 @@ const school=()=>S.levels.some(l=>['Pre-Primary','Primary','Middle School','Seco
 const ug=()=>S.levels.some(l=>['Undergraduate / UG','Junior College'].includes(l)), pg=()=>S.levels.some(l=>['Postgraduate / PG','PhD / Research'].includes(l));
 const EDU={'10th / SSC':['ssc'],'12th / Intermediate':['ssc','hsc'],'Diploma':['ssc','dip'],"Bachelor's Degree":['ssc','hsc','ug'],"Master's Degree":['ssc','hsc','ug','pg'],'M.Phil':['ssc','hsc','ug','pg','mphil'],'Ph.D.':['ssc','hsc','ug','pg','phd'],'Postdoctoral':['ssc','hsc','ug','pg','phd'],'Other':['ssc','hsc','oth']};
 function completion(){const req=[['Personal details',S.first&&S.last&&age(S.dob)!==null],['Contact information',S.email&&S.phone],['Highest qualification',S.high],['Current designation',S.desig],['Subject specialization',S.subjects.length]];
- const rec=[['Add resume',S.files.resume,8],['Add employment history',S.jobs.length,5],['Add professional links',S.links.length,9],['Add certificates',Object.keys(S.files).some(k=>k!=='resume'&&k!=='photo'),3]];
+ const rec=[['Add resume',S.files.resume,8],['Add employment history',S.jobs.length,5],['Add professional links',S.links.length,8],['Add certificates',Object.keys(S.files).some(k=>k!=='resume'&&k!=='photo'),3]];
  const p=req.filter(x=>x[1]).length*16+rec.filter(x=>x[1]).length*5;return{req,rec,p}}
 /* ---------- sections ---------- */
 const R={
@@ -111,19 +111,18 @@ const R={
 7:()=>{const items=docList();return `<h3>Documents</h3><p class="fp-sub">Everything you have uploaded. Add documents from the relevant sections.</p>
  ${items.length?items.map(d=>`<div class="fp-row"><span>${ic('file',14)} <b>${esc(d[1].name)}</b> <small>${esc(d[0])}${szt(d[1])}</small></span><span class="fp-pill p-ok">${ic('check',11)}Uploaded</span></div>`).join(''):`<div class="fp-empty">No documents uploaded yet.</div>`}
  <div class="fp-note" style="margin-top:14px">Identity documents are not needed for a normal profile. If an institution requires them, you'll be asked in a separate step.</div>`},
-8:()=>`<h3>CV / Resume</h3><p class="fp-sub">Upload your latest CV so institutions can review your full background.</p>
+8:()=>`<h3>Professional Links</h3><p class="fp-sub">Optional — Google Scholar / ORCID are recommended for research roles.</p><div id="fpLinks">${linksHTML()}</div>
+ <div class="fp-card"><h4>Add another link</h4><div class="fp-grid"><div class="fp-f"><select class="fp-in" id="fpLt">${OPT.linkt.map(x=>`<option>${x}</option>`).join('')}</select></div><div class="fp-f"><input class="fp-in" id="fpLu" placeholder="https://…"><div class="fp-err" data-e></div></div></div><button class="fp-btn pri" style="margin-top:10px" data-act="addlink">Add link</button></div>
  <div class="fp-card"><h4>CV / Resume ${tag('rec')}</h4><div class="fp-up ${S.files.resume?'has':''}" data-up="resume">${UPin('resume')}</div><div class="fp-hint">Accepted: ${RULES.resume.label}</div></div>`,
-9:()=>`<h3>Professional Links</h3><p class="fp-sub">Optional — Google Scholar / ORCID are recommended for research roles.</p><div id="fpLinks">${linksHTML()}</div>
- <div class="fp-card"><h4>Add another link</h4><div class="fp-grid"><div class="fp-f"><select class="fp-in" id="fpLt">${OPT.linkt.map(x=>`<option>${x}</option>`).join('')}</select></div><div class="fp-f"><input class="fp-in" id="fpLu" placeholder="https://…"><div class="fp-err" data-e></div></div></div><button class="fp-btn pri" style="margin-top:10px" data-act="addlink">Add link</button></div>`,
-10:()=>`<h3>Teaching Preferences</h3><p class="fp-sub">What you're looking for next. All optional.</p><div class="fp-grid">
+9:()=>`<h3>Teaching Preferences</h3><p class="fp-sub">What you're looking for next. All optional.</p><div class="fp-grid">
  ${F('Preferred teaching level','opt',MS('prefLevels','pref'))}${F('Preferred subjects','opt',MS('prefSubs','subjects'))}${F('Preferred job type','opt',MS('prefJob','jobtype'))}
  ${F('Work location','opt',RAD('prefWork',['On-site','Remote','Hybrid']))}${F('Preferred locations','opt',MS('prefLoc','cities','Add cities / states'))}${F('Willing to relocate','opt',RAD('reloc',['Yes','No','Maybe']))}
  ${F('Expected salary','opt',I('salary',{ph:'e.g. ₹ per month'}),{hint:'Never required for profile completion.'})}</div>`,
-11:()=>`<h3>Profile Verification</h3><p class="fp-sub">Document verification is not available yet.</p>
+10:()=>`<h3>Profile Verification</h3><p class="fp-sub">Document verification is not available yet.</p>
  <div class="fp-card"><div class="fp-row" style="border:0;padding:0"><b>Email</b><span>${esc(S.email)||'—'}</span></div></div>
  <div class="fp-card"><div class="fp-row" style="border:0;padding:0"><b>Education, experience &amp; identity</b>${pill('p-no','circle','Not verified')}</div><div class="fp-hint" style="margin-top:8px">Upload certificates in Education and Employment History. Verification by our team will be shown here once it is available.</div></div>
  <div class="fp-note">Identity verification is not required to create a faculty profile.</div>`,
-12:()=>{const a=age(S.dob),m=months(),ed=(EDU[S.high]||[]).filter(x=>['ug','pg','phd','mphil','dip'].includes(x)).reverse();
+11:()=>{const a=age(S.dob),m=months(),ed=(EDU[S.high]||[]).filter(x=>['ug','pg','phd','mphil','dip'].includes(x)).reverse();
  const lab={ug:"Bachelor's",pg:"Master's",phd:'Ph.D.',mphil:'M.Phil',dip:'Diploma'},ch=l=>l&&l.length?l.map(x=>`<span class="fp-chip">${esc(x)}</span>`).join(''):'<span class="fp-hint">Not added</span>';
  const jobs=S.jobs.filter(j=>j.org).map(j=>`<div class="fp-tl"><i class="${j.cur?'cur':''}"></i><div><b>${esc(j.desig)}</b>${j.cur?' '+pill('p-ok','check','Current'):''}<div>${esc(j.org)}${j.dept?' · '+esc(j.dept):''}</div><small>${fmt(j.start)} – ${j.cur?'Present':fmt(j.end)} · ${esc(j.type||'')}</small></div></div>`).join('');
  const eds=ed.map(k=>{const e=S.edu[k]||{};return `<div class="fp-tl"><i></i><div><b>${esc((e.type?e.type+' ':'')+(e.major||lab[k]))}</b><div>${esc(e.uni||'')}</div><small>${esc(lab[k])}${e.end?' · '+esc(e.end):''}</small></div></div>`}).join('');
@@ -160,9 +159,9 @@ function heroHTML(){const c=completion(),m=months(),nx=c.rec.find(x=>!x[1]),miss
 function shell(){
  $('#fpRoot').innerHTML=`<div id="fpHero"></div><div class="fp-wrap"><nav class="fp-nav" id="fpNav">${SEC.map((s,i)=>`<button data-go="${i}"><span class="n">${ic(ICON[i],14)}</span>${s}<em>${ic('check',14)}</em></button>`).join('')}</nav><div>${SEC.map((s,i)=>`<section class="fp-sec" data-i="${i}"><header data-go="${i}" data-tog="1" role="button" tabindex="0" aria-expanded="${i===S.open}"><span class="fp-hl">${ic(ICON[i],15)}${s}</span></header><div class="fp-body"></div></section>`).join('')}</div></div>`;
  SEC.forEach((_,i)=>renderSec(i));paint()}
-function renderSec(i){const b=$(`.fp-sec[data-i="${i}"] .fp-body`);if(!b)return;b.innerHTML=R[i]()+(i<12?`<div class="fp-actions"><button type="button" class="fp-btn" data-back>Back</button><div><button type="button" class="fp-btn" data-act="draft" data-sv>Save</button><button type="button" class="fp-btn" data-next>Next</button><button type="button" class="fp-btn pri" data-act="save" data-sv>Save & Continue</button></div></div>`:'');if(i===0)ageUpd();a11y(b)}
-function paint(){$$('.fp-sec').forEach(s=>s.classList.toggle('open',+s.dataset.i===S.open));$$('#fpNav button').forEach((b,i)=>{b.classList.toggle('on',i===S.open);b.classList.toggle('done',!!S.done[i]&&i!==S.open)});$('#fpHero').innerHTML=heroHTML();try{window.dispatchEvent(new Event('fp:paint'))}catch(e){}}
-function go(i){S.open=Math.max(0,Math.min(12,i));renderSec(S.open);paint();const el=$(`.fp-sec[data-i="${S.open}"]`);const sc=$('.fp-wrap>div');if(window.matchMedia('(min-width:900px)').matches&&sc){sc.scrollTop=0;const nb=$(`#fpNav button[data-go="${S.open}"]`);if(nb&&nb.scrollIntoView)nb.scrollIntoView({block:'nearest'})}else if(el)el.scrollIntoView({behavior:'smooth',block:'start'})}
+function renderSec(i){const b=$(`.fp-sec[data-i="${i}"] .fp-body`);if(!b)return;b.innerHTML=R[i]()+(i<11?`<div class="fp-actions"><button type="button" class="fp-btn" data-back>Back</button><div><button type="button" class="fp-btn" data-act="draft" data-sv>Save</button><button type="button" class="fp-btn" data-next>Next</button><button type="button" class="fp-btn pri" data-act="save" data-sv>Save & Continue</button></div></div>`:'');if(i===0)ageUpd();a11y(b)}
+function paint(){$$('.fp-sec').forEach(s=>s.classList.toggle('open',+s.dataset.i===S.open));$$('#fpNav button').forEach((b,i)=>{b.classList.toggle('on',i===S.open);b.classList.toggle('done',!!S.done[i]&&i!==S.open)});$('#fpHero').innerHTML=S.open===11?'':heroHTML();try{window.dispatchEvent(new Event('fp:paint'))}catch(e){}}
+function go(i){S.open=Math.max(0,Math.min(11,i));renderSec(S.open);paint();const el=$(`.fp-sec[data-i="${S.open}"]`);const sc=$('.fp-wrap>div');if(window.matchMedia('(min-width:900px)').matches&&sc){sc.scrollTop=0;const nb=$(`#fpNav button[data-go="${S.open}"]`);if(nb&&nb.scrollIntoView)nb.scrollIntoView({block:'nearest'})}else if(el)el.scrollIntoView({behavior:'smooth',block:'start'})}
 window.FP={go:function(i){go(i)},sections:SEC,open:function(){return S.open}};
 function ageUpd(){const e=$('#fpAge');if(!e)return;const a=age(S.dob);e.style.display=a===null?'none':'inline-block';e.textContent='Age: '+a+' years'}
 function toast(t,ok,bad){const d=document.createElement('div');d.className='fp-toast'+(bad?' bad':'');d.setAttribute('role',bad?'alert':'status');d.innerHTML=(ok?ic('check',14):bad?ic('alert',14):'')+esc(t);document.body.appendChild(d);setTimeout(()=>d.remove(),bad?5000:2500)}
@@ -181,7 +180,7 @@ document.addEventListener('input',e=>{const t=e.target;if(!t.closest||!t.closest
  if(t.matches('.fp-ms input')){msOpen(t.closest('.fp-ms'),t.value);return}
  const k=t.dataset.k;if(!k||t.type==='radio'||t.type==='checkbox')return;set(k,t.value);
  if(k==='dob'){ageUpd();if(t.value.length===2||t.value.length===5){}}
- clearTimeout(window._fh);window._fh=setTimeout(()=>{$('#fpHero').innerHTML=heroHTML()},250)});
+ clearTimeout(window._fh);window._fh=setTimeout(()=>{$('#fpHero').innerHTML=S.open===11?'':heroHTML()},250)});
 document.addEventListener('focusout',e=>{const t=e.target;if(t.dataset&&t.dataset.v&&t.closest('#fpRoot'))check(t)});
 document.addEventListener('change',e=>{const t=e.target;if(!t.closest||!t.closest('#fpRoot'))return;
  if(t.type==='file'){upload(t);return}
@@ -189,13 +188,11 @@ document.addEventListener('change',e=>{const t=e.target;if(!t.closest||!t.closes
  if(t.type==='checkbox'&&/\.cur$/.test(k)){const i=+k.split('.')[1];if(t.checked)S.jobs[i].end='';}
  if(t.dataset.re==='edu'){$('#fpEdu').innerHTML=(EDU[S.high]||[]).map(eduBlock).join('');}
  if(t.dataset.re==='jobs'){$('#fpJobs').innerHTML=jobsHTML()}
- if(t.tagName==='SELECT'&&!t.dataset.re&&t.id!=='fpTqSel'&&t.id!=='fpLt'&&(t.value==='Other'||get(k+'Other'))){if(t.value!=='Other')set(k+'Other','');const y=window.scrollY;renderSec(S.open);window.scrollTo(0,y)}
  paint()});
 function upload(inp){const p=inp.dataset.p,f=inp.files[0];if(f)uploadFile(p,f)}
 function msOpen(box,q){let dd=$('.fp-dd',box);if(!dd){dd=document.createElement('div');dd.className='fp-dd';box.appendChild(dd)}
  const p=box.dataset.ms,sel=get(p)||[],all=OPT[box.dataset.opts];q=(q||'').toLowerCase();const l=all.filter(x=>x.toLowerCase().includes(q));
- const raw=(box.querySelector('input')||{}).value||'',custom=raw.trim()&&!all.some(x=>x.toLowerCase()===raw.trim().toLowerCase())?`<div data-opt="${esc(raw.trim())}">${ic('plus',12)}Add "${esc(raw.trim())}" as other</div>`:'';
- dd.innerHTML=(l.length?l.map(x=>`<div data-opt="${esc(x)}" class="${sel.includes(x)?'sel':''}">${sel.includes(x)?ic('check',12):''}${esc(x)}</div>`).join(''):`<em>No match</em>`)+custom}
+ dd.innerHTML=l.length?l.map(x=>`<div data-opt="${esc(x)}" class="${sel.includes(x)?'sel':''}">${sel.includes(x)?ic('check',12):''}${esc(x)}</div>`).join(''):`<em>No match</em>`}
 function msRefresh(box){const p=box.dataset.ms;const n=document.createElement('div');n.innerHTML=MS(p,box.dataset.opts);box.replaceWith(n.firstChild);}
 document.addEventListener('click',e=>{const t0=e.target;if(!t0.closest)return;const t=t0.closest('[data-opt],[data-rm],[data-pick],[data-del],[data-act],[data-next],[data-back],[data-go]')||t0;const root=t.closest('#fpRoot');
  if(!root){$$('.fp-dd').forEach(d=>d.remove());return}
