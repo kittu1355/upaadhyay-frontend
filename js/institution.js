@@ -133,11 +133,11 @@ const F1=[
  {k:'pin',l:'PIN code',req:1,v:'pin',ph:'Auto-filled, or enter 6 digits',pin:1},
  {k:'address',l:'Full address',req:1,t:'textarea',full:1,ph:'Building, street, landmark'}];
 const F2=[
- {k:'rname',l:'Full name',req:1},{k:'rdes',l:'Designation',req:1,t:'select',o:DES},
- {k:'rdep',l:'Department',req:1,t:'select',o:DEP},{k:'remail',l:'Official work email',req:1,v:'email',ph:'name@example.edu'},
+ {k:'rname',l:'Full name',req:1},{k:'rdes',l:'Designation',req:1,t:'select',o:DES,oth:1},
+ {k:'rdep',l:'Department',req:1,t:'select',o:DEP,oth:1},{k:'remail',l:'Official work email',req:1,v:'email',ph:'name@example.edu'},
  {k:'rphone',l:'Work contact number',req:1,v:'phone',ph:'10-digit number'}];
 const F2A=[
- {k:'aname',l:'Authority name',req:1},{k:'adesig',l:'Designation',req:1,t:'select',o:ADES},
+ {k:'aname',l:'Authority name',req:1},{k:'adesig',l:'Designation',req:1,t:'select',o:ADES,oth:1},
  {k:'aemail',l:'Official institution email',req:1,v:'email',ph:'name@example.edu'},{k:'aphone',l:'Phone',v:'phone',ph:'10-digit number'}];
 const FB=[
  {k:'name',l:'Branch / campus name',req:1,ph:'e.g. Warangal Campus'},{k:'type',l:'Branch type',req:1,t:'select',o:BTYPES},
@@ -176,8 +176,10 @@ function toast(m){ const t=document.createElement('div'); t.className='in-toast'
 function top(){ /* page stays where it is when a step or option is clicked */ }
 
 /* ---------- validation ---------- */
+const othLbl=o=>(o.o||[]).find(x=>/^Other/.test(x));
+const fval=(f,S)=>{const v=((S||I.d)[f.k]||'').trim();return f.oth&&v===othLbl(f)?'':v};
 function chk(o,v){
-  v=(v||'').trim(); if(!v) return o.req?'This field is required':'';
+  v=(v||'').trim(); if(o.oth&&v===othLbl(o)) return 'Please specify';  if(!v) return o.req?'This field is required':'';
   if(o.v==='phone') return /^\d{10}$/.test(v.replace(/[\s+-]|^91/g,''))?'':MSG.phone;
   if(o.v==='year'){ const y=+v; return RX.year.test(v)&&y>=1800&&y<=new Date().getFullYear()?'':MSG.year; }
   if(o.v) return RX[o.v].test(v)?'':MSG[o.v];
@@ -196,7 +198,7 @@ function valid(list,sc){
 const LORD=['country','state','district','city','area'], LPAR={state:'country',district:'state',city:'district',area:'city'};
 const cmpA=(a,b)=>String(a).localeCompare(String(b));
 const isIndia=S=>!S.o_country&&(S.country||'India')==='India';
-const OTHER_K=['country','state','district'];
+const OTHER_K=['country','state','district','city','area'];
 function locOpts(S,k){
   if(k==='country') return COUNTRIES.slice().sort(cmpA);
   if(!isIndia(S)) return null;
@@ -222,7 +224,7 @@ function locField(o,sc){
     const dis=par&&!parOk;
     const opts=lst.map(x=>`<option${!isOther&&cur===x?' selected':''}>${esc(x)}</option>`).join('')+(withOther?`<option value="Other"${isOther?' selected':''}>Other</option>`:'');
     inp=`<select ${dis?'disabled ':''}onchange="IN.loc('${sc}','${k}',this.value)" ${isOther?'':ev}><option value="">${dis?'Select '+par+' first':'Select '+nm}</option>${opts}</select>`;
-    if(isOther) inp+=`<input type="text" class="in-other" style="margin-top:8px" value="${esc(S['o_'+k]?cur:cur)}" placeholder="Enter your ${nm}" oninput="IN.set('${sc}','${k}',this.value)" ${ev}>`;
+    if(isOther) inp+=`<input type="text" class="in-other" style="margin-top:8px" value="${esc(S['o_'+k]?cur:cur)}" placeholder="Please specify" oninput="IN.set('${sc}','${k}',this.value)" ${ev}>`;
   } else if(par&&isIndia(S)&&!parOk){
     inp=`<select disabled><option value="">Select ${par} first</option></select>`;
   } else {
@@ -242,7 +244,11 @@ function fld(o,sc){
   if(o.loc) return locField(o,sc);
   const S=sc==='d'?I.d:BR, v=esc(S[o.k]||''), h=`oninput="IN.set('${sc}','${o.k}',this.value)" onblur="IN.blur('${sc}','${o.k}')"`;
   let inp;
-  if(o.t==='select') inp=`<select onchange="IN.set('${sc}','${o.k}',this.value,1)" onblur="IN.blur('${sc}','${o.k}')"><option value="">Select</option>${o.o.map(x=>`<option${S[o.k]===x?' selected':''}>${esc(x)}</option>`).join('')}</select>`;
+  if(o.t==='select'){
+    const ol=o.oth?othLbl(o):null, cur=S[o.k]||'', custom=!!(ol&&cur&&!o.o.includes(cur)), selv=custom?ol:cur, showO=!!(ol&&(cur===ol||custom));
+    inp=`<select onchange="IN.pick('${sc}','${o.k}',this.value)" onblur="IN.blur('${sc}','${o.k}')"><option value="">Select</option>${o.o.map(x=>`<option${selv===x?' selected':''}>${esc(x)}</option>`).join('')}</select>`
+      +(showO?`<input type="text" class="in-other" style="margin-top:8px" placeholder="Please specify" value="${esc(custom?cur:'')}" oninput="IN.set('${sc}','${o.k}',this.value.trim()||'${esc(ol)}')" onblur="IN.blur('${sc}','${o.k}')">`:'');
+  }
   else if(o.t==='textarea') inp=`<textarea placeholder="${esc(o.ph||'')}" ${h}>${v}</textarea>`;
   else inp=`<input type="text" value="${v}" placeholder="${esc(o.ph||'')}" ${h}${o.pin?' maxlength="6" inputmode="numeric" autocomplete="postal-code"':''}>`;
   return `<div class="in-f${o.full?' in-full':''}" id="f-${sc}-${o.k}"><label>${o.l}<i>${o.req?'Required':'Optional'}</i></label>${inp}<div class="in-err" role="alert"></div>${o.pin?`<div id="pin-${sc}" class="in-full"></div>`:''}</div>`;
@@ -277,8 +283,8 @@ const isReq=c=>typeof c.req==='function'?c.req():!!c.req;
 const anyDoc=()=>Object.keys(I.docs).some(okDoc)||I.extra.some(x=>x.st==='ok');
 const missing=()=>DOCR().filter(c=>isReq(c)&&!okDoc(c.k));
 const pubMail=()=>isPub(I.d.email);
-const instOk=()=>F0.concat(F1).filter(f=>f.req).every(f=>(I.d[f.k]||'').trim());
-const repOk=()=>F2.filter(f=>f.req).every(f=>(I.d[f.k]||'').trim())&&!!I.regRole;
+const instOk=()=>F0.concat(F1).filter(f=>f.req).every(f=>fval(f));
+const repOk=()=>F2.filter(f=>f.req).every(f=>fval(f))&&!!I.regRole;
 const dot=(c,i)=>`<span class="in-dot${c?' '+c:''}">${i||''}</span>`;
 const rowIc=c=>c==='ok'?ck(11):c==='warn'?BANGd:c==='wait'?CLKd:'';
 const kvs=l=>`<div class="inv-kv">${l.map(x=>`<div${x[2]?' class="inv-full"':''}><span>${x[0]}</span><b>${x[1]||'<em>Not added</em>'}</b></div>`).join('')}</div>`;
@@ -656,6 +662,7 @@ window.IN={
     const f=$('f-'+sc+'-'+k); if(f) f.classList.remove('err');
     save(); locRefresh(sc,i); mapRefresh(sc); const b=$('pin-'+sc); if(b) b.innerHTML='';
     if(oth){ const el=document.querySelector('#f-'+sc+'-'+k+' .in-other'); if(el) el.focus(); } },
+  pick(sc,k,v){ IN.set(sc,k,v,1); const o=ALLF.find(f=>f.k===k&&(sc==='b'?FB.includes(f):!FB.includes(f))); if(o&&o.oth){ const el=$('f-'+sc+'-'+k); if(el){ const t=document.createElement('div'); t.innerHTML=fld(o,sc); el.replaceWith(t.firstChild); const inp=$('f-'+sc+'-'+k).querySelector('.in-other'); if(inp) inp.focus(); } } },
   set(sc,k,v,re){ (sc==='d'?I.d:BR)[k]=v; if(sc==='d'&&k==='aemail'&&I.aem!=='idle') I.aem='idle'; const f=$('f-'+sc+'-'+k); if(f) f.classList.remove('err'); if(k==='pin') pinLook(sc,v.trim()); if(re&&sc==='d'&&k==='type'){ save(); render(); } else if(sc==='d') save(); },
   blur(sc,k){ const o=ALLF.find(f=>f.k===k&&(sc==='b'?FB.includes(f):!FB.includes(f))); if(o) mark(sc,o,chk(o,(sc==='d'?I.d:BR)[k])); },
   steps(){ return STEPS; },
