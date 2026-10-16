@@ -162,8 +162,8 @@ function mountChrome(opts){
         </div>
         <div class="footer-col">
           <h5>Platform</h5>
-          <a href="${PAGES.home}#faculty">For Faculty</a>
-          <a href="${PAGES.home}#employers">For Employers</a>
+          <a href="${PAGES.facultyHub}">For Faculty</a>
+          <a href="${PAGES.employersHub}">For Employers</a>
           <a href="${PAGES.home}#categories">Categories</a>           <a href="${SITE_ROOT}pages/university-faculty-recruitment.html">University Faculty Recruitment</a>           <a href="${SITE_ROOT}pages/junior-college-faculty-recruitment.html">Junior College Faculty Recruitment</a>           <a href="${SITE_ROOT}pages/school-teacher-recruitment.html">School Teacher Recruitment</a>
         </div>
         <div class="footer-col">
