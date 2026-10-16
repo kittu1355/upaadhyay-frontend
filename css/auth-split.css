@@ -4,7 +4,7 @@ body.page-auth{font-family:'Poppins','Inter',sans-serif;background:#fff;color:#1
 .as-brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:inherit}
 .as-brand img{height:40px;width:auto}
 .as-word{font-weight:800;font-size:25px;letter-spacing:-1.2px;color:#3a1580;line-height:1}
-.as-word span{color:#e0359a}
+.as-word span{color:inherit}
 .as-switch{font-size:15px;font-weight:500;color:#1f1637}
 .as-switch a{color:#4b1f9e;font-weight:700;text-decoration:none}
 .as-switch a:hover{text-decoration:underline}
