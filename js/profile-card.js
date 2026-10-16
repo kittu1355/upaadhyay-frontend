@@ -43,7 +43,7 @@
   function faculty(){
     var U = currentUser || {}, fp = U.fp || {}, files = fp.files || {}, saved = !!fp.savedAt;
     var req = [!!(fp.first && fp.last && fp.dob), !!(U.email && U.phone), !!fp.high, !!fp.desig, !!(fp.subjects && fp.subjects.length)];
-    var rec = [!!files.resume, !!(fp.jobs && fp.jobs.length), !!(fp.links && fp.links.length), Object.keys(files).some(function(k){ return k !== 'resume'; })];
+    var rec = [!!(files.resume||files.resume2||files.resume3||files.resume4||files.resume5), !!(fp.jobs && fp.jobs.length), !!(fp.links && fp.links.length), Object.keys(files).some(function(k){ return !/^resume[2-5]?$/.test(k); })];
     var hints = ['Add personal details','Add contact details','Add your highest qualification','Add your designation','Add subject specialization','Upload your resume','Add employment history','Add professional links','Upload a certificate'];
     var all = req.concat(rec), nx = all.indexOf(false);
     var pct = saved ? Math.min(100, req.filter(Boolean).length * 16 + rec.filter(Boolean).length * 5) : 0;
