@@ -212,3 +212,10 @@
 #fpRoot .fp-nav{position:static;min-height:0;max-height:none;overflow-y:auto;overscroll-behavior:contain}   /* many menu items -> the menu itself scrolls */
 #fpRoot .fp-wrap>div{min-height:0;overflow-y:auto;overscroll-behavior:contain}                              /* clicking a menu item swaps only this content */
 }
+
+/* Profile Preview: keep name/role/meta fully below the banner, beside the avatar */
+.fp-pv-head{align-items:flex-start}
+.fp-pv-head>div:not(.fp-av){padding-top:42px}
+.fp-pv-head>.fp-btn{margin-top:46px}
+.fp-pv-head h2{line-height:1.25}
+@media(max-width:560px){.fp-pv-head>div:not(.fp-av){flex-basis:100%;padding-top:4px}.fp-pv-head>.fp-btn{margin-top:4px}}
