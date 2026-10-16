@@ -728,6 +728,19 @@ if(typeof window.bkStatusBadge !== 'function'){
     return parts.join(' · ');
   }
 
+
+  /* "Ask Questions" step: keep each job's Q&A settings so the job page can show them (kept in this browser until the API supports it). */
+  function jbSaveQa(id){
+    if(!id) return;
+    const g = function(i){ const el = document.getElementById(i); return el ? (el.value || '').trim() : ''; };
+    const on = document.getElementById('jbQaOn');
+    try{ localStorage.setItem('upaadhyay_jobqa_' + id, JSON.stringify({ on: on ? !!on.checked : true, contact: g('jbQaContact'), faq: g('jbQaFaq') })); }catch(e){}
+  }
+  function jbLoadQa(id){
+    let q = {}; try{ q = JSON.parse(localStorage.getItem('upaadhyay_jobqa_' + id) || '{}'); }catch(e){}
+    const on = document.getElementById('jbQaOn'), c = document.getElementById('jbQaContact'), f = document.getElementById('jbQaFaq');
+    if(on) on.checked = q.on !== false; if(c) c.value = q.contact || ''; if(f) f.value = q.faq || '';
+  }
   function addJob(e){
     if(e && e.preventDefault) e.preventDefault();
     const v = id => (document.getElementById(id).value || '').trim();
@@ -778,15 +791,17 @@ if(typeof window.bkStatusBadge !== 'function'){
       campus, campusLoc, location, desc: v('jbDesc'), skills: v('jbSkills'), deadline: v('jbDeadline')
     };
     const editing = (editingJobId && jobsData[editingJobId]) ? jobsData[editingJobId] : null;
-    (editing ? bkUpdateJob(editing.id, jobPayload) : bkPostJob(jobPayload)).then(function(){
+    (editing ? bkUpdateJob(editing.id, jobPayload) : bkPostJob(jobPayload)).then(function(res){
+    jbSaveQa((res && res.id) || (editing && editing.id));
     if(editing) endEditJob();
 
     // reset the form and confirm
-    ['jbTitle','jbRole','jbRoleOther','jbCategory','jbCategoryOther','jbDept','jbType','jbTypeOther','jbVac','jbQualification','jbQualificationOther','jbNotice','jbNoticeOther','jbExpMin','jbExpMax','jbSalMin','jbSalMax','jbLocation','jbDesc','jbSkills','jbDeadline','jbCampus'].forEach(i=>{ const el = document.getElementById(i); if(el) el.value = ''; });
+    ['jbTitle','jbRole','jbRoleOther','jbCategory','jbCategoryOther','jbDept','jbType','jbTypeOther','jbVac','jbQualification','jbQualificationOther','jbNotice','jbNoticeOther','jbExpMin','jbExpMax','jbSalMin','jbSalMax','jbLocation','jbDesc','jbSkills','jbDeadline','jbCampus','jbQaContact','jbQaFaq'].forEach(i=>{ const el = document.getElementById(i); if(el) el.value = ''; });
     ['jbRoleOther','jbCategoryOther','jbTypeOther','jbQualificationOther','jbNoticeOther'].forEach(i=>{ const el = document.getElementById(i); if(el) el.style.display = 'none'; });
     document.getElementById('jbSalPeriod').value = 'month';
     document.getElementById('jbSalNeg').checked = false;
     document.getElementById('jbSalNorms').checked = false;
+    const qaOn = document.getElementById('jbQaOn'); if(qaOn) qaOn.checked = true;
     if(typeof instCampusChange === 'function') instCampusChange();
     const ok = document.getElementById('jbOk');
     if(ok){
@@ -823,7 +838,7 @@ if(typeof window.bkStatusBadge !== 'function'){
     jbSetVal('jbSalPeriod', j.salPeriod || 'month');
     const neg = document.getElementById('jbSalNeg'), norms = document.getElementById('jbSalNorms');
     if(neg) neg.checked = !!j.salNeg; if(norms) norms.checked = !!j.salNorms;
-    jbSetVal('jbLocation', j.location); jbSetVal('jbDesc', j.desc); jbSetVal('jbSkills', j.skills); jbSetVal('jbDeadline', j.deadline);
+    jbSetVal('jbLocation', j.location); jbSetVal('jbDesc', j.desc); jbSetVal('jbSkills', j.skills); jbSetVal('jbDeadline', j.deadline); jbLoadQa(j.id);
     const camp = document.getElementById('jbCampus');
     if(camp && typeof instCampusOptions === 'function'){ const o = instCampusOptions().find(function(x){ return x.n === j.campus; }); camp.value = o ? o.v : ''; if(typeof instCampusChange === 'function') instCampusChange(); }
     const bar = document.getElementById('jbEditBar');
@@ -838,7 +853,7 @@ if(typeof window.bkStatusBadge !== 'function'){
   }
   function cancelEditJob(){
     endEditJob();
-    ['jbTitle','jbRole','jbRoleOther','jbCategory','jbCategoryOther','jbDept','jbType','jbTypeOther','jbVac','jbQualification','jbQualificationOther','jbNotice','jbNoticeOther','jbExpMin','jbExpMax','jbSalMin','jbSalMax','jbLocation','jbDesc','jbSkills','jbDeadline','jbCampus'].forEach(function(i){ const el = document.getElementById(i); if(el) el.value = ''; });
+    ['jbTitle','jbRole','jbRoleOther','jbCategory','jbCategoryOther','jbDept','jbType','jbTypeOther','jbVac','jbQualification','jbQualificationOther','jbNotice','jbNoticeOther','jbExpMin','jbExpMax','jbSalMin','jbSalMax','jbLocation','jbDesc','jbSkills','jbDeadline','jbCampus','jbQaContact','jbQaFaq'].forEach(function(i){ const el = document.getElementById(i); if(el) el.value = ''; });
     ['jbRoleOther','jbCategoryOther','jbTypeOther','jbQualificationOther','jbNoticeOther'].forEach(function(i){ const el = document.getElementById(i); if(el) el.style.display = 'none'; });
     const p = document.getElementById('jbSalPeriod'); if(p) p.value = 'month';
     const n1 = document.getElementById('jbSalNeg'), n2 = document.getElementById('jbSalNorms'); if(n1) n1.checked = false; if(n2) n2.checked = false;
