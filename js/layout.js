@@ -14,7 +14,7 @@ const BELL_SVG  = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" x
 /* ---- Top nav bar --------------------------------------------------------- */
 
 const NAV_CSS = `
-
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap');
 .nav{background:#fff !important;border-bottom:0 !important;border-radius:0 0 3px 3px;box-shadow:0 4px 20px rgba(75,31,158,.10);backdrop-filter:none !important;font-family:'Poppins','Inter',sans-serif}
 .nav-inner{max-width:1360px !important;padding:10px 28px !important;gap:22px !important;justify-content:flex-start !important}
 .fn-brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:inherit}
@@ -79,7 +79,7 @@ function mountNav(active){
           <span class="nav-bell-dot" id="navBellDot" style="display:none;"></span>
         </button>
         <button class="nav-avatar-btn" id="navAvatarBtn" onclick="openMiniProfile()">
-          <img id="navAvatarImg" src="" alt="Your profile photo">
+          <img id="navAvatarImg" src="">
         </button>
         <button class="btn btn-ghost btn-sm nav-logout" id="navLogoutBtn" onclick="logoutUser()">Log out</button>
       </div>
@@ -164,13 +164,13 @@ function mountChrome(opts){
           <h5>Platform</h5>
           <a href="${PAGES.home}#faculty">For Faculty</a>
           <a href="${PAGES.home}#employers">For Employers</a>
-          <a href="${PAGES.home}#categories">Categories</a>           <a href="/university-faculty-recruitment/">University Faculty Recruitment</a>           <a href="/junior-college-faculty-recruitment/">Junior College Faculty Recruitment</a>           <a href="/school-teacher-recruitment/">School Teacher Recruitment</a>
+          <a href="${PAGES.home}#categories">Categories</a>
         </div>
         <div class="footer-col">
           <h5>Company</h5>
-          <a href="${PAGES.about}">About</a>
-          <a href="${PAGES.contact}">Contact</a>
-          <a href="${PAGES.help}">Help centre</a>
+          <a href="javascript:void(0)" onclick="showGenericToast('About Upadyay — coming soon')">About</a>
+          <a href="javascript:void(0)" onclick="showGenericToast('Contact page — coming soon')">Contact</a>
+          <a href="javascript:void(0)" onclick="showGenericToast('Help centre — coming soon')">Help centre</a>
         </div>
         <div class="footer-col">
           <h5>Legal</h5>
@@ -198,7 +198,7 @@ function mountChrome(opts){
   <div class="mini-panel" id="miniPanel">
     <button class="mini-close" onclick="closeMiniProfile()" aria-label="Close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
     <div class="mini-head">
-      <img class="mini-avatar" id="miniAvatar" src="" alt="Your profile photo">
+      <img class="mini-avatar" id="miniAvatar" src="">
       <div class="mini-head-txt">
         <h3 id="miniName">Your name</h3>
         <p id="miniDegree">Add your degree</p>
@@ -307,7 +307,7 @@ function mountChrome(opts){
     </div>
     <div class="notif-panel-list" id="notifPanelList"></div>
   </div>`;
-  /* Make placeholder links crawlable: javascript:void(0) becomes # (click actions still run) */   el.querySelectorAll('a[href="javascript:void(0)"]').forEach(function(a){     a.setAttribute('href', '#');     a.addEventListener('click', function(e){ e.preventDefault(); });   });   if(typeof refreshMiniProfile === 'function' && isLoggedIn) refreshMiniProfile();
+  if(typeof refreshMiniProfile === 'function' && isLoggedIn) refreshMiniProfile();
   if(hasUnreadNotif){
     const d = document.getElementById('navBellDot'); if(d) d.style.display = 'block';
   }
