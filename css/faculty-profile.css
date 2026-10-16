@@ -231,3 +231,12 @@
 .fp-pv-box.empty{background:#fcfdff}
 .fp-pv-link{display:flex;align-items:center;gap:8px;font-size:13.5px;padding:6px 0;color:var(--ink-soft)}
 @media(max-width:899px){.fp-pv-grid{grid-template-columns:1fr;padding:16px}}
+.fp-pv-kv{display:flex;justify-content:space-between;gap:14px;padding:7px 0;border-bottom:1px solid var(--line);font-size:13.5px}
+.fp-pv-kv:last-child{border-bottom:0}
+.fp-pv-kv span{color:var(--ink-faint);flex:none}
+.fp-pv-kv b{font-weight:600;color:var(--ink);text-align:right;word-break:break-word}
+.fp-pv-file{display:flex;align-items:center;gap:12px;padding:10px 12px;border:1px solid var(--line);border-radius:6px;background:#f8faff;margin-bottom:8px;font-size:13.5px}
+.fp-pv-file:last-child{margin-bottom:0}
+.fp-pv-file>div{flex:1;min-width:0}.fp-pv-file b{display:block}.fp-pv-file small{color:var(--ink-faint);display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fp-pv-file a{font-weight:600;color:var(--blue-600,#2563EB);text-decoration:none}
+.fp-pv-file .ic{color:var(--blue-600,#2563EB);flex:none}
