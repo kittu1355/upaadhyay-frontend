@@ -1187,3 +1187,17 @@
     pushNotif('Profile saved — you can now browse and apply to jobs.');
     goTo('jobs');
   }
+
+/* "Other" option: reveal a "Please specify" box; the typed text becomes the saved value */
+(function(){
+  function wire(sel){
+    if(sel.dataset.otherWired) return; sel.dataset.otherWired='1';
+    var opt=[].find.call(sel.options,function(o){return o.text.trim()==='Other';}); if(!opt) return;
+    var box=document.createElement('input'); box.type='text'; box.className='pf-input'; box.placeholder='Please specify';
+    box.style.cssText='display:none;margin-top:8px'; sel.parentNode.appendChild(box);
+    function sync(){ var on=sel.selectedOptions[0]===opt; box.style.display=on?'':'none'; opt.value=(on&&box.value.trim())?box.value.trim():'Other'; }
+    sel.addEventListener('change',sync);
+    box.addEventListener('input',function(){ opt.value=box.value.trim()||'Other'; if(window.pfOnInputProgress) pfOnInputProgress(); });
+  }
+  document.addEventListener('DOMContentLoaded',function(){ document.querySelectorAll('select.pf-input').forEach(wire); });
+})();
