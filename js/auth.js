@@ -657,7 +657,7 @@
   function miniStrength(){
     const fp = miniFp(), U = currentUser, files = fp.files || {};
     const req = [!!(fp.first && fp.last && fp.dob), !!(U.email && U.phone), !!fp.high, !!fp.desig, !!(fp.subjects && fp.subjects.length)];
-    const rec = [!!files.resume, !!(fp.jobs && fp.jobs.length), !!(fp.links && fp.links.length), Object.keys(files).some(function(k){ return k !== 'resume'; })];
+    const rec = [!!(files.resume||files.resume2||files.resume3||files.resume4||files.resume5), !!(fp.jobs && fp.jobs.length), !!(fp.links && fp.links.length), Object.keys(files).some(function(k){ return !/^resume[2-5]?$/.test(k); })];
     const hints = ['Add personal details','Add contact details','Add your highest qualification','Add your designation','Add subject specialization','Upload your resume','Add employment history','Add professional links','Upload a certificate'];
     const all = req.concat(rec), next = all.indexOf(false);
     return { pct: req.filter(Boolean).length * 16 + rec.filter(Boolean).length * 5, hint: next === -1 ? 'Looking great!' : hints[next] };
