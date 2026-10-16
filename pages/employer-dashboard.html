@@ -110,7 +110,7 @@
             <div class="in-note" id="jbEditBar" style="display:none;" role="status"></div>
 
             <div class="in-layout">
-              <aside class="in-side"><div class="in-steps" role="tablist" aria-orientation="vertical"><button type="button" class="in-step on" role="tab" aria-selected="true" onclick="jbJump(0)"><span class="in-step-n">1</span><span class="in-step-t">Job details</span></button><button type="button" class="in-step" role="tab" aria-selected="false" onclick="jbJump(1)"><span class="in-step-n">2</span><span class="in-step-t">Requirements</span></button><button type="button" class="in-step" role="tab" aria-selected="false" onclick="jbJump(2)"><span class="in-step-n">3</span><span class="in-step-t">Salary</span></button><button type="button" class="in-step" role="tab" aria-selected="false" onclick="jbJump(3)"><span class="in-step-n">4</span><span class="in-step-t">Job location</span></button><button type="button" class="in-step" role="tab" aria-selected="false" onclick="jbJump(4)"><span class="in-step-n">5</span><span class="in-step-t">Description</span></button></div>
+              <aside class="in-side"><div class="in-steps" role="tablist" aria-orientation="vertical"><button type="button" class="in-step on" role="tab" aria-selected="true" onclick="jbJump(0)"><span class="in-step-n">1</span><span class="in-step-t">Job details</span></button><button type="button" class="in-step" role="tab" aria-selected="false" onclick="jbJump(1)"><span class="in-step-n">2</span><span class="in-step-t">Requirements</span></button><button type="button" class="in-step" role="tab" aria-selected="false" onclick="jbJump(2)"><span class="in-step-n">3</span><span class="in-step-t">Salary</span></button><button type="button" class="in-step" role="tab" aria-selected="false" onclick="jbJump(3)"><span class="in-step-n">4</span><span class="in-step-t">Job location</span></button><button type="button" class="in-step" role="tab" aria-selected="false" onclick="jbJump(4)"><span class="in-step-n">5</span><span class="in-step-t">Description</span></button><button type="button" class="in-step" role="tab" aria-selected="false" onclick="jbJump(5)"><span class="in-step-n">6</span><span class="in-step-t">Ask Questions</span></button></div>
                 <div class="in-side-foot"><div class="in-bar"><div id="jbBar" style="width:0%"></div></div><span id="jbPct">0% complete</span></div></aside>
               <div class="in-main">
             <div class="in-card jb-step on" data-s="0">
@@ -165,7 +165,17 @@
               </div>
             </div>
 
-            <div class="in-actions"><span class="in-stepof" id="jbStepOf">Step 1 of 5</span>
+            <div class="in-card jb-step" data-s="5">
+              <h4>Ask Questions</h4><p class="sub2">Let candidates ask about this role before they apply.</p>
+              <div class="in-grid">
+                <label class="in-chk in-full"><input type="checkbox" id="jbQaOn" checked> Allow candidates to ask questions about this role</label>
+                <div class="in-f in-full" id="jf-qaContact"><label>Contact for questions<i>Optional</i></label><input type="email" id="jbQaContact" placeholder="e.g. hr@institution.edu" oninput="jbClear('qaContact')"><div class="in-err" role="alert"></div></div>
+                <div class="in-f in-full"><label>Common questions &amp; answers<i>Optional</i></label><textarea id="jbQaFaq" placeholder="One per line, like:&#10;Is accommodation provided? | Yes, on campus&#10;Is there a probation period? | 6 months"></textarea></div>
+              </div>
+              <div class="in-note">Candidates will see these answers on the job page and can send you new questions.</div>
+            </div>
+
+            <div class="in-actions"><span class="in-stepof" id="jbStepOf">Step 1 of 6</span>
               <div class="r"><button type="button" class="btn btn-ghost btn-sm" id="jbBack" onclick="jbBack()" style="display:none">Back</button><button type="button" class="btn btn-primary btn-sm" id="jbNext" onclick="jbNext(event)">Next</button></div></div>
               </div>
             </div>
@@ -236,7 +246,7 @@
 <script>
 /* Post a job: same left-steps + right-card layout as the company profile. UI only; posting still runs through addJob(). */
 (function(){
-  var N=5, cur=0, max=0, F=document.getElementById('jobPostForm'); if(!F) return;
+  var N=6, cur=0, max=0, F=document.getElementById('jobPostForm'); if(!F) return;
   var $=function(id){return document.getElementById(id);}, val=function(id){return ($(id).value||'').trim();};
   var REQ=['jbTitle','jbRole','jbCategory','jbDept','jbType','jbQualification','jbNotice','jbExpMin','jbSalMin','jbSalMax','jbCampus'];
   function need(list){ var first=null; list.forEach(function(x){ if(!val(x[1])){ jbErr(x[0],x[2]); if(!first) first=x[1]; } }); return first; }
@@ -250,7 +260,8 @@
       if(!(Number(val('jbSalMax'))>0)){ jbErr('salmax','Enter the maximum salary'); f=f||'jbSalMax'; }
       else if(Number(val('jbSalMax'))<Number(val('jbSalMin')||0)){ jbErr('salmax','Maximum cannot be lower than minimum'); f=f||'jbSalMax'; } return f; },
     function(){ return need([['campus','jbCampus','Select the campus for this job']]); },
-    function(){ return null; }];
+    function(){ return null; },
+    function(){ var c=val('jbQaContact'); if(c&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(c)){ jbErr('qaContact','Enter a valid email address'); return 'jbQaContact'; } return null; }];
   function pct(){ var n=REQ.filter(function(id){ if($('jbSalNorms').checked&&(id==='jbSalMin'||id==='jbSalMax')) return true; return !!val(id); }).length; return Math.round(n/REQ.length*100); }
   function paint(){
     var p=pct(); $('jbBar').style.width=p+'%'; $('jbPct').textContent=p+'% complete';
