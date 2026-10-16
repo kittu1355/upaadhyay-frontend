@@ -128,8 +128,14 @@ const R={
  const eds=ed.map(k=>{const e=S.edu[k]||{};return `<div class="fp-tl"><i></i><div><b>${esc((e.type?e.type+' ':'')+(e.major||lab[k]))}</b><div>${esc(e.uni||'')}</div><small>${esc(lab[k])}${e.end?' · '+esc(e.end):''}</small></div></div>`}).join('');
  return `<div class="fp-pv"><div class="fp-pv-ban"></div><div class="fp-pv-head">${avatarHTML()}<div style="flex:1;min-width:200px"><h2>${esc([S.title,S.first,S.middle,S.last].filter(Boolean).join(' '))}</h2><div class="fp-pv-role">${esc(S.headline||S.desig||'')}</div><div class="fp-meta"><span>${ic('pin',13)}${esc([S.city,S.state].filter(Boolean).join(', ')||'Location not set')}</span><span>${ic('clock',13)}${m>=12?Math.floor(m/12)+'+ years':m+' months'} experience</span>${a!==null?`<span>${ic('cal',13)}${a} yrs</span>`:''}</div></div><button class="fp-btn pri" data-go="0">Edit Profile</button></div>
  
- <div class="fp-pv-grid"><div><h5>Teaching levels</h5><div class="fp-chips">${ch(S.levels)}</div><h5>Subjects</h5><div class="fp-chips">${ch(S.subjects)}</div><h5>Links</h5>${S.links.length?S.links.map(l=>`<div class="fp-hint">${ic('link',12)} ${esc(l.t)}</div>`).join(''):'<span class="fp-hint">Not added</span>'}</div>
- <div><h5>Experience</h5>${jobs||'<span class="fp-hint">Fresher / not added</span>'}<h5>Education</h5>${eds||`<span class="fp-hint">${esc(S.high||'Not added')}</span>`}</div></div></div>`}};
+ <div class="fp-pv-grid">
+  ${pvBox('Teaching levels',2,S.levels&&S.levels.length?`<div class="fp-chips">${ch(S.levels)}</div>`:'','Add the levels you teach, e.g. Primary, High School, Degree.')}
+  ${pvBox('Experience',5,jobs,'Fresher or not added yet. Add your employment history.')}
+  ${pvBox('Subjects',2,S.subjects&&S.subjects.length?`<div class="fp-chips">${ch(S.subjects)}</div>`:'','Add the subjects you teach or specialise in.')}
+  ${pvBox('Education',3,eds,S.high?'Add your qualification details.':'Add your highest qualification and details.')}
+  ${pvBox('Links',8,S.links.length?S.links.map(l=>`<div class="fp-pv-link">${ic('link',12)} <span>${esc(l.t)}</span></div>`).join(''):'','Add LinkedIn, Google Scholar, ORCID or a portfolio link.')}
+</div></div>`}};
+function pvBox(t,sec,body,empty){return `<div class="fp-pv-box ${body?'':'empty'}"><div class="fp-pv-bh"><h5>${t}</h5><button type="button" class="fp-pv-add" data-go="${sec}">${body?'Edit':'+ Add'}</button></div>${body||`<div class="fp-pv-ph">${empty}</div>`}</div>`}
 function eduBlock(k){const hi=(EDU[S.high]||[]).slice(-1)[0]===k,rq=hi?'req':(k==='ssc'||k==='hsc'?'rec':'some');const T=(t)=>tag(rq==='some'?'Required for some jobs':rq,rq==='some'?t:undefined);
  const e=`edu.${k}.`,names={ssc:'10th / SSC',hsc:'12th / Intermediate',ug:"Bachelor's Degree",pg:"Master's Degree",phd:'Ph.D. / Doctoral Details',mphil:'M.Phil',dip:'Diploma',oth:'Other qualification'};
  const yrs=I(e+'end',{ph:'YYYY'}),pc=I(e+'score',{ph:'e.g. 8.2 CGPA / 78%'}),v=hi?'req':'';
