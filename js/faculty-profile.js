@@ -19,9 +19,17 @@ const OPT={
  tq:['B.Ed.','M.Ed.','D.El.Ed.','B.P.Ed.','M.P.Ed.','Special Education Qualification','CTET','TET','State TET','NET','SET','SLET','Other'],
  linkt:['LinkedIn','Google Scholar','ORCID','ResearchGate','Personal Website','Portfolio','YouTube / Teaching Channel','Other'],
  pref:['Pre-Primary','Primary','Middle School','Secondary School','Senior Secondary','Junior College','Undergraduate / UG','Postgraduate / PG','PhD / Research'],
- exp:['Fresher','1–2 Years','3–5 Years','6–10 Years','11–15 Years','15+ Years']};
-const SEC=['Personal Details','Account & Contact','Professional Profile','Education & Qualifications','Teaching Qualifications','Employment History','Teaching Experience','Documents','Professional Links','Teaching Preferences','Verification','Profile Preview'];
-const ICON=['user','lock','cap','book','award','briefcase','hourglass','folder','link','target','shield','eye'];
+ exp:['Fresher','1–2 Years','3–5 Years','6–10 Years','11–15 Years','15+ Years'],
+ idxJ:['SCI','SCIE','ESCI','Scopus','Web of Science (WoS)','Scopus + WoS','UGC-CARE','ABDC','Other Indexed','Non-Indexed'],
+ idxC:['SCI','SCIE','ESCI','Scopus','Web of Science (WoS)','Scopus + WoS','UGC','ABDC','Other Indexed','Non-Indexed'],
+ idxB:['Scopus','Web of Science (WoS)','Scopus + WoS','Other Indexed','Non-Indexed'],
+ qrt:['Q1','Q2','Q3','Q4','Not Applicable / Not Verified'],
+ pos:['First Author','Corresponding Author','Co-Author','Other'],
+ ptype:['Design Patent','Utility Patent','Other'],pstat:['Filed','Published','Granted','Rejected','Withdrawn'],
+ ctype:['National','International'],btype:['Authored Book','Edited Book'],
+ otype:['Magazine Article','Research Article','Blog','Technical Article','Industry Article','Science Communication']};
+const SEC=['Personal Details','Account & Contact','Professional Profile','Education & Qualifications','Teaching Qualifications','Employment History','Teaching Experience','Documents','Add Resume','Teaching Preferences','Verification','Profile Preview'];
+const ICON=['user','lock','cap','book','award','briefcase','hourglass','folder','file','target','shield','eye'];
 /* inline SVG icons (Lucide-style, stroke = currentColor) — no emoji anywhere */
 const SVG={
 user:'<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
@@ -50,7 +58,7 @@ const pill=(c,i,t)=>`<span class="fp-pill ${c}">${ic(i,11)}${t}</span>`;
 const cap=t=>t.charAt(0).toUpperCase()+t.slice(1);
 const TAG={req:['t-req','Required'],rec:['t-rec','Recommended'],opt:['t-opt','Optional']};
 const blank=()=>({open:0,done:{},savedAt:'',title:'',first:'',middle:'',last:'',dob:'',gender:'',headline:'',email:'',phone:'',phone2:'',pin:'',state:'',district:'',city:'',area:'',addr:'',vis:'Employers Only',
- desig:'',levels:[],subjects:[],high:'',edu:{ssc:{},hsc:{},ug:{},pg:{},phd:{},mphil:{},dip:{},oth:{}},tq:[],jobs:[],taught:[],taughtSubs:[],boards:[],medium:[],expLevel:'',links:[],files:{},
+ desig:'',levels:[],subjects:[],high:'',edu:{ssc:{},hsc:{},ug:{},pg:{},phd:{},mphil:{},dip:{},oth:{}},tq:[],jobs:[],taught:[],taughtSubs:[],boards:[],medium:[],expLevel:'',links:[],files:{},resumes:[],resumeSel:'',resumePub:'',cvs:[],cvSel:'',cvPub:'',editions:[],research:{journal:[],patent:[],conf:[],book:[],chapter:[],other:[]},
  prefLevels:[],prefSubs:[],prefJob:[],prefWork:'',prefLoc:[],reloc:'',salary:'',ver:{edu:'none',exp:'none',id:'none'}});
 let S=blank(),SAVED='',ST={saving:false,busy:{}},_uid=0;
 const RULES={photo:{ext:['jpg','jpeg','png','webp'],mb:2,label:'JPG, PNG or WEBP · Max 2 MB'},resume:{ext:['pdf','doc','docx'],mb:5,label:'PDF, DOC or DOCX · Max 5 MB'},doc:{ext:['pdf','jpg','jpeg','png'],mb:5,label:'PDF, JPG or PNG · Max 5 MB'}};
@@ -75,7 +83,7 @@ const school=()=>S.levels.some(l=>['Pre-Primary','Primary','Middle School','Seco
 const ug=()=>S.levels.some(l=>['Undergraduate / UG','Junior College'].includes(l)), pg=()=>S.levels.some(l=>['Postgraduate / PG','PhD / Research'].includes(l));
 const EDU={'10th / SSC':['ssc'],'12th / Intermediate':['ssc','hsc'],'Diploma':['ssc','dip'],"Bachelor's Degree":['ssc','hsc','ug'],"Master's Degree":['ssc','hsc','ug','pg'],'M.Phil':['ssc','hsc','ug','pg','mphil'],'Ph.D.':['ssc','hsc','ug','pg','phd'],'Postdoctoral':['ssc','hsc','ug','pg','phd'],'Other':['ssc','hsc','oth']};
 function completion(){const req=[['Personal details',S.first&&S.last&&age(S.dob)!==null],['Contact information',S.email&&S.phone],['Highest qualification',S.high],['Current designation',S.desig],['Subject specialization',S.subjects.length]];
- const rec=[['Add resume',S.files.resume,8],['Add employment history',S.jobs.length,5],['Add professional links',S.links.length,8],['Add certificates',Object.keys(S.files).some(k=>k!=='resume'&&k!=='photo'),3]];
+ const rec=[['Add resume',pubItem('resumes')||S.files.resume,8],['Add employment history',S.jobs.length,5],['Add research records',rsTotal()>0,7],['Add certificates',Object.keys(S.files).some(k=>k!=='resume'&&k!=='photo'),3]];
  const p=req.filter(x=>x[1]).length*16+rec.filter(x=>x[1]).length*5;return{req,rec,p}}
 /* ---------- sections ---------- */
 const R={
@@ -110,10 +118,8 @@ const R={
  ${F('Classes / levels taught','rec',MS('taught','levels'))}${F('Subjects taught','rec',MS('taughtSubs','subjects'))}${F('Boards / curricula','opt',MS('boards','boards'),{full:1})}</div>`},
 7:()=>{const items=docList();return `<h3>Documents</h3><p class="fp-sub">Everything you have uploaded. Add documents from the relevant sections.</p>
  ${items.length?items.map(d=>`<div class="fp-row"><span>${ic('file',14)} <b>${esc(d[1].name)}</b> <small>${esc(d[0])}${szt(d[1])}</small></span><span class="fp-pill p-ok">${ic('check',11)}Uploaded</span></div>`).join(''):`<div class="fp-empty">No documents uploaded yet.</div>`}
- <div class="fp-note" style="margin-top:14px">Identity documents are not needed for a normal profile. If an institution requires them, you'll be asked in a separate step.</div>`},
-8:()=>`<h3>Professional Links</h3><p class="fp-sub">Optional — Google Scholar / ORCID are recommended for research roles.</p><div id="fpLinks">${linksHTML()}</div>
- <div class="fp-card"><h4>Add another link</h4><div class="fp-grid"><div class="fp-f"><select class="fp-in" id="fpLt">${OPT.linkt.map(x=>`<option>${x}</option>`).join('')}</select></div><div class="fp-f"><input class="fp-in" id="fpLu" placeholder="https://…"><div class="fp-err" data-e></div></div></div><button class="fp-btn pri" style="margin-top:10px" data-act="addlink">Add link</button></div>
- <div class="fp-card"><h4>CV / Resume ${tag('rec')}</h4><div class="fp-up ${S.files.resume?'has':''}" data-up="resume">${UPin('resume')}</div><div class="fp-hint">Accepted: ${RULES.resume.label}</div></div>`,
+ <div class="fp-note" style="margin-top:14px">Identity documents are not needed for a normal profile. If an institution requires them, you'll be asked in a separate step.</div>${rsHTML()}`},
+8:()=>`<h3>Add Resume</h3><p class="fp-sub">Upload up to 5 files or add links in each box, pick the one to show, then publish it.</p>${boxHTML('resumes')}${boxHTML('cvs')}${edHTML()}`,
 9:()=>`<h3>Teaching Preferences</h3><p class="fp-sub">What you're looking for next. All optional.</p><div class="fp-grid">
  ${F('Preferred teaching level','opt',MS('prefLevels','pref'))}${F('Preferred subjects','opt',MS('prefSubs','subjects'))}${F('Preferred job type','opt',MS('prefJob','jobtype'))}
  ${F('Work location','opt',RAD('prefWork',['On-site','Remote','Hybrid']))}${F('Preferred locations','opt',MS('prefLoc','cities','Add cities / states'))}${F('Willing to relocate','opt',RAD('reloc',['Yes','No','Maybe']))}
@@ -129,7 +135,7 @@ const R={
  const kv=(l,v)=>{v=Array.isArray(v)?v.join(', '):v;return v?`<div class="fp-pv-kv"><span>${l}</span><b>${esc(v)}</b></div>`:''},
   fileRow=(l,f)=>`<div class="fp-pv-file">${ic('file',16)}<div><b>${esc(l)}</b><small>${esc(f.name||'File')}${szt(f)}</small></div>${f.url?`<a href="${esc(f.url)}" target="_blank" rel="noopener">View</a>`:''}</div>`,
   contact=[kv('Email',S.email),kv('Phone',S.phone),kv('Alt. phone',S.phone2),kv('Location',[S.area,S.city,S.district,S.state].filter(Boolean).join(', ')+(S.pin?' - '+S.pin:'')),kv('Gender',S.gender),kv('Visible to',S.vis)].join(''),
-  resume=S.files.resume?fileRow('Resume',S.files.resume):'',
+  resume=pvItem('resumes','Resume')+pvItem('cvs','CV'),
   tqs=S.tq.filter(q=>q&&q.name).map(q=>`<div class="fp-pv-link">${ic('award',12)}<span><b>${esc(q.name)}</b>${q.spec?' · '+esc(q.spec):''}</span></div>`).join(''),
   tex=[kv('Experience level',S.expLevel),kv('Medium',S.medium),kv('Classes taught',S.taught),kv('Subjects taught',S.taughtSubs),kv('Boards',S.boards)].join(''),
   docs=docList().filter(([l])=>l!=='Profile photo'&&l!=='Resume').map(([l,f])=>fileRow(l,f)).join(''),
@@ -138,7 +144,7 @@ const R={
  
  <div class="fp-pv-grid">
   ${pvBox('Contact & location',1,contact,'Add your email, phone and location.')}
-  ${pvBox('Resume',7,resume,'No resume uploaded yet. Upload a PDF, DOC or DOCX (max 5 MB).')}
+  ${pvBox('Resume',8,resume,'No resume published yet. Add one in Add Resume.')}
   ${pvBox('Teaching levels',2,S.levels&&S.levels.length?`<div class="fp-chips">${ch(S.levels)}</div>`:'','Add the levels you teach, e.g. Primary, High School, Degree.')}
   ${pvBox('Subjects',2,S.subjects&&S.subjects.length?`<div class="fp-chips">${ch(S.subjects)}</div>`:'','Add the subjects you teach or specialise in.')}
   ${pvBox('Experience',5,jobs,'Fresher or not added yet. Add your employment history.')}
@@ -146,7 +152,8 @@ const R={
   ${pvBox('Teaching qualifications',4,tqs,'Add B.Ed., TET, NET or other teaching qualifications.')}
   ${pvBox('Teaching experience',6,tex,'Add the classes, subjects and boards you have taught.')}
   ${pvBox('Documents',7,docs,'No documents uploaded yet.')}
-  ${pvBox('Links',8,S.links.length?S.links.map(l=>`<div class="fp-pv-link">${ic('link',12)} <span>${esc(l.t)}</span></div>`).join(''):'','Add LinkedIn, Google Scholar, ORCID or a portfolio link.')}
+  ${pvBox('Research',7,rsPv(),'Add journal papers, patents, conference papers, books and chapters.')}
+  ${pvBox('Editions',8,S.editions.filter(x=>x.name).map(x=>`<div class="fp-pv-link">${ic('link',12)} <span>${x.url?`<a href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.name)}</a>`:esc(x.name)}</span></div>`).join(''),'Add your editions with a name and link.')}
   ${pvBox('Teaching preferences',9,prefs,'Add preferred levels, subjects, job type and locations.')}
 </div></div>`}};
 function pvBox(t,sec,body,empty){return `<div class="fp-pv-box ${body?'':'empty'}"><div class="fp-pv-bh"><h5>${t}</h5><button type="button" class="fp-pv-add" data-go="${sec}">${body?'Edit':'+ Add'}</button></div>${body||`<div class="fp-pv-ph">${empty}</div>`}</div>`}
@@ -191,6 +198,7 @@ function check(el){const r=el.dataset.v,v=el.value.trim();let m='';
  else if(r==='dob'){if(!v)m='This field is required.';else if(age(v)===null)m='Please enter a valid date of birth.'}
  else if(r==='email'&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v))m=v?'Please enter a valid email address.':'This field is required.';
  else if(r==='phone'&&!/^\+?\d[\d\s-]{7,18}$/.test(v))m=v?'Please enter a valid phone number.':'This field is required.';
+ else if(r==='year'&&v&&!/^(19|20)\d{2}$/.test(v))m='Enter a valid 4-digit year.';
  else if(r==='pin'&&!/^\d{6}$/.test(v))m=v?'Enter a valid 6-digit PIN code.':'This field is required.';
  else if(r==='url'&&v&&!/^https?:\/\/[^\s.]+\.[^\s]{2,}$/i.test(v))m='Please enter a valid website URL.';
  el.classList.toggle('bad',!!m);el.setAttribute('aria-invalid',m?'true':'false');const e=el.closest('.fp-f')&&el.closest('.fp-f').querySelector('[data-e]');if(e)e.textContent=m;return!m}
@@ -251,6 +259,9 @@ function load(){const U=currentUser||{};S=Object.assign(blank(),JSON.parse(JSON.
  if(!S.city&&U.city)S.city=U.city;if(!S.state&&U.state)S.state=U.state;if(!S.desig&&U.currentDesignation)S.desig=U.currentDesignation;
  if(!PLACEHOLDER(U.avatar))S.files.photo={name:'Profile photo',url:U.avatar};
  {const sf=window.bkServerFiles||{};if(!S.files.resume&&sf.resume&&sf.resume.id)S.files.resume={id:sf.resume.id,name:sf.resume.original_name||'Resume',size:'',url:sf.resume.url||''}}
+ ['journal','patent','conf','book','chapter','other'].forEach(c=>{if(!S.research||typeof S.research!=='object')S.research={};if(!Array.isArray(S.research[c]))S.research[c]=[]});
+ ['resumes','cvs','editions'].forEach(k=>{if(!Array.isArray(S[k]))S[k]=[]});
+ if(S.files.resume&&S.files.resume.id&&!S.resumes.some(x=>x.fid===S.files.resume.id)&&S.resumes.length<5){const f=S.files.resume,id=uidR();S.resumes.push({id,kind:'file',name:f.name||'Resume',size:f.size||'',url:f.url||'',fid:f.id});if(!S.resumePub){S.resumePub=id;if(!S.resumeSel)S.resumeSel=id}}
  SAVED=snap()}
 function avatarHTML(){const f=S.files.photo,ini=esc((S.first[0]||'')+(S.last[0]||'')||'?');return `<div class="fp-av lg">${f&&f.url?`<img src="${esc(f.url)}" alt="">`:ini}</div>`}
 function bannerHTML(){let h='';
@@ -300,6 +311,112 @@ window.addEventListener('focus',async()=>{const r=$('#fpRoot');if(!r||!r.dataset
  try{await bkRefreshSeeker();const before=SAVED,o=S.open;load();if(SAVED!==before){S.open=o;shell();refreshChrome()}}catch(e){}});
 async function retryLoad(){const r=$('#fpRoot');r.innerHTML='<div class="fp-empty" role="status">Loading your profile…</div>';try{await bkRefreshSeeker();delete r.dataset.m;window.bkProfileLoaded=true;fpMount()}catch(e){errView(r,e)}}
 function errView(r,e){r.innerHTML=`<div class="fp-banner warn" role="alert"><div><b>We couldn't load your profile</b><div class="fp-hint">${esc((e&&e.message)||window.bkProfileError||'Unknown error')}${e&&e.status?' (HTTP '+e.status+')':''}. Nothing has been changed.</div></div><button type="button" class="fp-btn pri" data-act="retry">Retry</button></div>`}
+
+/* ---------- Add Resume (resume / CV boxes + editions) ---------- */
+const uidR=()=>'r'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+const SELK=k=>k==='resumes'?'resumeSel':'cvSel', PUBK=k=>k==='resumes'?'resumePub':'cvPub', RSE={};
+function pubItem(k){return S[k].find(x=>x.id===S[PUBK(k)])||null}
+function syncResume(){const it=pubItem('resumes');if(it&&it.kind==='file'&&it.fid)S.files.resume={id:it.fid,name:it.name,size:it.size,url:it.url};else delete S.files.resume}
+function pvItem(k,l){const it=pubItem(k);if(!it)return '';return it.kind==='file'?`<div class="fp-pv-file">${ic('file',16)}<div><b>${l}</b><small>${esc(it.name)}${szt(it)}</small></div>${it.url?`<a href="${esc(it.url)}" target="_blank" rel="noopener">View</a>`:''}</div>`:`<div class="fp-pv-file">${ic('link',16)}<div><b>${l}</b><small>${esc(it.name)}</small></div><a href="${esc(it.url)}" target="_blank" rel="noopener">Open</a></div>`}
+function previewHTML(k){const it=S[k].find(x=>x.id===S[SELK(k)]);if(!it)return `<div class="fp-rs-pv empty">${ic('file',22)}<span>Select an item to preview it here.</span></div>`;
+ const pub=S[PUBK(k)]===it.id,badge=`<span class="fp-pill ${pub?'p-ok':'p-pend'}">${pub?'Published on your profile':'Selected · not published yet'}</span>`;
+ if(it.kind==='link')return `<div class="fp-rs-pv">${badge}<div class="fp-rs-card">${ic('link',26)}<b>${esc(it.name)}</b><small>${esc(it.url)}</small><a class="fp-btn sm" href="${esc(it.url)}" target="_blank" rel="noopener">Open link</a></div></div>`;
+ const pdf=/\.pdf$/i.test(it.name)&&/^https?:/i.test(it.url||'');
+ return `<div class="fp-rs-pv">${badge}${pdf?`<iframe src="${esc(it.url)}" title="Preview of ${esc(it.name)}"></iframe>`:`<div class="fp-rs-card">${ic('file',26)}<b>${esc(it.name)}</b><small>${esc(it.name.split('.').pop().toUpperCase())}${szt(it)}</small>${it.url?`<a class="fp-btn sm" href="${esc(it.url)}" target="_blank" rel="noopener">Open file</a>`:''}</div>`}</div>`}
+function boxHTML(k){const T=k==='resumes'?'Resume':'CV',arr=S[k],sel=S[SELK(k)],pub=pubItem(k),busy=ST.busy['rs_'+k],ed=RSE[k],full=arr.length>=5&&!ed;
+ const list=arr.length?arr.map(x=>`<label class="fp-rs-it ${x.id===sel?'on':''}"><input type="radio" name="rs_${k}" data-ra="sel:${k}:${x.id}" ${x.id===sel?'checked':''}><span class="nm"><b>${esc(x.name)}</b><small>${x.kind==='file'?'File'+szt(x):'Link'}${x.id===S[PUBK(k)]?' · Published':''}</small></span><span class="acts"><button type="button" class="fp-btn sm" data-ra="upd:${k}:${x.id}">Update</button><button type="button" class="fp-btn sm dng" data-ra="del:${k}:${x.id}">Remove</button></span></label>`).join(''):`<div class="fp-empty">No ${T} added yet.</div>`;
+ const add=full?`<div class="fp-hint">Maximum of 5 reached. Remove one to add another.</div>`:`<div class="fp-rs-add"><div class="fp-rs-up"><button type="button" class="fp-btn pri" data-ra="pick:${k}" ${busy?'disabled':''}>${ic('plus',13)}${busy?'Uploading… please wait':'Upload file'}</button><span class="fp-hint">PDF, DOC, DOCX · Max 5 MB</span></div>
+  <div class="fp-grid"><div class="fp-f"><label>Link name</label><input class="fp-in" id="rsn_${k}" placeholder="e.g. Google Drive ${T}"></div><div class="fp-f"><label>Link</label><input class="fp-in" id="rsu_${k}" placeholder="https://…"><div class="fp-err" data-e></div></div></div>
+  <button type="button" class="fp-btn" data-ra="addlink:${k}">${ed?'Save link':'Add link'}</button>${ed?` <button type="button" class="fp-btn" data-ra="canc:${k}">Cancel</button>`:''}</div>`;
+ return `<div class="fp-card fp-rs-box" data-box="${k}"><h4>${k==='resumes'?'1. Resume':'2. CV'} ${tag('rec')}<small class="fp-hint" style="margin-left:auto">${arr.length}/5 added</small></h4>
+  <div class="fp-rs-grid"><div class="fp-rs-l">${list}${add}</div><div class="fp-rs-r">${previewHTML(k)}</div></div>
+  <div class="fp-rs-pub"><button type="button" class="fp-btn pri" data-ra="publish:${k}" ${sel&&sel!==S[PUBK(k)]?'':'disabled'}>Publish selected ${T}</button><span class="fp-hint">${pub?`Showing on your profile: <b>${esc(pub.name)}</b>`:'Nothing published yet.'}</span></div></div>`}
+function rsBoxPaint(k){const el=$(`[data-box="${k}"]`);if(el){const n=document.createElement('div');n.innerHTML=boxHTML(k);el.replaceWith(n.firstChild)}paint()}
+function edHTML(){return `<div class="fp-card" id="fpEd"><h4>3. Editions ${tag('opt')}</h4><div id="fpEdRows">${edRows()}</div><div class="fp-rs-pub"><button type="button" class="fp-btn" data-ra="edadd">${ic('plus',13)}Add edition</button><button type="button" class="fp-btn pri" data-ra="edsave">Save</button></div></div>`}
+function edRows(){return S.editions.length?S.editions.map((x,i)=>`<div class="fp-rs-ed"><div class="fp-grid">${F('Name',0,I(`editions.${i}.name`,{ph:'e.g. 2nd Edition, 2024'}))}${F('Link',0,I(`editions.${i}.url`,{v:'url',ph:'https://'}))}</div><button type="button" class="fp-btn sm dng" data-ra="edrm:${i}">Remove</button></div>`).join(''):`<div class="fp-empty">No editions added yet.</div>`}
+function edPaint(){const r=$('#fpEdRows');if(r){r.innerHTML=edRows();a11y(r)}paint()}
+async function rsUpload(k,f,slot){const bk='rs_'+k;if(ST.busy[bk]||ST.saving)return;const m=checkFile('resume',f);if(m){toast(m,0,1);return}
+ const fd=new FormData();fd.append('file',f,f.name);fd.append('name',k==='cvs'?'CV':'Resume');ST.busy[bk]=1;rsBoxPaint(k);
+ try{const d=await api.post('/candidate/certificates',fd),file=d&&d.file?d.file:d;if(!file||!file.id)throw new Error('The server did not confirm the upload.');
+  const it={id:slot||uidR(),kind:'file',name:file.original_name||f.name,size:(f.size/1048576).toFixed(1),url:file.url||'',fid:file.id},arr=S[k],ix=arr.findIndex(x=>x.id===it.id);let old=null;
+  if(ix>=0){old=arr[ix];arr[ix]=it}else{arr.push(it);if(!S[SELK(k)])S[SELK(k)]=it.id}
+  if(old&&old.fid){try{await api.del('/files/'+old.fid)}catch(e){}}
+  delete ST.busy[bk];if(k==='resumes')syncResume();rsBoxPaint(k);if(await saveProfile())toast('File uploaded',1);else toast('File uploaded, but the profile was not saved. Press Save.',0,1)}
+ catch(e){delete ST.busy[bk];rsBoxPaint(k);toast((e&&e.message)||'Upload failed. Please try again.',0,1)}}
+function rsPick(k,slot){if(!slot&&S[k].length>=5){toast('You can add up to 5 items.',0,1);return}const i=document.createElement('input');i.type='file';i.accept=RULES.resume.ext.map(x=>'.'+x).join(',');i.style.display='none';document.body.appendChild(i);i.onchange=()=>{if(i.files[0])rsUpload(k,i.files[0],slot);i.remove()};i.click()}
+document.addEventListener('change',e=>{const t=e.target;if(!t.matches||!t.matches('input[data-ra^="sel:"]'))return;const[,k,id]=t.dataset.ra.split(':');S[SELK(k)]=id;rsBoxPaint(k)});
+document.addEventListener('click',async e=>{const b=e.target.closest&&e.target.closest('[data-ra]');if(!b||!b.closest('#fpRoot')||b.matches('input'))return;const[a,x,y]=b.dataset.ra.split(':');
+ if(a==='pick'){rsPick(x);return}
+ if(a==='upd'){const it=S[x].find(z=>z.id===y);if(!it)return;if(it.kind==='file'){rsPick(x,y)}else{RSE[x]=y;rsBoxPaint(x);$('#rsn_'+x).value=it.name;$('#rsu_'+x).value=it.url;$('#rsu_'+x).focus()}return}
+ if(a==='canc'){delete RSE[x];rsBoxPaint(x);return}
+ if(a==='addlink'){const n=$('#rsn_'+x),u=$('#rsu_'+x);u.dataset.v='url';const e2=u.nextElementSibling;if(!u.value.trim()){u.classList.add('bad');e2.textContent='This field is required.';return}if(!check(u))return;
+  const url=u.value.trim(),name=n.value.trim()||url.replace(/^https?:\/\//,'').slice(0,60);
+  if(RSE[x]){const it=S[x].find(z=>z.id===RSE[x]);if(it){it.name=name;it.url=url}delete RSE[x]}else{if(S[x].length>=5){toast('You can add up to 5 items.',0,1);return}const id=uidR();S[x].push({id,kind:'link',name,url});if(!S[SELK(x)])S[SELK(x)]=id}
+  if(x==='resumes')syncResume();rsBoxPaint(x);if(await saveProfile())toast('Link saved',1);return}
+ if(a==='del'){const it=S[x].find(z=>z.id===y);if(!it||!confirm('Remove "'+it.name+'"?'))return;
+  if(it.fid){try{await api.del('/files/'+it.fid)}catch(er){}}
+  S[x]=S[x].filter(z=>z.id!==y);if(S[SELK(x)]===y)S[SELK(x)]=(S[x][0]||{}).id||'';if(S[PUBK(x)]===y)S[PUBK(x)]='';if(RSE[x]===y)delete RSE[x];
+  if(x==='resumes')syncResume();rsBoxPaint(x);if(await saveProfile())toast('Removed',1);return}
+ if(a==='publish'){const prev=S[PUBK(x)];S[PUBK(x)]=S[SELK(x)];if(x==='resumes')syncResume();rsBoxPaint(x);
+  if(await saveProfile()){const it=pubItem(x);toast('Published: '+(it?it.name:''),1)}else{S[PUBK(x)]=prev;if(x==='resumes')syncResume();rsBoxPaint(x)}return}
+ if(a==='edadd'){S.editions.push({name:'',url:''});edPaint();const r=$$('#fpEdRows input');if(r.length)r[r.length-2].focus();return}
+ if(a==='edrm'){S.editions.splice(+x,1);edPaint();return}
+ if(a==='edsave'){let ok=true;S.editions=S.editions.filter(z=>z.name.trim()||z.url.trim());edPaint();
+  $$('#fpEdRows [data-v]').forEach(i=>{if(!check(i))ok=false});
+  S.editions.forEach((z,i)=>{if(z.url.trim()&&!z.name.trim()){ok=false;const f=$$('#fpEdRows .fp-rs-ed')[i].querySelector('input');f.classList.add('bad');f.closest('.fp-f').querySelector('[data-e]').textContent='Add a name for this link.'}});
+  if(!ok){toast('Please fix the highlighted fields',0,1);return}
+  if(await saveProfile())toast('Editions saved',1);return}
+ if(a==='tab'){ST.rtab=x;rsTabs();$('#fpRsBody').innerHTML=rsBody();a11y($('#fpRsBody'));return}
+ if(a==='radd'){S.research[x].push({status:'Pending Verification'});$('#fpRsBody').innerHTML=rsBody();a11y($('#fpRsBody'));rsLive();const c=$$('#fpRsBody .fp-rs-rec');if(c.length)c[c.length-1].scrollIntoView({block:'nearest'});return}
+ if(a==='rrm'){const r=S.research[x][+y];if(!confirm('Delete this record?'))return;S.research[x].splice(+y,1);$('#fpRsBody').innerHTML=rsBody();a11y($('#fpRsBody'));rsLive();return}
+});
+
+/* ---------- Research (individual records, automatic totals) ---------- */
+const RS={
+ journal:{label:'Journal Publications',one:'Journal publication',tot:'Total Journal Publications',note:'SCI, SCIE and ESCI are Web of Science Core Collection categories; "Web of Science" is a broader label. Pick SCI / SCIE / ESCI only after verifying the journal.',f:[
+  {k:'name',l:'Journal name'},{k:'title',l:'Article / publication title'},{k:'doi',l:'DOI',h:'DOI or DOI link'},{k:'year',l:'Publication year',t:'year'},
+  {k:'idx',l:'Indexed in',t:'ms',o:'idxJ'},{k:'q',l:'Quartile',t:'sel',o:'qrt'},{k:'qsrc',l:'Quartile source & year',h:'Database / ranking source and year used for the quartile'},{k:'pos',l:'Author position',t:'sel',o:'pos'},{k:'url',l:'Publication link',t:'url'}]},
+ patent:{label:'Patents',one:'Patent',tot:'Total Patents',note:'Published and Granted are different stages. A published patent is not necessarily granted.',f:[
+  {k:'title',l:'Title of patent'},{k:'no',l:'Patent / application number'},{k:'ptype',l:'Patent type',t:'sel',o:'ptype'},{k:'status',l:'Patent status',t:'sel',o:'pstat'},
+  {k:'date',l:'Filing / publication / grant date',t:'date'},{k:'country',l:'Country / patent office'},{k:'url',l:'Patent verification link',t:'url'}]},
+ conf:{label:'Conference Publications',one:'Conference publication',tot:'Total Conference Publications',note:'Use SCI / SCIE / ESCI only when the proceedings are verifiably covered. Quartile applies only where the source has a verifiable quartile. A presentation is not the same as a published paper.',f:[
+  {k:'ctype',l:'Conference type',t:'sel',o:'ctype'},{k:'name',l:'Conference name'},{k:'title',l:'Paper / publication title'},{k:'doi',l:'DOI',h:'DOI or DOI link'},{k:'year',l:'Publication year',t:'year'},
+  {k:'idx',l:'Indexed in',t:'ms',o:'idxC'},{k:'q',l:'Quartile',t:'sel',o:'qrt'},{k:'pos',l:'Author position',t:'sel',o:'pos'},{k:'url',l:'Proceedings / paper link',t:'url'}]},
+ book:{label:'Books',one:'Book',tot:'Total Books',note:'',f:[
+  {k:'title',l:'Book title'},{k:'btype',l:'Book type',t:'sel',o:'btype'},{k:'isbn',l:'ISBN'},{k:'issn',l:'ISSN',h:'Optional, where applicable'},
+  {k:'pub',l:'Publisher name'},{k:'pubd',l:'Publisher details / website'},{k:'year',l:'Publication year',t:'year'},{k:'idx',l:'Indexed in',t:'ms',o:'idxB'},{k:'doi',l:'DOI',h:'Optional'}]},
+ chapter:{label:'Book Chapters',one:'Book chapter',tot:'Total Book Chapters',note:'',f:[
+  {k:'title',l:'Chapter title'},{k:'book',l:'Published book title'},{k:'doi',l:'DOI',h:'DOI or DOI link'},{k:'isbn',l:'ISBN'},
+  {k:'ps',l:'Start page'},{k:'pe',l:'End page'},{k:'pub',l:'Publisher name'},{k:'year',l:'Publication year',t:'year'},{k:'pos',l:'Author position',t:'sel',o:'pos'},{k:'url',l:'Book / chapter link',t:'url'}]},
+ other:{label:'Cutting-Edge Articles',one:'Article',tot:'Total Cutting-Edge Articles',note:'Magazine articles and blogs are not counted as peer-reviewed research publications. They are kept separate from research metrics.',f:[
+  {k:'ctype',l:'Contribution type',t:'sel',o:'otype'},{k:'title',l:'Article title'},{k:'name',l:'Publication / magazine / website name'},{k:'doi',l:'DOI',h:'Optional'},
+  {k:'date',l:'Publication date',t:'date'},{k:'pos',l:'Author position',t:'sel',o:'pos'},{k:'url',l:'Article URL',t:'url'},{k:'pub',l:'Publisher / organization'},{k:'ev',l:'Evidence link',t:'url',h:'Optional link to supporting evidence'}]}};
+const RSK=Object.keys(RS);
+const cnt=c=>S.research[c].filter(r=>r&&String(r.title||'').trim()).length;
+function rsTotal(){return RSK.reduce((a,c)=>a+cnt(c),0)}
+function idxGroups(r){const g=new Set();(r.idx||[]).forEach(x=>{if(x==='Scopus + WoS'){g.add('Scopus');g.add('Web of Science (WoS)')}else if(x==='UGC-CARE')g.add('UGC');else g.add(x)});return g}
+function dupMap(){const g={},out={};const add=(sc,v,c,i)=>{v=String(v||'').trim();if(!v)return;const k=sc+'|'+v;(g[k]=g[k]||[]).push([c,i])};
+ const doi=v=>String(v||'').toLowerCase().replace(/^https?:\/\/(dx\.)?doi\.org\//,'').trim(),isbn=v=>String(v||'').replace(/[^0-9xX]/g,'').toLowerCase();
+ RSK.forEach(c=>S.research[c].forEach((r,i)=>{if(c!=='patent')add('doi',doi(r.doi),c,i);if(c==='patent')add('pat',String(r.no||'').toLowerCase().replace(/[\s-]/g,''),c,i);if(c==='book'||c==='chapter')add('isbn'+c,isbn(r.isbn),c,i)}));
+ Object.keys(g).forEach(k=>{if(g[k].length<2)return;const w=k.indexOf('doi|')===0?'DOI':k.indexOf('pat|')===0?'patent number':'ISBN';g[k].forEach(([c,i])=>{const o=g[k].filter(z=>!(z[0]===c&&z[1]===i)).map(z=>RS[z[0]].one+' '+(z[1]+1)).join(', ');out[c+'.'+i]=`Possible duplicate: same ${w} as ${o}`})});return out}
+function rsSumHTML(){const j=S.research.journal.concat(S.research.conf).filter(r=>String(r.title||'').trim());
+ const gc={},q={Q1:0,Q2:0,Q3:0,Q4:0};let any=0,na=0;j.forEach(r=>{const g=idxGroups(r);g.forEach(x=>gc[x]=(gc[x]||0)+1);if([...g].some(x=>x!=='Non-Indexed'))any++;if(q[r.q]!==undefined)q[r.q]++;else na++});
+ const chip=(a,b)=>`<span class="fp-chip">${esc(a)}: <b>${b}</b></span>`,order=['SCI','SCIE','ESCI','Scopus','Web of Science (WoS)','UGC','ABDC','Other Indexed','Non-Indexed'];
+ return `<div class="fp-rs-stats">${RSK.map(c=>`<div class="fp-rs-stat"><b>${cnt(c)}</b><span>${RS[c].tot}</span></div>`).join('')}</div>
+ <div class="fp-card" style="margin-top:12px"><h4>Research summary</h4><div class="fp-hint">Journal + conference records (${j.length}). Each record is counted once per index; "Scopus + WoS" counts under both. Cutting-Edge Articles are not included.</div>
+ <div class="fp-chips" style="margin-top:8px">${chip('Indexed (any)',any)}${order.filter(x=>gc[x]).map(x=>chip(x,gc[x])).join('')}</div>
+ <div class="fp-chips" style="margin-top:8px">${['Q1','Q2','Q3','Q4'].map(x=>chip(x,q[x])).join('')}${chip('Not applicable / not verified',na)}</div></div>`}
+function rsTabs(){const e=$('#fpRsTabs');if(e)e.innerHTML=RSK.map(c=>`<button type="button" class="fp-rs-tab ${c===(ST.rtab||'journal')?'on':''}" data-ra="tab:${c}">${RS[c].label}<em>${cnt(c)}</em></button>`).join('')}
+function rsLive(){const e=$('#fpRsSum');if(e)e.innerHTML=rsSumHTML();rsTabs();const d=dupMap();$$('[data-dup]').forEach(x=>{const m=d[x.dataset.dup];x.textContent=m||'';x.style.display=m?'inline-block':'none'})}
+function rsFld(c,i,f){const p=`research.${c}.${i}.${f.k}`,t=f.t||'text';
+ const inner=t==='sel'?SEL(p,OPT[f.o]):t==='ms'?MS(p,f.o,'Select indexing…'):t==='year'?I(p,{v:'year',ph:'YYYY'}):t==='url'?I(p,{v:'url',ph:'https://'}):t==='date'?I(p,{type:'date'}):I(p);
+ return F(f.l,0,inner,{hint:f.h,full:t==='ms'})}
+function rsRec(c,r,i){return `<div class="fp-card fp-rs-rec"><h4>${RS[c].one} ${i+1}<span class="fp-pill p-pend">${esc(r.status||'Pending Verification')}</span><span class="fp-rs-dup" data-dup="${c}.${i}" style="display:none"></span><button type="button" class="fp-btn sm dng" style="margin-left:auto" data-ra="rrm:${c}:${i}">Delete</button></h4><div class="fp-grid">${RS[c].f.map(f=>rsFld(c,i,f)).join('')}</div></div>`}
+function rsBody(){const c=ST.rtab||'journal',a=S.research[c];return `${RS[c].note?`<div class="fp-note" style="margin-bottom:12px">${esc(RS[c].note)}</div>`:''}${a.length?a.map((r,i)=>rsRec(c,r,i)).join(''):`<div class="fp-empty">No ${RS[c].label.toLowerCase()} added yet.</div>`}<button type="button" class="fp-btn pri" data-ra="radd:${c}">${ic('plus',13)}Add ${RS[c].one.toLowerCase()}</button>`}
+function rsHTML(){setTimeout(()=>{rsLive();const b=$('#fpRsBody');if(b)a11y(b)},0);return `<div class="fp-rs" id="fpRs"><h3 style="margin-top:26px">Research</h3><p class="fp-sub">Add each contribution as its own record. Totals are calculated automatically. Records start as Pending Verification.</p><div id="fpRsSum"></div><div class="fp-rs-tabs" id="fpRsTabs"></div><div id="fpRsBody">${rsBody()}</div></div>`}
+function rsPv(){const l=RSK.filter(c=>cnt(c)).map(c=>`<div class="fp-pv-kv"><span>${RS[c].label}</span><b>${cnt(c)}</b></div>`).join('');return l}
+['input','change','click'].forEach(ev=>document.addEventListener(ev,e=>{if(e.target.closest&&e.target.closest('#fpRs'))setTimeout(rsLive,0)}));
+
 window.fpMount=async function(){const r=$('#fpRoot');if(!r||r.dataset.m)return;r.innerHTML='<div class="fp-empty" role="status">Loading your profile…</div>';
  try{if(window.bkHydrate)await bkHydrate()}catch(e){}
  if(!window.bkSaveSeekerProfile||!window.bkRefreshSeeker){errView(r,new Error('js/backend.js on the server is outdated. Upload the new backend.js, then hard-refresh (Ctrl/Cmd+Shift+R)'));return}
