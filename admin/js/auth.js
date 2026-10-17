@@ -8,7 +8,8 @@
 async function adminCurrent(){
   if(!api.hasToken()) return null;
   const u = await api.me();
-  return u && u.role === 'admin' ? u : null;
+  if(u && u.role !== 'admin'){ api.clearAuth(); return null; }   // another role's token: never reused for admin
+  return u || null;
 }
 
 // Sign in through POST /api/admin/login (administrators only; a faculty/institution account gets the same
