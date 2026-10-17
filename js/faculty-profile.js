@@ -116,9 +116,7 @@ const R={
  <div class="fp-card"><h4>Total teaching experience ${tag('rec')}</h4><b style="font-size:20px" id="fpTotal">${Math.floor(m/12)} years ${m%12} months</b><div class="fp-hint">Auto-calculated from employment history (current roles counted to today).</div></div>
  <div class="fp-grid">${F('Experience level','req',SEL('expLevel',OPT.exp),{hint:'Suggested: '+expLabel(m)})}${F('Medium of instruction','rec',MS('medium','medium'))}
  ${F('Classes / levels taught','rec',MS('taught','levels'))}${F('Subjects taught','rec',MS('taughtSubs','subjects'))}${F('Boards / curricula','opt',MS('boards','boards'),{full:1})}</div>`},
-7:()=>{const items=docList();return `<h3>Research</h3><p class="fp-sub">Everything you have uploaded. Add documents from the relevant sections.</p>
- ${items.length?items.map(d=>`<div class="fp-row"><span>${ic('file',14)} <b>${esc(d[1].name)}</b> <small>${esc(d[0])}${szt(d[1])}</small></span><span class="fp-pill p-ok">${ic('check',11)}Uploaded</span></div>`).join(''):`<div class="fp-empty">No documents uploaded yet.</div>`}
- <div class="fp-note" style="margin-top:14px">Identity documents are not needed for a normal profile. If an institution requires them, you'll be asked in a separate step.</div>${rsHTML()}`},
+7:()=>`<h3>Research</h3>${rsHTML()}`,
 8:()=>`<h3>Add Resume</h3><p class="fp-sub">Upload up to 5 files or add links in each box, pick the one to show, then publish it.</p>${boxHTML('resumes')}${boxHTML('cvs')}${edHTML()}`,
 9:()=>`<h3>Teaching Preferences</h3><p class="fp-sub">What you're looking for next. All optional.</p><div class="fp-grid">
  ${F('Preferred teaching level','opt',MS('prefLevels','pref'))}${F('Preferred subjects','opt',MS('prefSubs','subjects'))}${F('Preferred job type','opt',MS('prefJob','jobtype'))}
@@ -413,7 +411,7 @@ function rsFld(c,i,f){const p=`research.${c}.${i}.${f.k}`,t=f.t||'text';
  return F(f.l,0,inner,{hint:f.h,full:t==='ms'})}
 function rsRec(c,r,i){return `<div class="fp-card fp-rs-rec"><h4>${RS[c].one} ${i+1}<span class="fp-pill p-pend">${esc(r.status||'Pending Verification')}</span><span class="fp-rs-dup" data-dup="${c}.${i}" style="display:none"></span><button type="button" class="fp-btn sm dng" style="margin-left:auto" data-ra="rrm:${c}:${i}">Delete</button></h4><div class="fp-grid">${RS[c].f.map(f=>rsFld(c,i,f)).join('')}</div></div>`}
 function rsBody(){const c=ST.rtab||'journal',a=S.research[c];return `${RS[c].note?`<div class="fp-note" style="margin-bottom:12px">${esc(RS[c].note)}</div>`:''}${a.length?a.map((r,i)=>rsRec(c,r,i)).join(''):`<div class="fp-empty">No ${RS[c].label.toLowerCase()} added yet.</div>`}<button type="button" class="fp-btn pri" data-ra="radd:${c}">${ic('plus',13)}Add ${RS[c].one.toLowerCase()}</button>`}
-function rsHTML(){setTimeout(()=>{rsLive();const b=$('#fpRsBody');if(b)a11y(b)},0);return `<div class="fp-rs" id="fpRs"><h3 style="margin-top:26px">Research records</h3><p class="fp-sub">Add each contribution as its own record. Totals are calculated automatically. Records start as Pending Verification.</p><div id="fpRsSum"></div><div class="fp-rs-tabs" id="fpRsTabs"></div><div id="fpRsBody">${rsBody()}</div></div>`}
+function rsHTML(){setTimeout(()=>{rsLive();const b=$('#fpRsBody');if(b)a11y(b)},0);return `<div class="fp-rs" id="fpRs"><div class="fp-rs-tabs" id="fpRsTabs"></div><div id="fpRsBody">${rsBody()}</div></div>`}
 function rsPv(){const l=RSK.filter(c=>cnt(c)).map(c=>`<div class="fp-pv-kv"><span>${RS[c].label}</span><b>${cnt(c)}</b></div>`).join('');return l}
 ['input','change','click'].forEach(ev=>document.addEventListener(ev,e=>{if(e.target.closest&&e.target.closest('#fpRs'))setTimeout(rsLive,0)}));
 
