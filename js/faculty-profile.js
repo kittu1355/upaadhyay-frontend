@@ -415,15 +415,21 @@ function rsHTML(){setTimeout(()=>{rsLive();const b=$('#fpRsBody');if(b)a11y(b)},
 function rsPv(){const l=RSK.filter(c=>cnt(c)).map(c=>`<div class="fp-pv-kv"><span>${RS[c].label}</span><b>${cnt(c)}</b></div>`).join('');return l}
 ['input','change','click'].forEach(ev=>document.addEventListener(ev,e=>{if(e.target.closest&&e.target.closest('#fpRs'))setTimeout(rsLive,0)}));
 
+/* desktop: the dark hero card + section menu stay in view; only the menu and the form area scroll */
+function fitRoot(){const r=$('#fpRoot');if(!r)return;if(!window.matchMedia('(min-width:900px)').matches){r.style.height='';return}
+ const b=r.getBoundingClientRect(),z=(b.height&&r.offsetHeight)?b.height/r.offsetHeight:1,top0=b.top+window.scrollY;
+ r.style.height=Math.max(520,Math.floor((window.innerHeight-top0-12)/(z||1)))+'px'}
+window.addEventListener('resize',fitRoot);window.addEventListener('load',()=>setTimeout(fitRoot,50));
+window.addEventListener('fp:paint',()=>setTimeout(fitRoot,0));
 window.fpMount=async function(){const r=$('#fpRoot');if(!r||r.dataset.m)return;
  const cached=currentUser&&currentUser.fp&&Object.keys(currentUser.fp).length>0;
- if(cached){r.dataset.m=1;ST.loading=true;load();shell()} /* show the saved copy right away, refresh from the server in the background */
+ if(cached){r.dataset.m=1;ST.loading=true;load();shell();fitRoot()} /* show the saved copy right away, refresh from the server in the background */
  else r.innerHTML='<div class="fp-empty" role="status">Loading your profile…</div>';
  try{if(window.bkHydrate)await bkHydrate()}catch(e){}
  if(!window.bkSaveSeekerProfile||!window.bkRefreshSeeker){ST.loading=false;delete r.dataset.m;errView(r,new Error('js/backend.js on the server is outdated. Upload the new backend.js, then hard-refresh (Ctrl/Cmd+Shift+R)'));return}
  if(window.bkProfileLoaded!==true){try{await bkRefreshSeeker()}catch(e){ST.loading=false;if(cached)delete r.dataset.m;errView(r,e);return}}
  ST.loading=false;
  if(cached){if(!dirty()&&!Object.keys(ST.busy).length){const o=S.open;load();S.open=o;shell()}}
- else{r.dataset.m=1;load();shell()}};
+ else{r.dataset.m=1;load();shell();fitRoot()}};
 
 })();
