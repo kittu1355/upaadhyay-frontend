@@ -272,7 +272,7 @@ function applyToUser(){const U=currentUser,m=months();
 function softCheck(){const bad=[];if(S.phone&&!/^\+?\d[\d\s-]{7,18}$/.test(S.phone))bad.push('Enter a valid phone number.');if(S.dob&&age(S.dob)===null)bad.push('Enter a valid date of birth (DD/MM/YYYY).');return bad}
 function showServerErrors(e){const er=e&&e.errors;if(er){const map={phone:'phone',date_of_birth:'dob',name:'first',gender:'gender'};Object.keys(er).forEach(k=>{const f=map[k]&&$(`[data-k="${map[k]}"]`);if(f){f.classList.add('bad');const x=f.closest('.fp-f')&&f.closest('.fp-f').querySelector('[data-e]');if(x)x.textContent=String([].concat(er[k])[0])}})}}
 function refreshChrome(){try{if(typeof refreshDashTopAccount==='function')refreshDashTopAccount();if(typeof updateNavForLogin==='function')updateNavForLogin()}catch(e){}paint()}
-async function saveProfile(validated){if(ST.saving)return false;const bad=softCheck();if(bad.length){toast(bad[0],0,1);return false}
+async function saveProfile(validated){if(ST.saving)return false;if(ST.loading){toast('Still loading your profile — try again in a moment.',0,1);return false}const bad=softCheck();if(bad.length){toast(bad[0],0,1);return false}
  const U=currentUser,prev={};KEYS.forEach(k=>prev[k]=U[k]===undefined?undefined:JSON.parse(JSON.stringify(U[k])));
  setBusy(true);
  try{applyToUser();await window.bkSaveSeekerProfile();SAVED=snap();refreshChrome();toast('Profile saved',1);return true}
@@ -415,10 +415,15 @@ function rsHTML(){setTimeout(()=>{rsLive();const b=$('#fpRsBody');if(b)a11y(b)},
 function rsPv(){const l=RSK.filter(c=>cnt(c)).map(c=>`<div class="fp-pv-kv"><span>${RS[c].label}</span><b>${cnt(c)}</b></div>`).join('');return l}
 ['input','change','click'].forEach(ev=>document.addEventListener(ev,e=>{if(e.target.closest&&e.target.closest('#fpRs'))setTimeout(rsLive,0)}));
 
-window.fpMount=async function(){const r=$('#fpRoot');if(!r||r.dataset.m)return;r.innerHTML='<div class="fp-empty" role="status">Loading your profile…</div>';
+window.fpMount=async function(){const r=$('#fpRoot');if(!r||r.dataset.m)return;
+ const cached=currentUser&&currentUser.fp&&Object.keys(currentUser.fp).length>0;
+ if(cached){r.dataset.m=1;ST.loading=true;load();shell()} /* show the saved copy right away, refresh from the server in the background */
+ else r.innerHTML='<div class="fp-empty" role="status">Loading your profile…</div>';
  try{if(window.bkHydrate)await bkHydrate()}catch(e){}
- if(!window.bkSaveSeekerProfile||!window.bkRefreshSeeker){errView(r,new Error('js/backend.js on the server is outdated. Upload the new backend.js, then hard-refresh (Ctrl/Cmd+Shift+R)'));return}
- if(window.bkProfileLoaded!==true){try{await bkRefreshSeeker()}catch(e){errView(r,e);return}}
- r.dataset.m=1;load();shell()};
+ if(!window.bkSaveSeekerProfile||!window.bkRefreshSeeker){ST.loading=false;delete r.dataset.m;errView(r,new Error('js/backend.js on the server is outdated. Upload the new backend.js, then hard-refresh (Ctrl/Cmd+Shift+R)'));return}
+ if(window.bkProfileLoaded!==true){try{await bkRefreshSeeker()}catch(e){ST.loading=false;if(cached)delete r.dataset.m;errView(r,e);return}}
+ ST.loading=false;
+ if(cached){if(!dirty()&&!Object.keys(ST.busy).length){const o=S.open;load();S.open=o;shell()}}
+ else{r.dataset.m=1;load();shell()}};
 
 })();
