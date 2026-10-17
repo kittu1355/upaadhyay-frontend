@@ -31,11 +31,18 @@
   //   mode = 'login' | 'register'   (fixed by which page it is)
   //   role comes from ?role=seeker|company — if absent, ask via popup first.
   function initAuthPage(mode){
-    // Already signed in? Ask the backend (token is the only credential) before redirecting.
-    if(!window._authChecked && (api.hasToken() || isLoggedIn)){
+    // A stored token is NEVER trusted to skip this page for a different role. We ask the backend who the token
+    // belongs to; only if its role matches the login area being opened do we go straight to that dashboard.
+    // A mismatched / invalid token is discarded here so it can never be inherited by this role.
+    const wantRole = getParam('role');   // 'company' | 'seeker' | null (not chosen yet)
+    if(!window._authChecked && api.hasToken()){
       window._authChecked = true;
       authReady.then(function(u){
-        if(u || currentRole === 'branch') goTo(dashboardPageForRole()); else initAuthPage(mode);
+        const uiRole = u ? api.toUiRole(u.role) : null;
+        if(u && wantRole && uiRole === wantRole && getParam('type') !== 'sub'){ goTo(dashboardPageForRole()); return; }
+        if(u && !wantRole){ initAuthPage(mode); return; }   // role not chosen yet: show the chooser, keep nothing signed in implicitly
+        if(!u || (wantRole && uiRole !== wantRole)){ clearSession(); }   // stale or other-role session: drop it
+        initAuthPage(mode);
       });
       return;
     }
@@ -382,16 +389,18 @@
       if(isFirstEverLogin) localStorage.setItem(seenKey, '1');
       saveState();
 
-      if(!wasRegister && api.notice){   // e.g. picked Faculty login but this email is an Institution account
-        errEl.style.cssText = 'display:block;background:#E6F6EE;color:#0F766E;border-color:#B7E4CC;';
-        errEl.textContent = api.notice;
-        await new Promise(function(r){ setTimeout(r, 2200); });
-      }
       // Backend role decides the dashboard (candidate -> faculty, company -> employer, admin -> admin).
       goTo(dashboardPageForRole(), isFirstEverLogin ? { welcome: '1' } : null);
     }catch(err){
       _authBusy(false);
       showErr(err.message || 'Something went wrong. Please try again.');
+      if(!wasRegister && /^No (Faculty|Institution) Account Found/.test(err.message || '')){
+        const a = document.createElement('a');
+        a.href = 'javascript:void(0)'; a.style.cssText = 'display:block;margin-top:6px;font-weight:600;color:var(--blue-700);';
+        a.textContent = 'Create ' + (isCompanyRole ? 'Institution' : 'Faculty') + ' Account';
+        a.onclick = function(){ goTo('register', roleParams()); };
+        errEl.appendChild(a);
+      }
     }
     return false;
   }
