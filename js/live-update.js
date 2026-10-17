@@ -3,8 +3,7 @@
    Load it RIGHT AFTER js/api.js and BEFORE js/store.js on every page.
 
    1. Stale-cache cleanup (runs synchronously, before store.js reads its saved state)
-        - page was reloaded / hard-refreshed       -> drop the cached profile state (re-loaded from the server)
-        - cached state older than 12 hours         -> drop it
+        - cached state older than 7 days           -> drop it (a plain reload keeps it: the server copy is re-loaded on every page open)
         - a new site version was detected          -> drop it
       Only the cached state key is removed. The login token, sub-branch session and other settings are kept.
    2. New site version  -> page reloads itself (or shows a "Refresh now" bar if the user is typing).
@@ -20,7 +19,7 @@
   var TOKEN_KEY = 'upadyay_api_token';         // Sanctum token written by api.js
   var VER_KEY = 'upadyay_app_version', STAMP_KEY = 'upadyay_cache_stamp', PURGE_KEY = 'upadyay_purge_pending';
   var GUARD_KEY = 'upadyay_reloaded_for';      // sessionStorage: stops a reload loop
-  var MAX_AGE = 12 * 3600 * 1000, VERSION_POLL = 60 * 1000, JOBS_POLL = 90 * 1000, TYPING_IDLE = 120 * 1000;
+  var MAX_AGE = 7 * 24 * 3600 * 1000, VERSION_POLL = 60 * 1000, JOBS_POLL = 90 * 1000, TYPING_IDLE = 120 * 1000;
 
   var ROOT = (function(){
     try{ var s = document.currentScript.src; return s.substring(0, s.lastIndexOf('/js/') + 1); }
@@ -35,7 +34,7 @@
   try{
     var nav = (performance.getEntriesByType && performance.getEntriesByType('navigation')[0]) || {};
     var stamp = Number(lsGet(STAMP_KEY)) || 0;
-    var purge = lsGet(PURGE_KEY) === '1' || nav.type === 'reload' || (stamp && Date.now() - stamp > MAX_AGE);
+    var purge = lsGet(PURGE_KEY) === '1' || (stamp && Date.now() - stamp > MAX_AGE);
     if(purge){ lsDel(STORE_KEY); lsDel(PURGE_KEY); stamp = 0; }
     if(!stamp) lsSet(STAMP_KEY, String(Date.now()));
   }catch(e){}
