@@ -111,11 +111,12 @@
       try{ localStorage.setItem(ROLE_HINT_KEY, payload.user.role); }catch(e){}
       return payload.user;
     },
-    /* role ('candidate'|'company') = the login type the person picked. If the password matches, the account that
-       was registered with this email opens whatever they picked; api.notice then says so. */
+    /* role ('candidate'|'company') = the login area the person picked. The backend only issues a token when the
+       account's real role equals it; otherwise it returns "No Faculty/Institution Account Found". */
     login: async function(email, password, role){
       const body = { email: email, password: password };
       if(role) body.role = role;
+      clearAuth();   // never carry a previous role's token into a new login
       const d = await request('POST', '/auth/login', body, { noAuthRedirect: true });
       api.notice = (d && d.notice) || '';
       return api._accept(d);
