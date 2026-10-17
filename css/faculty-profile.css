@@ -264,3 +264,9 @@
 .fp-rs-tab.on{background:var(--blue-600);border-color:var(--blue-600);color:#fff}.fp-rs-tab.on em{background:rgba(255,255,255,.22)}
 .fp-rs-dup{font-size:11.5px;font-weight:600;color:#B42318;background:#FFF1F0;border-radius:2px;padding:3px 8px}
 @media(max-width:899px){.fp-rs-grid{grid-template-columns:1fr}.fp-rs-ed{flex-direction:column;align-items:stretch}}
+
+/* desktop: keep the hero card fixed in view while the page scrolls; menu + form scroll inside */
+@media(min-width:900px){
+#fpRoot{position:sticky;top:12px;z-index:5}
+#fpRoot .fp-hero{padding:16px 22px;margin-bottom:12px}
+}
