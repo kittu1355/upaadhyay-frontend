@@ -222,6 +222,10 @@
     if(cp.current_job_title && !currentUser.currentDesignation) currentUser.currentDesignation = cp.current_job_title;
     if(cp.total_experience != null && !currentUser.experience) currentUser.experience = String(cp.total_experience);
     if(cp.profile_photo) currentUser.avatar = fileUrl(cp.profile_photo);   // server column is the source of truth
+    /* Uploaded resume/certificates live in their own tables. Keep what the server has so the profile editor can show
+       them even when profile_data.fp.files was not saved (e.g. the save right after the upload failed). */
+    const r0 = (u.resumes || []).filter(function(r){ return r && r.file; })[0];
+    window.bkServerFiles = { resume: r0 ? r0.file : null };
     _lastSig = JSON.stringify(seekerPayload());
   }
   function seekerPayload(){
