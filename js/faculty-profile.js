@@ -250,6 +250,7 @@ function load(){const U=currentUser||{};S=Object.assign(blank(),JSON.parse(JSON.
  if(!S.dob&&/^\d{4}-\d{2}-\d{2}$/.test(U.dob||'')){const q=U.dob.split('-');S.dob=q[2]+'/'+q[1]+'/'+q[0]}
  if(!S.city&&U.city)S.city=U.city;if(!S.state&&U.state)S.state=U.state;if(!S.desig&&U.currentDesignation)S.desig=U.currentDesignation;
  if(!PLACEHOLDER(U.avatar))S.files.photo={name:'Profile photo',url:U.avatar};
+ {const sf=window.bkServerFiles||{};if(!S.files.resume&&sf.resume&&sf.resume.id)S.files.resume={id:sf.resume.id,name:sf.resume.original_name||'Resume',size:'',url:sf.resume.url||''}}
  SAVED=snap()}
 function avatarHTML(){const f=S.files.photo,ini=esc((S.first[0]||'')+(S.last[0]||'')||'?');return `<div class="fp-av lg">${f&&f.url?`<img src="${esc(f.url)}" alt="">`:ini}</div>`}
 function bannerHTML(){let h='';
