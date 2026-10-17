@@ -47,8 +47,6 @@
 .up-item .lk{display:inline-flex;opacity:.7}.up-item .lk svg{width:13px;height:13px}
 
 /* hide the old in-page section list on the institution dashboard — the sidebar replaces it (wizard keeps its own steps) */
-body.up-has-side #instRoot .in-dash .in-side{display:none}
-body.up-has-side #instRoot .in-dash .in-layout{display:block}
 
 /* overview panel */
 .up-ov{margin-bottom:18px}
@@ -72,8 +70,6 @@ body.up-has-side #app .dash-tabs{display:none !important}
 .up-subitem{display:block;width:100%;padding:7px 10px;border:0;background:none;border-radius:var(--radius);font:500 13px/1.25 inherit;font-family:inherit;color:var(--ink-soft);text-align:left;cursor:pointer}
 .up-subitem:hover{background:var(--blue-50);color:var(--blue-900)}
 .up-subitem.on{background:var(--blue-900);color:#fff;font-weight:600}
-body.up-has-side #fpRoot .fp-nav{display:none}
-body.up-has-side #fpRoot .fp-wrap{grid-template-columns:minmax(0,1fr)}
 
 /* Browse jobs filters inside the sidebar */
 .up-sub-f{border-left:0;margin-left:6px;padding-left:0}
@@ -112,7 +108,3 @@ body.up-has-side #fpRoot .fp-wrap{grid-template-columns:minmax(0,1fr)}
 .up-subitem.off:hover,.up-subitem:disabled:hover{background:#fff;border-color:var(--line)}
 
 /* profile wizard: steps live in the sidebar dropdown, so the in-page card (steps + progress + save-later) is removed and the form uses the full width */
-body.up-has-side .in-side-wiz{display:none !important}
-body.up-has-side .in-layout:has(> .in-side-wiz){display:block !important;grid-template-columns:1fr !important}
-body.up-has-side .in-layout:has(> .in-side-wiz) .in-main{max-width:none !important;width:100% !important}
-body.up-has-side .in-wrap:has(.in-side-wiz) .in-head{max-width:none !important;margin-left:0 !important;margin-right:0 !important}
