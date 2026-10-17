@@ -306,7 +306,7 @@ document.addEventListener('keydown',e=>{const t=e.target;if(!t.closest||!t.close
  if(t.matches('.fp-ms input')){if(e.key==='Escape'){$$('.fp-dd').forEach(d=>d.remove())}if(e.key==='Enter'){e.preventDefault();const o=$('.fp-dd [data-opt]',t.closest('.fp-ms'));if(o)o.click()}}});
 let _lastRefresh=Date.now();
 window.addEventListener('focus',async()=>{const r=$('#fpRoot');if(!r||!r.dataset.m||dirty()||ST.saving||Object.keys(ST.busy).length||Date.now()-_lastRefresh<30000||!window.bkRefreshSeeker)return;_lastRefresh=Date.now();
- try{await bkRefreshSeeker();const before=SAVED,o=S.open;load();if(SAVED!==before){S.open=o;shell();refreshChrome()}}catch(e){}});
+ try{await bkRefreshSeeker();const before=SAVED,o=S.open;load();S.open=o;if(SAVED!==before){shell();refreshChrome()}else paint()}catch(e){}});
 async function retryLoad(){const r=$('#fpRoot');r.innerHTML='<div class="fp-empty" role="status">Loading your profile…</div>';try{await bkRefreshSeeker();delete r.dataset.m;window.bkProfileLoaded=true;fpMount()}catch(e){errView(r,e)}}
 function errView(r,e){r.innerHTML=`<div class="fp-banner warn" role="alert"><div><b>We couldn't load your profile</b><div class="fp-hint">${esc((e&&e.message)||window.bkProfileError||'Unknown error')}${e&&e.status?' (HTTP '+e.status+')':''}. Nothing has been changed.</div></div><button type="button" class="fp-btn pri" data-act="retry">Retry</button></div>`}
 
