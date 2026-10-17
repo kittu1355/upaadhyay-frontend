@@ -74,7 +74,7 @@
     var c = UpCard.data('company'), ok = c.approved;
     return { active:companyActive(), edit:function(){ hideOv(); tab('company'); if(window.IN && IN.edit) IN.edit(0); },
       list:[ { k:'ov', t:'Overview', i:'grid', go:overview },
-        { k:'profile', t:'Institution profile', i:'building', go:function(){ sec('profile'); }, sub:true },
+        { k:'profile', t:'Institution profile', i:'building', go:function(){ sec('profile'); } },
         { k:'verify', t:'Verification', i:'shield', go:function(){ sec('verify'); }, flag:!ok },
         { k:'reqs', t:'Sub-branches', i:'tree', go:function(){ sec('branches'); }, lock:!ok, n:c.pending },
         { k:'post', t:'Post a job', i:'plus', go:function(){ tab('post'); }, lock:!ok },
@@ -95,7 +95,7 @@
     var c = UpCard.data('branch'), ok = c.approved, sd = 'profile';
     try{ if(typeof S === 'object' && S && S.sd) sd = S.sd; }catch(e){}
     return { active:sd === 'settings' ? 'set' : sd, edit:function(){ bt('profile'); },
-      list:[ { k:'profile', t:'Branch profile', i:'building', go:function(){ bt('profile'); }, sub:true },
+      list:[ { k:'profile', t:'Branch profile', i:'building', go:function(){ bt('profile'); } },
         { k:'post', t:'Post a job', i:'plus', go:function(){ bt('post', !ok); }, lock:!ok },
         { k:'jobs', t:'Posted jobs', i:'list', go:function(){ bt('jobs', !ok); }, lock:!ok, n:c.stats[0][0] },
         { k:'cands', t:'Browse faculty', i:'search', go:function(){ bt('cands', !ok); }, lock:!ok },
@@ -154,7 +154,7 @@
     function mine(){ if(onPage){ hideSet(); hideEmbed(); if(typeof switchDashTab === 'function') switchDashTab('profile'); window.scrollTo(0, 0); } else goTo('faculty'); }
     function jobs(){ hideSet(); if(onPage && showEmbed((window.PAGES && PAGES.jobs ? PAGES.jobs : '../pages/jobs.html') + '?embed=1')) return; goTo('jobs'); }
     return { active:onPage ? (state.set ? 'set' : state.emb ? 'jobs' : 'profile') : '', edit:mine,
-      list:[ { k:'profile', t:'My profile', i:'user', go:mine, sub:true },
+      list:[ { k:'profile', t:'My profile', i:'user', go:mine },
         { k:'jobs', t:'Browse jobs', i:'search', go:jobs, sub:true },
         { k:'notif', t:'Notifications', i:'bell', go:function(){ var b = document.querySelector('.nav-bell'); if(b) b.click(); } },
         { k:'set', t:'Settings', i:'cog', go:function(){ openSet(); }, sub:true },
