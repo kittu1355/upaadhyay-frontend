@@ -28,7 +28,7 @@ const OPT={
  ptype:['Design Patent','Utility Patent','Other'],pstat:['Filed','Published','Granted','Rejected','Withdrawn'],
  ctype:['National','International'],btype:['Authored Book','Edited Book'],
  otype:['Magazine Article','Research Article','Blog','Technical Article','Industry Article','Science Communication']};
-const SEC=['Personal Details','Account & Contact','Professional Profile','Education & Qualifications','Teaching Qualifications','Employment History','Teaching Experience','Documents','Add Resume','Teaching Preferences','Verification','Profile Preview'];
+const SEC=['Personal Details','Account & Contact','Professional Profile','Education & Qualifications','Teaching Qualifications','Employment History','Teaching Experience','Research Option','Add Resume','Teaching Preferences','Verification','Profile Preview'];
 const ICON=['user','lock','cap','book','award','briefcase','hourglass','folder','file','target','shield','eye'];
 /* inline SVG icons (Lucide-style, stroke = currentColor) — no emoji anywhere */
 const SVG={
@@ -116,7 +116,7 @@ const R={
  <div class="fp-card"><h4>Total teaching experience ${tag('rec')}</h4><b style="font-size:20px" id="fpTotal">${Math.floor(m/12)} years ${m%12} months</b><div class="fp-hint">Auto-calculated from employment history (current roles counted to today).</div></div>
  <div class="fp-grid">${F('Experience level','req',SEL('expLevel',OPT.exp),{hint:'Suggested: '+expLabel(m)})}${F('Medium of instruction','rec',MS('medium','medium'))}
  ${F('Classes / levels taught','rec',MS('taught','levels'))}${F('Subjects taught','rec',MS('taughtSubs','subjects'))}${F('Boards / curricula','opt',MS('boards','boards'),{full:1})}</div>`},
-7:()=>{const items=docList();return `<h3>Documents</h3><p class="fp-sub">Everything you have uploaded. Add documents from the relevant sections.</p>
+7:()=>{const items=docList();return `<h3>Research Option</h3><p class="fp-sub">Everything you have uploaded. Add documents from the relevant sections.</p>
  ${items.length?items.map(d=>`<div class="fp-row"><span>${ic('file',14)} <b>${esc(d[1].name)}</b> <small>${esc(d[0])}${szt(d[1])}</small></span><span class="fp-pill p-ok">${ic('check',11)}Uploaded</span></div>`).join(''):`<div class="fp-empty">No documents uploaded yet.</div>`}
  <div class="fp-note" style="margin-top:14px">Identity documents are not needed for a normal profile. If an institution requires them, you'll be asked in a separate step.</div>${rsHTML()}`},
 8:()=>`<h3>Add Resume</h3><p class="fp-sub">Upload up to 5 files or add links in each box, pick the one to show, then publish it.</p>${boxHTML('resumes')}${boxHTML('cvs')}${edHTML()}`,
