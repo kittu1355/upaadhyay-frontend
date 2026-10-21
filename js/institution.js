@@ -116,7 +116,7 @@ const DOCC=[
  {k:'aprf',t:'Authority / Dean / Principal Official Proof',d:'Appointment letter or official proof of the authority. Required when the authority uses a public email.',req:()=>aPub()}];
 const F0=[
  {k:'name',l:'Institution / college name',req:1,full:1,ph:'Full official name'},
- {k:'type',l:'Institution type',req:1,t:'select',o:TYPES},
+ {k:'type',l:'Institution type',req:1,t:'select',o:TYPES,oth:1},
  {k:'short',l:'Short / display name',ph:'e.g. Upaadhyay Univ.'},
  {k:'website',l:'Official website',req:1,v:'url',ph:'https://example.edu'},
  {k:'email',l:'Official institution email',req:1,v:'email',ph:'admissions@example.edu'},
@@ -140,7 +140,7 @@ const F2A=[
  {k:'aname',l:'Authority name',req:1},{k:'adesig',l:'Designation',req:1,t:'select',o:ADES,oth:1},
  {k:'aemail',l:'Official institution email',req:1,v:'email',ph:'name@example.edu'},{k:'aphone',l:'Phone',v:'phone',ph:'10-digit number'}];
 const FB=[
- {k:'name',l:'Branch / campus name',req:1,ph:'e.g. Warangal Campus'},{k:'type',l:'Branch type',req:1,t:'select',o:BTYPES},
+ {k:'name',l:'Branch / campus name',req:1,ph:'e.g. Warangal Campus'},{k:'type',l:'Branch type',req:1,t:'select',o:BTYPES,oth:1},
  {k:'code',l:'Branch code',ph:'e.g. WGL-01'},{k:'desc',l:'Branch description',full:1,t:'textarea'},
  {k:'cname',l:'Branch contact person'},{k:'cdes',l:'Designation'},
  {k:'email',l:'Official branch email',v:'email'},{k:'phone',l:'Branch contact number',v:'phone'},
@@ -246,7 +246,7 @@ function fld(o,sc){
   let inp;
   if(o.t==='select'){
     const ol=o.oth?othLbl(o):null, cur=S[o.k]||'', custom=!!(ol&&cur&&!o.o.includes(cur)), selv=custom?ol:cur, showO=!!(ol&&(cur===ol||custom));
-    inp=`<select onchange="IN.pick('${sc}','${o.k}',this.value)" onblur="IN.blur('${sc}','${o.k}')"><option value="">Select</option>${o.o.map(x=>`<option${selv===x?' selected':''}>${esc(x)}</option>`).join('')}</select>`
+    inp=`<select onchange="IN.pickSel('${sc}','${o.k}',this.value)" onblur="IN.blur('${sc}','${o.k}')"><option value="">Select</option>${o.o.map(x=>`<option${selv===x?' selected':''}>${esc(x)}</option>`).join('')}</select>`
       +(showO?`<input type="text" class="in-other" style="margin-top:8px" placeholder="Please specify" value="${esc(custom?cur:'')}" oninput="IN.set('${sc}','${o.k}',this.value.trim()||'${esc(ol)}')" onblur="IN.blur('${sc}','${o.k}')">`:'');
   }
   else if(o.t==='textarea') inp=`<textarea placeholder="${esc(o.ph||'')}" ${h}>${v}</textarea>`;
@@ -275,7 +275,7 @@ const PUB=/@(gmail|googlemail|yahoo|ymail|rocketmail|outlook|hotmail|live|msn|re
 const isPub=e=>PUB.test((e||'').trim());
 const sm=(s,n)=>s.replace('width="24" height="24"','width="'+n+'" height="'+n+'" style="vertical-align:-2px"');
 const CLKs=sm(CLK,13), BANGs=sm(BANG,13), CLKd=sm(CLK,11), BANGd=sm(BANG,11);
-const FILES={}; let ERR={}, XOPEN=false, XT='Registration';
+const FILES={}; let ERR={}, XOPEN=false, XT='Registration', XTO='';
 const fsz=n=>n<1048576?Math.max(1,Math.round(n/1024))+' KB':(n/1048576).toFixed(1)+' MB';
 const DOCR=()=>DOCC.filter(c=>!c.sh||c.sh(I.d));
 const okDoc=k=>I.docs[k]&&I.docs[k].st==='ok';
@@ -311,12 +311,13 @@ async function pushLogo(dataUrl){
 /* ---------- document upload ---------- */
 function upload(k,f){
   delete ERR[k];
+  if(k==='new'&&XT==='Other'&&!XTO.trim()){ ERR[k]='Please specify the document type before uploading.'; render(); return; }
   if(!/\.(pdf|jpe?g|png)$/i.test(f.name)){ ERR[k]='Unsupported file. Upload a PDF, JPG or PNG.'; render(); return; }
   if(!f.size){ ERR[k]='This file is empty. Choose another file.'; render(); return; }
   if(f.size>5*1048576){ ERR[k]='File is larger than 5 MB. Upload a smaller file.'; render(); return; }
   const oldFid=k==='new'?null:(I.docs[k]&&I.docs[k].fid); /* replaced file is deleted server-side after the new one is saved */
   let id=k, rec={name:f.name,size:fsz(f.size),st:'up'};
-  if(k==='new'){ id='x'+Date.now(); rec.id=id; rec.type=XT; I.extra.push(rec); XOPEN=false; } else I.docs[k]=rec;
+  if(k==='new'){ id='x'+Date.now(); rec.id=id; rec.type=(XT==='Other'&&XTO.trim())?XTO.trim():XT; XTO=''; I.extra.push(rec); XOPEN=false; } else I.docs[k]=rec;
   if(FILES[id]) URL.revokeObjectURL(FILES[id].u);
   FILES[id]={u:URL.createObjectURL(f),t:f.type||''};
   render();
@@ -341,7 +342,7 @@ function upCard(c){
 }
 function extraBlock(){
   return (I.extra.length?`<div class="inv-extra">${I.extra.map(x=>frow(x.id,x,x.type)).join('')}</div>`:'')
-   +(XOPEN?`<div class="inv-add"><div class="in-f"><label>Document type<i>Required</i></label><select onchange="IN.xt(this.value)">${XTYPES.map(t=>`<option${XT===t?' selected':''}>${t}</option>`).join('')}</select></div>${dz('new')}${errH('new')}<div><button class="btn btn-ghost btn-sm" onclick="IN.xopen(0)">Cancel</button></div></div>`:`<div style="margin-top:10px"><button class="btn btn-ghost btn-sm" onclick="IN.xopen(1)">+ Add another document</button></div>`);
+   +(XOPEN?`<div class="inv-add"><div class="in-f"><label>Document type<i>Required</i></label><select onchange="IN.xt(this.value)">${XTYPES.map(t=>`<option${XT===t?' selected':''}>${t}</option>`).join('')}</select>${XT==='Other'?`<input type="text" class="in-other" data-xt-other="1" style="margin-top:8px" placeholder="Please specify document type" value="${esc(XTO)}" oninput="IN.xto(this.value)">`:''}</div>${dz('new')}${errH('new')}<div><button class="btn btn-ghost btn-sm" onclick="IN.xopen(0)">Cancel</button></div></div>`:`<div style="margin-top:10px"><button class="btn btn-ghost btn-sm" onclick="IN.xopen(1)">+ Add another document</button></div>`);
 }
 
 /* ---------- step 4 sections: two-level verification ---------- */
@@ -507,7 +508,7 @@ function s3(){
   + card('Your connection with this institution','Are you authorized to create and manage this institution profile?',`
    <label class="in-radio"><input type="radio" name="auth"${I.auth==='self'?' checked':''} onchange="IN.auth('self')"> Yes, I am authorized to represent this institution</label>
    <label class="in-radio"><input type="radio" name="auth"${I.auth==='behalf'?' checked':''} onchange="IN.auth('behalf')"> I am creating this profile on behalf of the institution</label>
-   ${I.auth==='behalf'?`<div class="in-grid"><div class="in-f"><label>Relationship / role<i>Required</i></label><select onchange="IN.role(this.value)"><option value="">Select</option>${ROLES.map(x=>`<option${I.role===x?' selected':''}>${x}</option>`).join('')}</select></div></div>`:''}
+   ${I.auth==='behalf'?`<div class="in-grid"><div class="in-f"><label>Relationship / role<i>Required</i></label><select onchange="IN.role(this.value)"><option value="">Select</option>${ROLES.map(x=>`<option${I.role===x||(x==='Other'&&I.role&&!ROLES.includes(I.role))?' selected':''}>${x}</option>`).join('')}</select>${I.role==='Other'||(I.role&&!ROLES.includes(I.role))?`<input type="text" class="in-other" data-role-other="1" style="margin-top:8px" placeholder="Please specify" value="${esc(I.role==='Other'?'':I.role)}" oninput="IN.roleTxt(this.value)">`:''}</div></div>`:''}
    ${note('Only create a profile for an institution you are authorized to represent.','in-warn')}
    <label class="in-check"><input type="checkbox"${I.c1?' checked':''} onchange="IN.c1(this.checked)"> I confirm that the information provided is accurate and that I am authorized to represent this institution.</label>
    <div class="in-note in-bad" id="vErr" style="display:none"></div>`);
@@ -662,7 +663,7 @@ window.IN={
     const f=$('f-'+sc+'-'+k); if(f) f.classList.remove('err');
     save(); locRefresh(sc,i); mapRefresh(sc); const b=$('pin-'+sc); if(b) b.innerHTML='';
     if(oth){ const el=document.querySelector('#f-'+sc+'-'+k+' .in-other'); if(el) el.focus(); } },
-  pick(sc,k,v){ IN.set(sc,k,v,1); const o=ALLF.find(f=>f.k===k&&(sc==='b'?FB.includes(f):!FB.includes(f))); if(o&&o.oth){ const el=$('f-'+sc+'-'+k); if(el){ const t=document.createElement('div'); t.innerHTML=fld(o,sc); el.replaceWith(t.firstChild); const inp=$('f-'+sc+'-'+k).querySelector('.in-other'); if(inp) inp.focus(); } } },
+  pickSel(sc,k,v){ IN.set(sc,k,v,1); const o=ALLF.find(f=>f.k===k&&(sc==='b'?FB.includes(f):!FB.includes(f))); if(o&&o.oth){ const el=$('f-'+sc+'-'+k); if(el){ const t=document.createElement('div'); t.innerHTML=fld(o,sc); el.replaceWith(t.firstChild); const inp=$('f-'+sc+'-'+k).querySelector('.in-other'); if(inp) inp.focus(); } } },
   set(sc,k,v,re){ (sc==='d'?I.d:BR)[k]=v; if(sc==='d'&&k==='aemail'&&I.aem!=='idle') I.aem='idle'; const f=$('f-'+sc+'-'+k); if(f) f.classList.remove('err'); if(k==='pin') pinLook(sc,v.trim()); if(re&&sc==='d'&&k==='type'){ save(); render(); } else if(sc==='d') save(); },
   blur(sc,k){ const o=ALLF.find(f=>f.k===k&&(sc==='b'?FB.includes(f):!FB.includes(f))); if(o) mark(sc,o,chk(o,(sc==='d'?I.d:BR)[k])); },
   steps(){ return STEPS; },
@@ -685,6 +686,7 @@ window.IN={
       else if((pubMail()||aPub())&&missing().length) m='Public email detected: upload '+missing().map(c=>c.t).join(', ')+' to continue.';
       else if(!I.auth) m='Tell us whether you are authorized to represent this institution.';
       else if(I.auth==='behalf'&&!I.role) m='Select your relationship to the institution.';
+      else if(I.auth==='behalf'&&I.role==='Other') m='Please specify your relationship to the institution.';
       else if(!I.c1) m='Confirm the statement at the bottom of this step to continue.';
       if(m){ e.textContent=m; e.style.display='block'; e.scrollIntoView({block:'center'}); ok=false; }
     } else if(s===STEPS.length-1&&!I.c2){ $('finalErr').style.display='block'; ok=false; }
@@ -719,14 +721,14 @@ window.IN={
   prev(k){ preview(k); },
   rm(k){ { const rc=k[0]==='x'?I.extra.find(x=>x.id===k):I.docs[k]; if(rc&&rc.fid&&window.bkDeleteFile) bkDeleteFile(rc.fid).catch(()=>{}); }
     if(k[0]==='x') I.extra=I.extra.filter(x=>x.id!==k); else delete I.docs[k]; delete FILES[k]; delete ERR[k]; save(); render(); },
-  xopen(v){ XOPEN=!!v; delete ERR['new']; render(); },
-  xt(v){ XT=v; },
+  xopen(v){ XOPEN=!!v; XTO=''; delete ERR['new']; render(); },
+  xt(v){ XT=v; if(v!=='Other') XTO=''; render(); if(v==='Other'){ const el=document.querySelector('[data-xt-other]'); if(el) el.focus(); } }, xto(v){ XTO=v; delete ERR['new']; },
   asend(){ const m=chk({req:1,v:'email'},I.d.aemail); if(m){ toast(m); return; } I.aem='sending'; render(); setTimeout(()=>{ I.aem='sent'; save(); render(); },900); },
   aresend(){ toast('A new code was sent to '+I.d.aemail); },
   averify(){ const c=[...document.querySelectorAll('#aotp input')].map(x=>x.value).join(''), e=$('aotpErr');
     if(!/^\d{6}$/.test(c)){ e.textContent='Enter the 6-digit code sent to the authority email.'; e.style.display='block'; return; }
     I.aem='ok'; save(); render(); toast('Authority email verified'); },
-  auth(v){ I.auth=v; save(); render(); }, role(v){ I.role=v; save(); }, c1(v){ I.c1=v; save(); }, c2(v){ I.c2=v; save(); },
+  auth(v){ I.auth=v; save(); render(); }, role(v){ const was=I.role==='Other'||(I.role&&!ROLES.includes(I.role)); I.role=v; save(); if(v==='Other'||was){ render(); const el=document.querySelector('[data-role-other]'); if(el) el.focus(); } }, roleTxt(v){ I.role=v.trim()||'Other'; save(); }, c1(v){ I.c1=v; save(); }, c2(v){ I.c2=v; save(); },
   vs(v){ I.vs=v; save(); render(); },
   dash(){ I.view='dash'; save(); render(); top(); },
   sec(k){ I.sec=k; if(k==='verify') VS=0; render(); },
