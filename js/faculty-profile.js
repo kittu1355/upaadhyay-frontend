@@ -66,12 +66,17 @@ const kindOf=p=>p==='photo'?'photo':p==='resume'?'resume':'doc';
 const szt=f=>f&&f.size?` · ${f.size} MB`:'';
 const get=(p,o=S)=>p.split('.').reduce((a,k)=>a==null?a:a[k],o);
 const set=(p,v)=>{const k=p.split('.'),l=k.pop();let o=S;k.forEach(x=>{if(o[x]==null)o[x]={};o=o[x]});o[l]=v};
+const sh=(v,o)=>v==='Other'&&String(o||'').trim()?String(o).trim():v;
+const shl=(a,o)=>(a||[]).map(x=>sh(x,o));
+const TT=()=>S.title==='Other'?String(S.titleOth||'').trim():S.title;
+const qn=q=>q.name==='Other'&&String(q.oname||'').trim()?String(q.oname).trim():q.name;
+const othIn=(p,on,req)=>`<input class="fp-in fp-oth" data-k="${p}Oth" data-oth="${p}" ${req?'data-v="req"':''} value="${esc(get(p+'Oth'))}" placeholder="Please specify" maxlength="120" aria-label="Please specify" style="margin-top:8px${on?'':';display:none'}" ${on?'':'disabled'}>`;
 const tag=(t,txt)=>{const x=TAG[t]||['t-some',t];return `<span class="fp-tag ${x[0]}">${esc(txt||x[1])}</span>`};
 const F=(label,t,inner,o={})=>`<div class="fp-f ${o.full?'full':''}"><label>${label}${t?tag(t,o.tt):''}</label>${inner}${o.hint?`<div class="fp-hint">${o.hint}</div>`:''}<div class="fp-err" data-e></div></div>`;
 const I=(p,o={})=>`<input class="fp-in" data-k="${p}" ${o.v?`data-v="${o.v}"`:''} value="${esc(get(p))}" placeholder="${esc(o.ph||'')}" ${o.type?`type="${o.type}"`:''} ${o.dis?'disabled':''}>`;
-const SEL=(p,opts,o={})=>`<select class="fp-in" data-k="${p}" ${o.v?`data-v="${o.v}"`:''} ${o.re?`data-re="${o.re}"`:''}><option value="">${o.ph||'Select…'}</option>${opts.map(x=>`<option ${get(p)===x?'selected':''}>${esc(x)}</option>`).join('')}</select>`;
+const SEL=(p,opts,o={})=>`<select class="fp-in" data-k="${p}" ${o.v?`data-v="${o.v}"`:''} ${o.re?`data-re="${o.re}"`:''}><option value="">${o.ph||'Select…'}</option>${opts.map(x=>`<option ${get(p)===x?'selected':''}>${esc(x)}</option>`).join('')}</select>${opts.includes('Other')?othIn(p,get(p)==='Other',o.v==='req'):''}`;
 const RAD=(p,opts)=>`<div class="fp-radio">${opts.map(x=>`<label><input type="radio" name="${p}" data-k="${p}" value="${esc(x)}" ${get(p)===x?'checked':''}>${esc(x)}</label>`).join('')}</div>`;
-const MS=(p,opts,ph)=>{const v=get(p)||[];return `<div class="fp-ms" data-ms="${p}" data-opts="${opts}"><div class="box">${v.map(x=>`<span class="fp-chip">${esc(x)}<u data-rm="${esc(x)}">${ic('x',11)}</u></span>`).join('')}<input placeholder="${v.length?'':esc(ph||'Search & select…')}"></div></div>`};
+const MS=(p,opts,ph,o={})=>{const v=get(p)||[];const w=(OPT[opts]||[]).includes('Other');const bx=`<div class="fp-ms" data-ms="${p}" data-opts="${opts}" data-req="${o.req?1:0}"><div class="box">${v.map(x=>`<span class="fp-chip">${esc(x)}<u data-rm="${esc(x)}">${ic('x',11)}</u></span>`).join('')}<input placeholder="${v.length?'':esc(ph||'Search & select…')}"></div></div>`;return w?`<div class="fp-msw">${bx}${v.includes('Other')?othIn(p,true,o.req):''}</div>`:bx};
 const UP=(p,label,t)=>{const f=S.files[p];return `<div class="fp-f"><label>${label}${t?tag(t):''}</label><div class="fp-up ${f?'has':''}" data-up="${p}">${UPin(p)}</div><div class="fp-hint">Accepted: ${RULES[kindOf(p)].label}</div></div>`};
 const UPin=p=>{const f=S.files[p],b=ST.busy[p];if(b)return `<span class="nm" role="status"><small>Uploading… please wait</small></span>`;
  return f?`<span class="nm">${p==='photo'&&f.url?`<img class="fp-thumb" src="${esc(f.url)}" alt="Profile photo preview"> `:ic('check',13)+' '}${esc(f.name)}${f.size?`<br><small>${f.size} MB</small>`:''}</span><button type="button" class="fp-btn sm" data-pick="${p}">Replace</button><button type="button" class="fp-btn sm dng" data-del="${p}">Remove</button>`:`<span class="nm"><small>No file uploaded</small></span><button type="button" class="fp-btn sm" data-pick="${p}">Upload</button>`};
@@ -82,7 +87,7 @@ const expLabel=m=>{const y=m/12;return m<1?'Fresher':y<3?'1–2 Years':y<6?'3–
 const school=()=>S.levels.some(l=>['Pre-Primary','Primary','Middle School','Secondary School','Senior Secondary'].includes(l));
 const ug=()=>S.levels.some(l=>['Undergraduate / UG','Junior College'].includes(l)), pg=()=>S.levels.some(l=>['Postgraduate / PG','PhD / Research'].includes(l));
 const EDU={'10th / SSC':['ssc'],'12th / Intermediate':['ssc','hsc'],'Diploma':['ssc','dip'],"Bachelor's Degree":['ssc','hsc','ug'],"Master's Degree":['ssc','hsc','ug','pg'],'M.Phil':['ssc','hsc','ug','pg','mphil'],'Ph.D.':['ssc','hsc','ug','pg','phd'],'Postdoctoral':['ssc','hsc','ug','pg','phd'],'Other':['ssc','hsc','oth']};
-function completion(){const req=[['Personal details',S.first&&S.last&&age(S.dob)!==null],['Contact information',S.email&&S.phone],['Highest qualification',S.high],['Current designation',S.desig],['Subject specialization',S.subjects.length]];
+function completion(){const req=[['Personal details',S.first&&S.last&&age(S.dob)!==null],['Contact information',S.email&&S.phone],['Highest qualification',S.high&&(S.high!=='Other'||String(S.highOth||'').trim())],['Current designation',S.desig&&(S.desig!=='Other'||String(S.desigOth||'').trim())],['Subject specialization',S.subjects.length]];
  const rec=[['Add resume',pubItem('resumes')||S.files.resume,8],['Add employment history',S.jobs.length,5],['Add research records',rsTotal()>0,7],['Add certificates',Object.keys(S.files).some(k=>k!=='resume'&&k!=='photo'),3]];
  const p=req.filter(x=>x[1]).length*16+rec.filter(x=>x[1]).length*5;return{req,rec,p}}
 /* ---------- sections ---------- */
@@ -101,14 +106,14 @@ const R={
  <div class="fp-card"><h4>Profile visibility ${tag('req')}</h4>${RAD('vis',['Public','Employers Only','Private'])}<div class="fp-hint" style="margin-top:8px">Saved with your profile. It will apply once employers can browse faculty profiles.</div></div>
  <div class="fp-note fp-note-i">${ic('lock',14)}<span>We never collect Aadhaar, PAN, bank details, passwords, OTPs or financial information in your faculty profile.</span></div>`,
 2:()=>`<h3>Professional Profile</h3><p class="fp-sub">Helps institutions match you with the right roles.</p><div class="fp-grid">
- ${F('Current designation','req',SEL('desig',OPT.desig,{v:'req'}))}${F('Teaching / target level','req',MS('levels','levels'),{hint:'Drives which qualification fields are shown.'})}
- ${F('Subjects / specialization','req',MS('subjects','subjects','Search subjects…'),{full:1})}</div>`,
+ ${F('Current designation','req',SEL('desig',OPT.desig,{v:'req'}))}${F('Teaching / target level','req',MS('levels','levels',undefined,{req:1}),{hint:'Drives which qualification fields are shown.'})}
+ ${F('Subjects / specialization','req',MS('subjects','subjects','Search subjects…',{req:1}),{full:1})}</div>`,
 3:()=>{const need=EDU[S.high]||[];return `<h3>Education & Qualifications</h3><p class="fp-sub">Choose your highest qualification — only the relevant sections appear.</p>
  ${F('Highest qualification','req',SEL('high',OPT.high,{v:'req',re:'edu'}))}
  <div style="margin-top:14px" id="fpEdu">${need.length?need.map(eduBlock).join(''):`<div class="fp-empty">Select your highest qualification to continue.</div>`}</div>`},
 4:()=>{const rows=[];if(school())rows.push(['B.Ed. / D.El.Ed. / relevant teaching qualification','Required for some school-teaching roles','some'],['TET / CTET','Role dependent','some']);if(ug())rows.push(["Bachelor's & Master's degree",'Required for UG roles','some'],['Professional qualification','Where applicable','opt']);if(pg())rows.push(["Master's degree",'Required for university faculty applications','some'],['NET / SET / SLET','Required for some higher-education roles','some'],['Ph.D. & research information','Recommended for research roles','rec']);
  return `<h3>Teaching Qualifications</h3><p class="fp-sub">Eligibility varies by post and institution (e.g. UGC norms for higher education). Nothing here is mandatory for every faculty member.</p>
- <div class="fp-note"><b>Based on your target levels (${esc(S.levels.join(', ')||'none selected')}):</b><ul>${rows.map(r=>`<li>${r[0]} ${tag(r[2]=='some'?r[1]:r[2],r[1])}</li>`).join('')||'<li>Select teaching levels in Professional Profile.</li>'}</ul></div>
+ <div class="fp-note"><b>Based on your target levels (${esc(shl(S.levels,S.levelsOth).join(', ')||'none selected')}):</b><ul>${rows.map(r=>`<li>${r[0]} ${tag(r[2]=='some'?r[1]:r[2],r[1])}</li>`).join('')||'<li>Select teaching levels in Professional Profile.</li>'}</ul></div>
  <div id="fpTq">${S.tq.length?S.tq.map(tqCard).join(''):`<div class="fp-empty">No teaching qualifications added yet.</div>`}</div>
  <div style="display:flex;gap:8px;flex-wrap:wrap"><select class="fp-in" id="fpTqSel" style="max-width:280px"><option value="">Choose qualification…</option>${OPT.tq.map(x=>`<option>${x}</option>`).join('')}</select><button class="fp-btn pri" data-act="addtq">${ic('plus',13)}Add qualification</button></div>`},
 5:()=>`<h3>Employment History</h3><p class="fp-sub">Add current and past teaching roles. Documents are optional unless a job requires them.</p><div id="fpJobs">${jobsHTML()}</div><button class="fp-btn pri" data-act="addjob">${ic('plus',13)}Add employment</button>`,
@@ -128,23 +133,23 @@ const R={
  <div class="fp-note">Identity verification is not required to create a faculty profile.</div>`,
 11:()=>{const a=age(S.dob),m=months(),ed=(EDU[S.high]||[]).filter(x=>['ug','pg','phd','mphil','dip'].includes(x)).reverse();
  const lab={ug:"Bachelor's",pg:"Master's",phd:'Ph.D.',mphil:'M.Phil',dip:'Diploma'},ch=l=>l&&l.length?l.map(x=>`<span class="fp-chip">${esc(x)}</span>`).join(''):'<span class="fp-hint">Not added</span>';
- const jobs=S.jobs.filter(j=>j.org).map(j=>`<div class="fp-tl"><i class="${j.cur?'cur':''}"></i><div><b>${esc(j.desig)}</b>${j.cur?' '+pill('p-ok','check','Current'):''}<div>${esc(j.org)}${j.dept?' · '+esc(j.dept):''}</div><small>${fmt(j.start)} – ${j.cur?'Present':fmt(j.end)} · ${esc(j.type||'')}</small></div></div>`).join('');
- const eds=ed.map(k=>{const e=S.edu[k]||{};return `<div class="fp-tl"><i></i><div><b>${esc((e.type?e.type+' ':'')+(e.major||lab[k]))}</b><div>${esc(e.uni||'')}</div><small>${esc(lab[k])}${e.end?' · '+esc(e.end):''}</small></div></div>`}).join('');
+ const jobs=S.jobs.filter(j=>j.org).map(j=>`<div class="fp-tl"><i class="${j.cur?'cur':''}"></i><div><b>${esc(j.desig)}</b>${j.cur?' '+pill('p-ok','check','Current'):''}<div>${esc(j.org)}${j.dept?' · '+esc(j.dept):''}</div><small>${fmt(j.start)} – ${j.cur?'Present':fmt(j.end)} · ${esc(sh(j.type,j.typeOth)||'')}</small></div></div>`).join('');
+ const eds=ed.map(k=>{const e=S.edu[k]||{};return `<div class="fp-tl"><i></i><div><b>${esc((e.type?sh(e.type,e.typeOth)+' ':'')+(e.major||lab[k]))}</b><div>${esc(e.uni||'')}</div><small>${esc(lab[k])}${e.end?' · '+esc(e.end):''}</small></div></div>`}).join('');
  const kv=(l,v)=>{v=Array.isArray(v)?v.join(', '):v;return v?`<div class="fp-pv-kv"><span>${l}</span><b>${esc(v)}</b></div>`:''},
   fileRow=(l,f)=>`<div class="fp-pv-file">${ic('file',16)}<div><b>${esc(l)}</b><small>${esc(f.name||'File')}${szt(f)}</small></div>${f.url?`<a href="${esc(f.url)}" target="_blank" rel="noopener">View</a>`:''}</div>`,
-  contact=[kv('Email',S.email),kv('Phone',S.phone),kv('Alt. phone',S.phone2),kv('Location',[S.area,S.city,S.district,S.state].filter(Boolean).join(', ')+(S.pin?' - '+S.pin:'')),kv('Gender',S.gender),kv('Visible to',S.vis)].join(''),
+  contact=[kv('Email',S.email),kv('Phone',S.phone),kv('Alt. phone',S.phone2),kv('Location',[S.area,S.city,S.district,S.state].filter(Boolean).join(', ')+(S.pin?' - '+S.pin:'')),kv('Gender',sh(S.gender,S.genderOth)),kv('Visible to',S.vis)].join(''),
   resume=pvItem('resumes','Resume')+pvItem('cvs','CV'),
-  tqs=S.tq.filter(q=>q&&q.name).map(q=>`<div class="fp-pv-link">${ic('award',12)}<span><b>${esc(q.name)}</b>${q.spec?' · '+esc(q.spec):''}</span></div>`).join(''),
-  tex=[kv('Experience level',S.expLevel),kv('Medium',S.medium),kv('Classes taught',S.taught),kv('Subjects taught',S.taughtSubs),kv('Boards',S.boards)].join(''),
+  tqs=S.tq.filter(q=>q&&q.name).map(q=>`<div class="fp-pv-link">${ic('award',12)}<span><b>${esc(qn(q))}</b>${q.spec?' · '+esc(q.spec):''}</span></div>`).join(''),
+  tex=[kv('Experience level',S.expLevel),kv('Medium',shl(S.medium,S.mediumOth)),kv('Classes taught',shl(S.taught,S.taughtOth)),kv('Subjects taught',shl(S.taughtSubs,S.taughtSubsOth)),kv('Boards',shl(S.boards,S.boardsOth))].join(''),
   docs=docList().filter(([l])=>l!=='Profile photo'&&l!=='Resume').map(([l,f])=>fileRow(l,f)).join(''),
   prefs=[kv('Levels',S.prefLevels),kv('Subjects',S.prefSubs),kv('Job type',S.prefJob),kv('Work mode',S.prefWork),kv('Locations',S.prefLoc),kv('Relocate',S.reloc),kv('Expected salary',S.salary)].join('');
- return `<div class="fp-pv"><div class="fp-pv-ban"></div><div class="fp-pv-head">${avatarHTML()}<div style="flex:1;min-width:200px"><h2>${esc([S.title,S.first,S.middle,S.last].filter(Boolean).join(' '))}</h2><div class="fp-pv-role">${esc(S.headline||S.desig||'')}</div><div class="fp-meta"><span>${ic('pin',13)}${esc([S.city,S.state].filter(Boolean).join(', ')||'Location not set')}</span><span>${ic('clock',13)}${m>=12?Math.floor(m/12)+'+ years':m+' months'} experience</span>${a!==null?`<span>${ic('cal',13)}${a} yrs</span>`:''}</div></div><button class="fp-btn pri" data-go="0">Edit Profile</button></div>
+ return `<div class="fp-pv"><div class="fp-pv-ban"></div><div class="fp-pv-head">${avatarHTML()}<div style="flex:1;min-width:200px"><h2>${esc([TT(),S.first,S.middle,S.last].filter(Boolean).join(' '))}</h2><div class="fp-pv-role">${esc(S.headline||sh(S.desig,S.desigOth)||'')}</div><div class="fp-meta"><span>${ic('pin',13)}${esc([S.city,S.state].filter(Boolean).join(', ')||'Location not set')}</span><span>${ic('clock',13)}${m>=12?Math.floor(m/12)+'+ years':m+' months'} experience</span>${a!==null?`<span>${ic('cal',13)}${a} yrs</span>`:''}</div></div><button class="fp-btn pri" data-go="0">Edit Profile</button></div>
  
  <div class="fp-pv-grid">
   ${pvBox('Contact & location',1,contact,'Add your email, phone and location.')}
   ${pvBox('Resume',8,resume,'No resume published yet. Add one in Add Resume.')}
-  ${pvBox('Teaching levels',2,S.levels&&S.levels.length?`<div class="fp-chips">${ch(S.levels)}</div>`:'','Add the levels you teach, e.g. Primary, High School, Degree.')}
-  ${pvBox('Subjects',2,S.subjects&&S.subjects.length?`<div class="fp-chips">${ch(S.subjects)}</div>`:'','Add the subjects you teach or specialise in.')}
+  ${pvBox('Teaching levels',2,S.levels&&S.levels.length?`<div class="fp-chips">${ch(shl(S.levels,S.levelsOth))}</div>`:'','Add the levels you teach, e.g. Primary, High School, Degree.')}
+  ${pvBox('Subjects',2,S.subjects&&S.subjects.length?`<div class="fp-chips">${ch(shl(S.subjects,S.subjectsOth))}</div>`:'','Add the subjects you teach or specialise in.')}
   ${pvBox('Experience',5,jobs,'Fresher or not added yet. Add your employment history.')}
   ${pvBox('Education',3,eds,'Add your highest qualification and details.')}
   ${pvBox('Teaching qualifications',4,tqs,'Add B.Ed., TET, NET or other teaching qualifications.')}
@@ -165,7 +170,7 @@ function eduBlock(k){const hi=(EDU[S.high]||[]).slice(-1)[0]===k,rq=hi?'req':(k=
  else body=`<div class="fp-grid">${F('Degree type',rq,SEL(e+'type',k==='pg'?OPT.pg:OPT.ug,{v}))}${F('Specialization / major',rq,I(e+'major',{v}))}${F('University / institution',rq,I(e+'uni',{v}))}${F('College name','opt',I(e+'college'))}${F('Study mode','opt',SEL(e+'mode',OPT.mode))}${F('Percentage / CGPA','rec',pc)}${F('Start year','opt',I(e+'start',{ph:'YYYY'}))}${F('End year',rq,I(e+'end',{ph:'YYYY',v}))}${UP(k+'cert','Degree certificate','rec')}</div>`;
  return `<div class="fp-card"><h4>${names[k]} ${k==='ssc'||k==='hsc'?tag(rq):tag(rq==='some'?'Required for some jobs':rq)}</h4>${body}</div>`}
 function tqCard(q,i){const n=q.name,t=['B.Ed.','D.El.Ed.','CTET','TET','State TET','B.P.Ed.'].includes(n)?'Required for some school-teaching roles':['NET','SET','SLET'].includes(n)?'Required for some higher-education roles':'Optional';const p=`tq.${i}.`;
- return `<div class="fp-card"><h4>${esc(n)} ${tag(t==='Optional'?'opt':t)}<button class="fp-btn sm dng" style="margin-left:auto" data-act="rmtq:${i}">Remove</button></h4><div class="fp-grid">${F('Specialization','opt',I(p+'spec'))}${F('Issuing authority','rec',I(p+'auth'))}${F('Year','rec',I(p+'year',{ph:'YYYY'}))}${UP('tq'+i,'Certificate / scorecard','opt')}</div></div>`}
+ return `<div class="fp-card"><h4>${esc(qn(q))} ${tag(t==='Optional'?'opt':t)}<button class="fp-btn sm dng" style="margin-left:auto" data-act="rmtq:${i}">Remove</button></h4><div class="fp-grid">${n==='Other'?F('Qualification name','req',I(p+'oname',{v:'req',ph:'Please specify'})):''}${F('Specialization','opt',I(p+'spec'))}${F('Issuing authority','rec',I(p+'auth'))}${F('Year','rec',I(p+'year',{ph:'YYYY'}))}${UP('tq'+i,'Certificate / scorecard','opt')}</div></div>`}
 function jobsHTML(){return S.jobs.length?S.jobs.map(jobCard).join(''):`<div class="fp-empty">No employment added yet. Freshers can skip this section.</div>`}
 function fmt(m){if(!m)return'';const[y,mo]=m.split('-');return['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][mo-1]+' '+y}
 function jobCard(j,i){const p=`jobs.${i}.`;return `<div class="fp-card"><div class="fp-job"><div><b>${esc(j.org||'New employment')}</b><div class="fp-hint">${esc(j.desig||'')} ${j.start?'· '+(j.start.slice(0,4))+' – '+(j.cur?'Present':(j.end||'').slice(0,4)):''}</div>${j.cur?pill('p-ok','check','Current'):''}</div><button class="fp-btn sm dng" data-act="rmjob:${i}">Remove</button></div>
@@ -178,7 +183,7 @@ function linksHTML(){return S.links.length?S.links.map((l,i)=>`<div class="fp-ro
 function docList(){const nm={photo:'Profile photo',resume:'Resume',phdcert:'Ph.D. certificate',ugcert:"Bachelor's certificate",pgcert:"Master's certificate",mphilcert:'M.Phil certificate',dipcert:'Diploma certificate',othcert:'Certificate'};return Object.entries(S.files).map(([k,f])=>[nm[k]||(/^tq/.test(k)?'Teaching qualification':/^j\d/.test(k)?'Employment document':'Document'),f])}
 /* ---------- shell ---------- */
 function heroHTML(){const c=completion(),m=months(),nx=c.rec.find(x=>!x[1]),miss=c.req.find(x=>!x[1]);
- return `${bannerHTML()}<div class="fp-hero"><div class="fp-hero-l">${avatarHTML()}<div><h2>${esc([S.title,S.first,S.last].filter(Boolean).join(' ')||'Your name')}</h2><p>${esc(S.headline||S.desig||'Add a professional headline')}</p><div class="fp-meta"><span>${ic('pin',13)}${esc(S.city||'Add location')}</span><span>${ic('cap',13)}${esc(S.high||'Add qualification')}</span><span>${ic('clock',13)}${m>=12?Math.floor(m/12)+'+ yrs':m+' mo'}</span></div></div></div>
+ return `${bannerHTML()}<div class="fp-hero"><div class="fp-hero-l">${avatarHTML()}<div><h2>${esc([TT(),S.first,S.last].filter(Boolean).join(' ')||'Your name')}</h2><p>${esc(S.headline||sh(S.desig,S.desigOth)||'Add a professional headline')}</p><div class="fp-meta"><span>${ic('pin',13)}${esc(S.city||'Add location')}</span><span>${ic('cap',13)}${esc(sh(S.high,S.highOth)||'Add qualification')}</span><span>${ic('clock',13)}${m>=12?Math.floor(m/12)+'+ yrs':m+' mo'}</span></div></div></div>
  <div class="fp-hero-r"><div class="fp-ring" style="--p:${c.p}"><span>${c.p}%</span></div><div><b>Profile strength</b><small>${miss?'Complete: '+miss[0]:nx?'Next: '+nx[0]:'Looking great!'}</small></div></div>
  <div class="fp-steps">${c.req.map(x=>`<span class="st ${x[1]?'ok':'no'}">${ic(x[1]?'check':'circle',13)}<span>${x[0]}</span></span>`).join('')}${c.rec.map(x=>`<span class="st rec ${x[1]?'ok':''}" ${x[1]?'':`data-go="${x[2]}"`}>${ic(x[1]?'check':'plus',13)}<span>${x[1]?cap(x[0].replace(/^Add /,'')):x[0]}</span></span>`).join('')}</div></div>`}
 function shell(){
@@ -192,7 +197,7 @@ function ageUpd(){const e=$('#fpAge');if(!e)return;const a=age(S.dob);e.style.di
 function toast(t,ok,bad){const d=document.createElement('div');d.className='fp-toast'+(bad?' bad':'');d.setAttribute('role',bad?'alert':'status');d.innerHTML=(ok?ic('check',14):bad?ic('alert',14):'')+esc(t);document.body.appendChild(d);setTimeout(()=>d.remove(),bad?5000:2500)}
 /* validation */
 function check(el){const r=el.dataset.v,v=el.value.trim();let m='';
- if(r==='req'&&!v)m='This field is required.';
+ if(r==='req'&&!v)m=el.classList.contains('fp-oth')?'Please specify.':'This field is required.';
  else if(r==='dob'){if(!v)m='This field is required.';else if(age(v)===null)m='Please enter a valid date of birth.'}
  else if(r==='email'&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v))m=v?'Please enter a valid email address.':'This field is required.';
  else if(r==='phone'&&!/^\+?\d[\d\s-]{7,18}$/.test(v))m=v?'Please enter a valid phone number.':'This field is required.';
@@ -211,6 +216,7 @@ document.addEventListener('focusout',e=>{const t=e.target;if(t.dataset&&t.datase
 document.addEventListener('change',e=>{const t=e.target;if(!t.closest||!t.closest('#fpRoot'))return;
  if(t.type==='file'){upload(t);return}
  const k=t.dataset.k;if(!k)return;set(k,t.type==='checkbox'?t.checked:t.value);
+ if(t.tagName==='SELECT'){const o=t.parentNode.querySelector('.fp-oth[data-oth="'+k+'"]');if(o){const on=t.value==='Other';o.style.display=on?'':'none';o.disabled=!on;if(on)o.focus();else{o.value='';set(k+'Oth','');o.classList.remove('bad');o.removeAttribute('aria-invalid');const er=o.closest('.fp-f')&&o.closest('.fp-f').querySelector('[data-e]');if(er&&!t.classList.contains('bad'))er.textContent=''}}}
  if(t.type==='checkbox'&&/\.cur$/.test(k)){const i=+k.split('.')[1];if(t.checked)S.jobs[i].end='';}
  if(t.dataset.re==='edu'){$('#fpEdu').innerHTML=(EDU[S.high]||[]).map(eduBlock).join('');}
  if(t.dataset.re==='jobs'){$('#fpJobs').innerHTML=jobsHTML()}
@@ -219,7 +225,7 @@ function upload(inp){const p=inp.dataset.p,f=inp.files[0];if(f)uploadFile(p,f)}
 function msOpen(box,q){let dd=$('.fp-dd',box);if(!dd){dd=document.createElement('div');dd.className='fp-dd';box.appendChild(dd)}
  const p=box.dataset.ms,sel=get(p)||[],all=OPT[box.dataset.opts];q=(q||'').toLowerCase();const l=all.filter(x=>x.toLowerCase().includes(q));
  dd.innerHTML=l.length?l.map(x=>`<div data-opt="${esc(x)}" class="${sel.includes(x)?'sel':''}">${sel.includes(x)?ic('check',12):''}${esc(x)}</div>`).join(''):`<em>No match</em>`}
-function msRefresh(box){const p=box.dataset.ms;const n=document.createElement('div');n.innerHTML=MS(p,box.dataset.opts);box.replaceWith(n.firstChild);}
+function msRefresh(box){const p=box.dataset.ms;if(!(get(p)||[]).includes('Other')&&get(p+'Oth'))set(p+'Oth','');const w=box.closest('.fp-msw')||box,n=document.createElement('div');n.innerHTML=MS(p,box.dataset.opts,undefined,{req:box.dataset.req==='1'});w.replaceWith(n.firstChild);}
 document.addEventListener('click',e=>{const t0=e.target;if(!t0.closest)return;const t=t0.closest('[data-opt],[data-rm],[data-pick],[data-del],[data-act],[data-next],[data-back],[data-go]')||t0;const root=t.closest('#fpRoot');
  if(!root){$$('.fp-dd').forEach(d=>d.remove());return}
  const box=t.closest('.fp-ms');
@@ -267,8 +273,8 @@ function bannerHTML(){let h='';
 function setBusy(on){ST.saving=on;$$('#fpRoot [data-sv]').forEach(b=>{b.disabled=on;b.setAttribute('aria-busy',on?'true':'false')})}
 const KEYS=['name','phone','gender','dob','city','state','location','currentDesignation','experience','avatar','fp'];
 function applyToUser(){const U=currentUser,m=months();
- U.name=[S.title,S.first,S.middle,S.last].filter(Boolean).join(' ')||U.name;U.phone=S.phone;U.gender=S.gender;U.dob=isoDob(S.dob);U.city=S.city;U.state=S.state;
- U.location=[S.city,S.state].filter(Boolean).join(', ');U.currentDesignation=S.desig;U.experience=String(Math.round(m/12*10)/10);S.savedAt=S.savedAt||new Date().toISOString();U.fp=PERSIST()}
+ U.name=[TT(),S.first,S.middle,S.last].filter(Boolean).join(' ')||U.name;U.phone=S.phone;U.gender=S.gender;U.dob=isoDob(S.dob);U.city=S.city;U.state=S.state;
+ U.location=[S.city,S.state].filter(Boolean).join(', ');U.currentDesignation=sh(S.desig,S.desigOth);U.experience=String(Math.round(m/12*10)/10);S.savedAt=S.savedAt||new Date().toISOString();U.fp=PERSIST()}
 function softCheck(){const bad=[];if(S.phone&&!/^\+?\d[\d\s-]{7,18}$/.test(S.phone))bad.push('Enter a valid phone number.');if(S.dob&&age(S.dob)===null)bad.push('Enter a valid date of birth (DD/MM/YYYY).');return bad}
 function showServerErrors(e){const er=e&&e.errors;if(er){const map={phone:'phone',date_of_birth:'dob',name:'first',gender:'gender'};Object.keys(er).forEach(k=>{const f=map[k]&&$(`[data-k="${map[k]}"]`);if(f){f.classList.add('bad');const x=f.closest('.fp-f')&&f.closest('.fp-f').querySelector('[data-e]');if(x)x.textContent=String([].concat(er[k])[0])}})}}
 function refreshChrome(){try{if(typeof refreshDashTopAccount==='function')refreshDashTopAccount();if(typeof updateNavForLogin==='function')updateNavForLogin()}catch(e){}paint()}
