@@ -117,3 +117,14 @@ body{background:var(--canvas);font-family:Inter,system-ui,-apple-system,"Segoe U
 @media (max-width:700px){.admin-stats{grid-template-columns:repeat(2,1fr)}.x-search{display:none}}
 .admin-panel-head{flex-wrap:nowrap;gap:10px}.admin-panel-head>span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .admin-panel-head .btn{flex:none}
+
+/* ---------- hidden scrollbars (scrolling still works) ---------- */
+*{scrollbar-width:none;-ms-overflow-style:none}
+*::-webkit-scrollbar{display:none;width:0;height:0}
+
+/* ---------- slightly zoomed-in page ---------- */
+:root{--z:1.1}
+html{zoom:var(--z)}
+.admin-shell{min-height:calc(100vh / var(--z))}
+.admin-side{height:calc(100vh / var(--z))}
+.admin-table th,.admin-table td{padding-left:12px;padding-right:12px}
