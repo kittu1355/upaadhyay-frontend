@@ -56,6 +56,7 @@
       two.classList.add('three');
       two.insertAdjacentHTML('beforeend', '<div class="admin-panel"><div class="admin-panel-head"><span>Most active faculty</span><button type="button" class="btn btn-ghost btn-sm" onclick="adminGo(\'faculty\')">View all</button></div><div id="ovTopFac"><div class="ov-empty">Loading…</div></div></div>');
     }
+    const h = p.querySelector('#ovPending'); if(h){ const t = h.closest('.admin-panel').querySelector('.admin-panel-head>span'); if(t) t.textContent = 'Waiting for review'; }
     $s('ovRange').addEventListener('change', drawChart);
   }
 
