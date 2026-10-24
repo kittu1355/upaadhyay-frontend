@@ -119,3 +119,10 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--purple);
 .x-filters input,.x-filters select,.x-catsearch{height:30px;padding:0 9px;border:1px solid var(--line);border-radius:4px;font:inherit;font-size:12px;background:#fff;color:var(--ink);min-width:120px}
 .x-filters .x-date{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--ink-soft)}
 .x-catsearch{display:block;width:calc(100% - 28px);margin:0 14px 8px}
+
+/* full profile drawer */
+.xd.xd-wide{width:min(720px,100%)}
+.xd-h{margin:16px 0 4px;font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-faint)}
+.xd-kv b{max-width:70%;overflow-wrap:anywhere}
+.xd-item div{overflow-wrap:anywhere}
+.rv-doc .ic{font-weight:800}
