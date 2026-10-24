@@ -113,3 +113,9 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--purple);
 .admin-nav-item.active svg{color:var(--ink)}
 .admin-nav-item .count{background:#374151;color:#fff}
 .admin-side-brand{color:var(--ink)}
+
+/* extra filter bars */
+.x-filters{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:0 14px 10px}
+.x-filters input,.x-filters select,.x-catsearch{height:30px;padding:0 9px;border:1px solid var(--line);border-radius:4px;font:inherit;font-size:12px;background:#fff;color:var(--ink);min-width:120px}
+.x-filters .x-date{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--ink-soft)}
+.x-catsearch{display:block;width:calc(100% - 28px);margin:0 14px 8px}
