@@ -122,8 +122,8 @@ body{background:var(--canvas);font-family:Inter,system-ui,-apple-system,"Segoe U
 *{scrollbar-width:none;-ms-overflow-style:none}
 *::-webkit-scrollbar{display:none;width:0;height:0}
 
-/* ---------- slightly zoomed-in page ---------- */
-:root{--z:1.1}
+/* ---------- page scale (0.8 = matches 75-80% browser zoom view) ---------- */
+:root{--z:0.8}
 html{zoom:var(--z)}
 .admin-shell{min-height:calc(100vh / var(--z))}
 .admin-side{height:calc(100vh / var(--z))}
