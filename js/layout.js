@@ -174,8 +174,11 @@ function mountChrome(opts){
         </div>
         <div class="footer-col">
           <h5>Legal</h5>
+          <a href="${PAGES.terms}">Terms &amp; conditions</a>
           <a href="${PAGES.privacy}">Privacy policy</a>
-          <a href="${PAGES.terms}">Terms</a>
+          <a href="${PAGES.community}">Community guidelines</a>
+          <a href="${PAGES.cookies}">Cookie policy</a>
+          <a href="${PAGES.regional}">India regional info</a>
         </div>
         <div class="footer-news">
           <h5>Subscribe to our newsletter</h5>
@@ -188,7 +191,7 @@ function mountChrome(opts){
       </div>
       <div class="footer-bottom">
         <select class="footer-lang" aria-label="Language"><option>English</option><option>हिन्दी</option></select>
-        <div>© 2026 Upaadhyay. &nbsp;•&nbsp; <a href="${PAGES.privacy}">Privacy</a> &nbsp;•&nbsp; <a href="${PAGES.terms}">Terms</a> &nbsp;•&nbsp; <a href="${SITE_ROOT}sitemap.xml">Sitemap</a></div>
+        <div>© 2026 Upaadhyay. &nbsp;•&nbsp; <a href="${PAGES.privacy}">Privacy</a> &nbsp;•&nbsp; <a href="${PAGES.terms}">Terms</a> &nbsp;•&nbsp; <a href="${PAGES.cookies}">Cookies</a> &nbsp;•&nbsp; <a href="${SITE_ROOT}sitemap.xml">Sitemap</a></div>
         <div class="footer-socials">${footerSocialHtml()}</div>
       </div>
     </div>
