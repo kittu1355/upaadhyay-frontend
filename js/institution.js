@@ -682,7 +682,7 @@ window.IN={
     else if(s===3){
       const e=$('vErr'); let m='';
       if(!I.regRole) m='Select who is registering this institution.';
-      else if(I.em!=='ok'&&!anyDoc()) m='Complete at least one verification method: verify your official email or upload an official document.';
+      /* OTP no longer required: the admin verifies the emails entered. */
       else if((pubMail()||aPub())&&missing().length) m='Public email detected: upload '+missing().map(c=>c.t).join(', ')+' to continue.';
       else if(!I.auth) m='Tell us whether you are authorized to represent this institution.';
       else if(I.auth==='behalf'&&!I.role) m='Select your relationship to the institution.';
