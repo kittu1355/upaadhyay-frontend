@@ -226,6 +226,11 @@ const PAGES = {
   about:     SITE_ROOT + 'pages/about.html',
   contact:   SITE_ROOT + 'pages/contact.html',
   help:      SITE_ROOT + 'pages/help-centre.html',
+  privacy:   SITE_ROOT + 'pages/privacy.html',
+  terms:     SITE_ROOT + 'pages/terms.html',
+  community: SITE_ROOT + 'pages/community-guidelines.html',
+  cookies:   SITE_ROOT + 'pages/cookie-policy.html',
+  regional:  SITE_ROOT + 'pages/regional-info.html',
   admin:     SITE_ROOT + 'admin/index.html'
 };
 function goTo(page, params){
