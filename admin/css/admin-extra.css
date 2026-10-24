@@ -63,59 +63,8 @@ body{font-size:12.5px}
 .xd-item small{display:block;color:var(--ink-faint)}
 .xd-acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
 
-/* ===== Admin theme v2: clean light sidebar, purple accent, 2-4px corners ===== */
-:root{--purple:#4b1f9e;--purple-d:#3a1580;--purple-50:#f4efff;--purple-100:#ebe3ff;--radius:4px;--radius-sm:2px}
-/* sidebar */
-.admin-side{background:#fff;color:var(--ink);border-right:1px solid var(--line);box-shadow:none}
-.admin-side-brand{color:var(--purple);border-bottom:1px solid var(--line);position:sticky;top:0;background:#fff;z-index:2}
-.admin-side-brand img{background:none;box-shadow:none;padding:0;border-radius:2px}
-.admin-nav{padding:8px 10px}
-.admin-nav-group-label{color:var(--ink-faint);padding:14px 10px 5px}
-.admin-nav-item{color:var(--ink-soft);border-radius:4px;border-left:3px solid transparent;padding:8px 10px;margin-bottom:1px}
-.admin-nav-item svg{color:var(--ink-faint);opacity:1}
-.admin-nav-item:hover{background:var(--purple-50);color:var(--purple)}
-.admin-nav-item:hover svg{color:var(--purple)}
-.admin-nav-item.active{background:var(--purple-50);color:var(--purple);border-left-color:var(--purple);box-shadow:none;font-weight:700}
-.admin-nav-item.active svg{color:var(--purple)}
-.admin-nav-item .count{background:var(--purple);color:#fff;border-radius:4px;min-width:18px;padding:1px 6px}
-.admin-side-foot{border-top:1px solid var(--line);color:var(--ink-faint);position:sticky;bottom:0;background:#fff}
-/* top bar + buttons */
-.admin-top{background:var(--purple)}
-.btn-primary,.al-btn{background:var(--purple)}
-.btn-primary:hover:not(:disabled),.al-btn:hover:not(:disabled){background:var(--purple-d)}
-.btn-ghost{color:var(--purple)}
-.btn-ghost:hover:not(:disabled){border-color:var(--purple);background:var(--purple-50)}
-a.admin-link,.admin-body a{color:var(--purple)}
-/* corners: 2-4px everywhere */
-.btn,.btn-sm,.admin-viewbtn,.admin-pill,.admin-stat,.admin-panel,.admin-avatar,.al-card,.al-lock,.al-field input,.al-eye,.al-err,
-.xd,.xd-item,input,select,textarea,.admin-top-back,.admin-nav-item .count{border-radius:4px}
-.admin-pill{border-radius:4px}
-.admin-avatar,.btn-sm,.admin-viewbtn{border-radius:2px}
-.admin-stat{overflow:hidden}
-input:focus,select:focus,textarea:focus{outline:none;border-color:var(--purple);box-shadow:0 0 0 2px rgba(75,31,158,.15)}
-/* stat cards: calmer colours */
-.admin-stat.c1 .admin-stat-top{background:#c97a12}
-.admin-stat.c2 .admin-stat-top{background:#1d8a5e}
-.admin-stat.c3 .admin-stat-top{background:#2563eb}
-.admin-stat.c4 .admin-stat-top{background:var(--purple)}
-.al-logo,.rv-logo,.rv-doc .ic,.rv-tag,.admin-tab .n,.admin-toast{border-radius:4px}
-.admin-side-brand img{border-radius:2px}
-.admin-body a:not(.btn){color:var(--purple)}
-.admin-tab.active,.admin-tab.on{color:var(--purple);border-bottom-color:var(--purple)}
-.rv-doc .ic{background:var(--purple-50);color:var(--purple)}
-.admin-avatar{background:var(--purple-50);color:var(--purple)}
-
-/* Sidebar: no purple highlight, neutral grey only */
-.admin-nav-item{border-left:0}
-.admin-nav-item:hover{background:#f3f4f6;color:var(--ink)}
-.admin-nav-item:hover svg{color:var(--ink-soft)}
-.admin-nav-item.active{background:#eef0f3;color:var(--ink);border-left:0;box-shadow:none;font-weight:700}
-.admin-nav-item.active svg{color:var(--ink)}
-.admin-nav-item .count{background:#374151;color:#fff}
-.admin-side-brand{color:var(--ink)}
-
 /* extra filter bars */
-.x-filters{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:0 14px 10px}
+.x-filters{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px 20px}
 .x-filters input,.x-filters select,.x-catsearch{height:30px;padding:0 9px;border:1px solid var(--line);border-radius:4px;font:inherit;font-size:12px;background:#fff;color:var(--ink);min-width:120px}
 .x-filters .x-date{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--ink-soft)}
 .x-catsearch{display:block;width:calc(100% - 28px);margin:0 14px 8px}
