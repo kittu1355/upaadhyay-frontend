@@ -62,3 +62,21 @@ body{font-size:12.5px}
 .xd-item{padding:8px 0;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:10px;align-items:center}
 .xd-item small{display:block;color:var(--ink-faint)}
 .xd-acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+
+/* ===== Theme: match user home page (white-pink + purple) ===== */
+:root{--purple:#4b1f9e;--purple-d:#3a1580;--pink:#e0359a;--rose-50:#fff5fa;--rose-100:#ffe9f3;--rose-200:#fbd3e6}
+.admin-side{background:linear-gradient(180deg,#fff 0%,var(--rose-50) 55%,var(--rose-100) 100%);color:var(--ink);border-right:1px solid var(--rose-200)}
+.admin-side-brand{border-bottom:1px solid var(--rose-200);color:var(--purple)}
+.admin-side-brand img{background:#fff;box-shadow:0 1px 4px rgba(224,53,154,.18)}
+.admin-nav-group-label{color:#b08aa3}
+.admin-nav-item{color:#5a4a63}
+.admin-nav-item:hover{background:var(--rose-100);color:var(--purple)}
+.admin-nav-item.active{background:#fff;color:var(--purple);box-shadow:inset 3px 0 0 var(--pink),0 1px 4px rgba(75,31,158,.10)}
+.admin-nav-item.active svg{color:var(--pink)}
+.admin-nav-item .count{background:var(--pink);color:#fff}
+.admin-side-foot{border-top:1px solid var(--rose-200);color:#8a7a93}
+.admin-top{background:linear-gradient(90deg,var(--purple),#7b4fd6)}
+.btn-primary,.al-btn{background:var(--purple)}
+.btn-primary:hover:not(:disabled),.al-btn:hover:not(:disabled){background:var(--purple-d)}
+.btn-ghost{color:var(--purple)}
+.btn-ghost:hover:not(:disabled){border-color:var(--pink);background:var(--rose-50)}
