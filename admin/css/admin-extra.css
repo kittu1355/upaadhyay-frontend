@@ -104,3 +104,12 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--purple);
 .admin-tab.active,.admin-tab.on{color:var(--purple);border-bottom-color:var(--purple)}
 .rv-doc .ic{background:var(--purple-50);color:var(--purple)}
 .admin-avatar{background:var(--purple-50);color:var(--purple)}
+
+/* Sidebar: no purple highlight, neutral grey only */
+.admin-nav-item{border-left:0}
+.admin-nav-item:hover{background:#f3f4f6;color:var(--ink)}
+.admin-nav-item:hover svg{color:var(--ink-soft)}
+.admin-nav-item.active{background:#eef0f3;color:var(--ink);border-left:0;box-shadow:none;font-weight:700}
+.admin-nav-item.active svg{color:var(--ink)}
+.admin-nav-item .count{background:#374151;color:#fff}
+.admin-side-brand{color:var(--ink)}
