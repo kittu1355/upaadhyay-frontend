@@ -119,6 +119,7 @@ function setMethod(m){method=m;$('methodEmail').classList.toggle('active',m==='e
 function sendOtp(){if(!/^\d{10}$/.test($('ph').value.trim())){err('Enter a valid 10-digit mobile number.');return}err('');$('otpF').style.display='block'}
 function next(){
   if(step===2){
+    if(method==='phone'){err('Sub-branch accounts use email. Switch to Email.');return}
     if(method==='email'){if(!/.+@.+\..+/.test($('em').value.trim())){err('Enter a valid email address.');return}}
     else{if(!/^\d{10}$/.test($('ph').value.trim())){err('Enter a valid 10-digit mobile number.');return}if(!/^\d{6}$/.test($('otp').value.trim())){err('Send the OTP and enter the 6-digit code.');return}}
   }
@@ -128,23 +129,46 @@ function next(){
 function back(){var o=order(),i=o.indexOf(step);if(i>0){step=o[i-1];view()}}
 function togglePw(id,b){var i=$(id);i.type=i.type==='password'?'text':'password'}
 function ls(k){try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}}
-function submitAuth(e){
+async function syncBranch(u){
+  /* rebuild the local dashboard state from the server (the server is the source of truth) */
+  var m=null;try{m=await api.branches.mine()}catch(x){}
+  if(!m||!m.connected||!m.status||m.status==='draft'){try{localStorage.removeItem('nwSub')}catch(x){}return 'code'}
+  var st=m.approved?'approved':(m.status==='rejected'||m.admin_status==='rejected')?'rejected':'pending';
+  var c=(u&&u.company)||{},mm=m.main||{};
+  var main={id:mm.id,n:mm.name,c:[mm.city,mm.state].filter(Boolean).join(', '),t:mm.type||'Institution',code:mm.code,d:mm.description||'',web:mm.website||'',addr:mm.address||'',year:mm.year||'',logo:mm.logo||'',live:true};
+  var sub={n:c.company_name||(u&&u.name)||'',c:[c.city,c.state].filter(Boolean).join(', '),em:(u&&u.email)||'',ph:(u&&u.phone)||'',by:(u&&u.name)||''};
+  try{localStorage.setItem('nwSub',JSON.stringify({sub:sub,mainCode:main.code,mainName:main.n,main:main,st:st}))}catch(x){}
+  return 'dash';
+}
+async function submitAuth(e){
   e.preventDefault();
-  var id=method==='email'?$('em').value.trim().toLowerCase():$('ph').value.trim(),pw=$('pw').value;
+  if(method!=='email'){err('Sub-branch accounts use email. Switch to Email.');return false}
+  var id=$('em').value.trim().toLowerCase(),pw=$('pw').value,btn=$('authSubmitBtn');
+  if(!/.+@.+\..+/.test(id)){err('Enter a valid email address.');return false}
   if(!pw){err('Enter your password.');return false}
   if(mode==='register'){
-    if(pw.length<6){err('Password must be at least 6 characters.');return false}
+    if(pw.length<8||!/[A-Za-z]/.test(pw)||!/\d/.test(pw)){err('Password must be at least 8 characters and include letters and numbers.');return false}
     if(pw!==$('pw2').value){err('Passwords do not match.');return false}
-    try{localStorage.setItem('nwSubAccount',JSON.stringify({id:id,pw:pw,branch:$('bn').value.trim(),contact:$('cp').value.trim()}))}catch(x){}
-    setBranchSession(id,$('bn').value.trim());
-    location.href='institution-network.html?start=code'+(BCODE?'&branch_code='+BCODE:'');return false;
   }
-  var a=ls('nwSubAccount');
-  if(!a){err('No sub-branch account found. Create an account first.');return false}
-  if(a.id!==id||a.pw!==pw){err('Wrong email/phone or password.');return false}
-  setBranchSession(id,a.branch);
-  var d=ls('nwSub');
-  location.href='institution-network.html?start='+(d&&d.st==='approved'?'dash':'code')+(BCODE?'&branch_code='+BCODE:'');
+  btn.disabled=true;
+  try{
+    if(mode==='register'){
+      var bn=$('bn').value.trim(),cp=$('cp').value.trim();
+      /* REAL account on the backend (role company) - this gives the API token the join request needs */
+      await api.register({name:cp,email:id,password:pw,password_confirmation:$('pw2').value,role:'company',company_name:bn});
+      try{localStorage.setItem('nwSubAccount',JSON.stringify({id:id,branch:bn,contact:cp}));localStorage.removeItem('nwSub')}catch(x){}
+      setBranchSession(id,bn);
+      location.href='institution-network.html?start=code'+(BCODE?'&branch_code='+BCODE:'');
+    }else{
+      var u=await api.login(id,pw,'company');
+      var nm=(u.company&&u.company.company_name)||u.name;
+      try{localStorage.setItem('nwSubAccount',JSON.stringify({id:id,branch:nm,contact:u.name}))}catch(x){}
+      setBranchSession(id,nm);
+      var where=await syncBranch(u);
+      location.href='institution-network.html?start='+where+(BCODE?'&branch_code='+BCODE:'');
+    }
+  }catch(x){err((x&&x.message)||'Something went wrong. Please try again.')}
+  finally{btn.disabled=false}
   return false;
 }
 view();
