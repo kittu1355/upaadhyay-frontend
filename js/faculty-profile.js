@@ -158,13 +158,13 @@ const R={
 </div></div>`}};
 
 /* ---------- Verification step ---------- */
-/* Server routes used by the Send / Verify buttons. Change them here to match your Laravel routes. */
-const VERIFY_API={emailSend:'/email/verification-notification',phoneSend:'/candidate/phone/send-otp',phoneVerify:'/candidate/phone/verify-otp'};
+/* For now the login email and the phone number the user adds are shown as verified automatically. OTP verification is marked Coming soon. */
 const VF_ST={none:['p-no','circle','Not verified'],pend:['p-pend','clock','Under review'],ok:['p-ok','check','Verified'],bad:['p-upd','alert','Rejected']};
 const vfPill=k=>{const x=VF_ST[k]||VF_ST.none;return pill(x[0],x[1],x[2])};
 const vfRow=(label,hint,pl,act)=>`<div class="fp-row"><span><b>${label}</b>${hint?`<div class="fp-hint" style="margin:2px 0 0">${hint}</div>`:''}</span><span style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">${pl}${act||''}</span></div>`;
-function vfEmail(){const U=currentUser||{};return (S.ver.email==='ok'||U.emailVerified||U.email_verified_at||U.email_verified)?'ok':'none'}
-function vfPhone(){return S.ver.phone==='ok'?'ok':'none'}
+function vfEmail(){return S.email?'ok':'none'}
+function vfPhone(){return String(S.phone||'').trim()?'ok':'none'}
+const vfSoon='<span class="fp-tag t-opt" title="OTP verification is coming soon">OTP verify · Coming soon</span>';
 function vfDocState(keys,sec){const f=keys.map(k=>S.files[k]).filter(Boolean);if(!f.length)return 'none';const v=S.ver[sec];return v==='ok'?'ok':v==='bad'?'bad':'pend'}
 function vfDocs(){const rows=[];
  const names={ug:"Bachelor's degree certificate",pg:"Master's degree certificate",mphil:'M.Phil certificate',dip:'Diploma certificate',phd:'Ph.D. certificate',oth:'Other qualification certificate'};
@@ -176,28 +176,19 @@ function vfDocs(){const rows=[];
  return html||`<div class="fp-hint" style="padding:10px 0">Add your qualifications and employment first. Their documents will be listed here.</div>`}
 function verifyHTML(){
  const em=vfEmail(),ph=vfPhone(),idf=S.files.idproof,idst=idf?(S.ver.id==='ok'?'ok':S.ver.id==='bad'?'bad':'pend'):'none',
-  items=[em==='ok',ph==='ok',idst==='ok'],done=items.filter(Boolean).length,
-  otp=ST.vfOtp?`<div class="fp-row" style="border:0;gap:8px"><input class="fp-in" id="vfCode" maxlength="6" inputmode="numeric" placeholder="Enter 6-digit code" style="max-width:200px"><button type="button" class="fp-btn pri sm" data-vf="phoneVerify">Verify</button><button type="button" class="fp-btn sm" data-vf="phoneCancel">Cancel</button></div>`:'';
+  done=[em==='ok',ph==='ok',idst==='ok'].filter(Boolean).length;
  return `<h3>Profile Verification</h3><p class="fp-sub">Verified contact details and documents help institutions trust your profile. Verification is optional and does not change your profile strength.</p>
  <div class="fp-note"><b>${done} of 3 checks complete</b> · Email, phone and an ID proof.</div>
  <div class="fp-card"><h4>1. Contact verification</h4>
-  ${vfRow('Email',esc(S.email)||'No email on this account',vfPill(em),em==='ok'?'':`<button type="button" class="fp-btn sm" data-vf="emailSend">Send verification link</button>`)}
-  ${vfRow('Phone',esc(S.phone)||'Add your phone number in Account &amp; Contact',vfPill(ph),ph==='ok'?'':(S.phone?`<button type="button" class="fp-btn sm" data-vf="phoneSend">Send OTP</button>`:`<button type="button" class="fp-btn sm" data-go="1">Add phone</button>`))}
-  ${otp}
+  ${vfRow('Email',esc(S.email)?esc(S.email)+' · the account you logged in with':'No email on this account',vfPill(em),vfSoon)}
+  ${vfRow('Phone',esc(S.phone)||'Add your phone number in Account &amp; Contact',vfPill(ph),ph==='ok'?vfSoon:`<button type="button" class="fp-btn sm" data-go="1">Add phone</button>`)}
+  <div class="fp-hint" style="margin-top:8px">Your login email and the phone number you add are marked verified for now. OTP verification is coming soon.</div>
  </div>
  <div class="fp-card"><h4>2. Identity proof ${tag('opt')}</h4><div class="fp-hint" style="margin:0 0 10px">Aadhaar, PAN, passport, voter ID or driving licence. Only our verification team can see it.</div>
   <div class="fp-row" style="border:0;padding:0 0 10px">${vfPill(idst)}${idst==='bad'?'<span class="fp-hint" style="margin:0">Please upload a clearer copy.</span>':idst==='pend'?'<span class="fp-hint" style="margin:0">Our team will review it. You will see the result here.</span>':''}</div>
   ${UP('idproof','ID proof document')}</div>
  <div class="fp-card"><h4>3. Education &amp; experience documents</h4>${vfDocs()}</div>
  <div class="fp-note">Identity verification is not required to create a faculty profile.</div>`}
-document.addEventListener('click',async e=>{const b=e.target.closest('[data-vf]');if(!b||ST.vfBusy)return;const a=b.dataset.vf,rr=()=>{renderSec(10);paint()};
- const call=async(path,body,okMsg)=>{ST.vfBusy=1;b.disabled=true;try{const r=await api.post(path,body||{});toast(okMsg,1);return r||true}catch(x){toast((x&&x.message)||'Could not complete this. Please try again later.',0,1);return false}finally{ST.vfBusy=0;b.disabled=false}};
- if(a==='emailSend'){await call(VERIFY_API.emailSend,{},'Verification link sent to '+(S.email||'your email'))}
- else if(a==='phoneSend'){if(await call(VERIFY_API.phoneSend,{phone:S.phone},'OTP sent to '+S.phone)){ST.vfOtp=1;rr()}}
- else if(a==='phoneCancel'){ST.vfOtp=0;rr()}
- else if(a==='phoneVerify'){const c=($('#vfCode')||{}).value||'';if(!/^\d{6}$/.test(c.trim())){toast('Enter the 6-digit code.',0,1);return}
-  if(await call(VERIFY_API.phoneVerify,{phone:S.phone,code:c.trim()},'Phone verified')){S.ver.phone='ok';ST.vfOtp=0;await saveProfile();rr()}}
-});
 function pvBox(t,sec,body,empty){return `<div class="fp-pv-box ${body?'':'empty'}"><div class="fp-pv-bh"><h5>${t}</h5><button type="button" class="fp-pv-add" data-go="${sec}">${body?'Edit':'+ Add'}</button></div>${body||`<div class="fp-pv-ph">${empty}</div>`}</div>`}
 function eduBlock(k){const hi=(EDU[S.high]||[]).slice(-1)[0]===k,rq=hi?'req':(k==='ssc'||k==='hsc'?'rec':'some');const T=(t)=>tag(rq==='some'?'Required for some jobs':rq,rq==='some'?t:undefined);
  const e=`edu.${k}.`,names={ssc:'10th / SSC',hsc:'12th / Intermediate',ug:"Bachelor's Degree",pg:"Master's Degree",phd:'Ph.D. / Doctoral Details',mphil:'M.Phil',dip:'Diploma',oth:'Other qualification'};
