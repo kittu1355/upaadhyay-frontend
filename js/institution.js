@@ -600,7 +600,7 @@ const VSTEPS=['Status','Representative','Authority','Documents']; let VS=0;
 function verifyFlow(){
   const last=VS===VSTEPS.length-1;
   const tabs=VSTEPS.map((t,i)=>`<button class="in-step${i===VS?' on':i<VS?' done':''}" onclick="IN.vstep(${i})"><span class="in-step-n">${i+1}</span><span class="in-step-t">${t}</span></button>`).join('');
-  const body=[()=>`<div class="in-card in-sq">${statusBody()}</div>`,repVCard,authVCard,docsCard][VS]();
+  const body=[()=>`<div class="in-card">${statusBody()}</div>`,repVCard,authVCard,docsCard][VS]();
   return body;
 }
 
