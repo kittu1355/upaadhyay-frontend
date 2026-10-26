@@ -6,7 +6,7 @@
 <title>Employer Dashboard — Upaadhyay</title>
 <meta name="robots" content="noindex,follow">
 <link rel="stylesheet" href="../css/style.css?v=16">
-<link rel="stylesheet" href="../css/institution.css?v=22">
+<link rel="stylesheet" href="../css/institution.css?v=23">
 <style>#dashInnerWide{visibility:hidden}#dashInnerWide.ready{visibility:visible}</style>
 <link rel="stylesheet" href="../css/sidebar.css?v=11">
 <link rel="stylesheet" href="../css/profile-ui.css?v=1">
@@ -171,9 +171,9 @@
               <div class="in-grid">
                 <label class="in-chk in-full"><input type="checkbox" id="jbQaOn" checked> Allow candidates to ask questions about this role</label>
                 <div class="in-f in-full" id="jf-qaContact"><label>Contact for questions<i>Optional</i></label><input type="email" id="jbQaContact" placeholder="e.g. hr@institution.edu" oninput="jbClear('qaContact')"><div class="in-err" role="alert"></div></div>
-                <div class="in-f in-full"><label>Common questions &amp; answers<i>Optional</i></label><textarea id="jbQaFaq" placeholder="One per line, like:&#10;Is accommodation provided? | Yes, on campus&#10;Is there a probation period? | 6 months"></textarea></div>
+                <div class="in-f in-full"><label>Questions for candidates<i>Optional · up to 5</i></label><div id="jbQaList" class="qa-host"></div></div>
               </div>
-              <div class="in-note">Candidates will see these answers on the job page and can send you new questions.</div>
+              <div class="in-note">Candidates will see these questions on the job page, with the time they get to answer each one.</div>
             </div>
 
             <div class="in-actions"><span class="in-stepof" id="jbStepOf">Step 1 of 6</span>
@@ -242,7 +242,9 @@
 <script src="../js/api.js?v=2"></script>
 <script src="../js/live-update.js?v=1"></script>
 <script src="../js/store.js?v=2"></script>
-<script src="../js/employer.js?v=19"></script>
+<script src="../js/qa-builder.js?v=1"></script>
+<script>(function(){function i(){if(window.QA)QA.init("jbQaList",[])}if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",i);else i()})();</script>
+<script src="../js/employer.js?v=20"></script>
 <script>/* this page shows real data only: drop the built-in demo candidates */Object.keys(facultyProfiles).forEach(function(k){ delete facultyProfiles[k]; });</script>
 <script src="../js/logo-crop.js"></script>
 <script src="../js/institution.js?v=27"></script>
