@@ -546,19 +546,24 @@ function subReq(){
 function pendingReqs(){ const r=subReq(); return r&&r.st==='pending'?1:0; }
 const reqPill=st=>st==='approved'?`<span class="in-vbadge">${ck(12)} Approved</span>`:st==='rejected'?'<span class="in-vbadge r">Rejected</span>':`<span class="in-vbadge p">${CLKs} Pending review</span>`;
 const reqThumb=r=>`<div class="in-thumb" style="width:52px;height:52px;overflow:hidden">${r.logo?`<img src="${r.logo}" alt="" style="width:100%;height:100%;object-fit:cover">`:esc((r.name||'').slice(0,2).toUpperCase())}</div>`;
+const PFMORE=m=>`<button class="pf-more" aria-label="More" onclick="event.stopPropagation();var m=this.nextElementSibling,o=m.classList.contains('open');document.querySelectorAll('.pf-menu.open').forEach(function(x){x.classList.remove('open')});if(!o)m.classList.add('open')">&middot;&middot;&middot;</button><div class="pf-menu">${m}</div>`;
+const pfAv=(img,name)=>img?`<div class="pf-av" style="background-image:url('${img}')"></div>`:`<div class="pf-av">${esc(String(name||'?').trim().slice(0,2).toUpperCase())}</div>`;
+function pfCard({name,img,sub,meta,badge,acts,click}){
+  return `<div class="pf-card"${click?` onclick="${click}"`:''}><div class="pf-cover"></div>${pfAv(img,name)}<div class="pf-body"><h3 class="pf-name"><span>${esc(name)}</span></h3><div class="pf-sub">${esc(sub||'')}</div><div class="pf-meta">${esc(meta||'')}</div>${badge?`<div class="pf-chips">${badge}</div>`:''}<div class="pf-acts">${acts}</div></div></div>`;
+}
 function branchMgr(){
   if(!approved()) return card('Branches','',note('<b>Locked until admin approval.</b><br>Once an admin approves your institution you can add campuses, view branches and review requests from sub-branches here.','in-warn'));
   const d=I.d, n=I.branches.length+1, r=subReq();
   const reqCard=card('Sub-branch requests','Sub-branches that selected your institution appear here. Review what they submitted, verify it, then approve or reject.',
-    r?`<div class="in-camp"><div class="lft">${reqThumb(r)}<div><b>${esc(r.name)}</b><span>${esc(r.city)||'Location not added'}${r.type?' · '+esc(r.type):''}${r.date?' · Submitted '+esc(r.date):''}</span></div></div>
-      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">${reqPill(r.st)}<button class="btn btn-ghost btn-sm" onclick="IN.reqView()">View details</button>${r.st==='pending'?'<button class="btn btn-primary btn-sm" onclick="IN.reqAsk(\'approved\')">Approve</button><button class="btn btn-ghost btn-sm" onclick="IN.reqAsk(\'rejected\')">Reject</button>':''}</div></div>`
+    r?`<div class="pf-grid">${pfCard({name:r.name,img:r.logo,sub:[r.type,'Sub-branch'].filter(Boolean)[0],meta:[r.city||'Location not added',r.date?'Submitted '+r.date:''].filter(Boolean).join(' \u00b7 '),badge:reqPill(r.st),click:'IN.reqView()',
+      acts:`<button class="pf-btn pri" onclick="event.stopPropagation();IN.reqView()">View details</button>`+(r.st==='pending'?`<button class="pf-btn out" onclick="event.stopPropagation();IN.reqAsk('approved')">Approve</button>`+PFMORE(`<button class="bad" onclick="IN.reqAsk('rejected')">Reject</button>`):'')})}</div>`
     :'<div class="empty-s" style="padding:14px 0;color:var(--ink-soft);font-size:14px"><b>No sub-branch requests yet.</b><br>New requests from sub-branches will appear here.</div>');
-  const connected=(r&&r.st==='approved')?`<div class="in-camp"><div class="lft">${reqThumb(r)}<div><b>${esc(r.name)}</b><span>${esc(r.city)||'Location not added'} · Sub-branch</span></div></div><button class="btn btn-ghost btn-sm" onclick="IN.reqView()">View</button></div>`:'';
+  const connected=(r&&r.st==='approved')?pfCard({name:r.name,img:r.logo,sub:'Sub-branch',meta:(r.city||'Location not added'),badge:'<span class="in-vbadge">'+ck(12)+' Connected</span>',click:'IN.reqView()',acts:'<button class="pf-btn pri" onclick="event.stopPropagation();IN.reqView()">View</button>'}):'';
   return reqCard+card('Branches &amp; campuses','Your campuses and approved sub-branches.',
    `<p style="font-size:13px;font-weight:600;color:var(--ink-soft);margin:0 0 10px">${n} ${n===1?'campus':'campuses'}${connected?' · 1 sub-branch':''}</p>
-   <div class="in-camp"><div class="lft"><div class="in-thumb" style="width:52px;height:52px;overflow:hidden">${d.logo?`<img src="${d.logo}" alt="Main campus logo" style="width:100%;height:100%;object-fit:cover">`:esc((d.short||d.name||'IN').slice(0,2).toUpperCase())}</div><div><b>${esc(d.name)||'Main campus'}</b><span>Main campus: ${esc(locStr(d))||'Location not added'}</span></div></div><span class="in-tag g">${ck(12)} Main campus</span></div>
-   ${I.branches.map((b,i)=>`<div class="in-camp"><div class="lft">${thumb(b)}<div><b>${esc(b.name)}</b><span>${esc(locStr(b))}${b.type?' · '+esc(b.type):''}</span></div></div><div style="display:flex;gap:8px"><button class="btn btn-ghost btn-sm" onclick="IN.bView(${i})">View</button><button class="btn btn-ghost btn-sm" onclick="IN.bEdit(${i})">Edit</button></div></div>`).join('')}
-   ${connected}
+   <div class="pf-grid">${pfCard({name:d.name||'Main campus',img:d.logo,sub:'Main campus',meta:locStr(d)||'Location not added',badge:'<span class="in-vbadge">'+ck(12)+' Main campus</span>',click:'IN.edit(0)',acts:'<button class="pf-btn pri" onclick="event.stopPropagation();IN.edit(0)">Edit</button>'})}
+   ${I.branches.map((b,i)=>pfCard({name:b.name,img:b.img,sub:b.type||'Branch',meta:locStr(b),click:`IN.bView(${i})`,acts:`<button class="pf-btn pri" onclick="event.stopPropagation();IN.bView(${i})">View</button><button class="pf-btn out" onclick="event.stopPropagation();IN.bEdit(${i})">Edit</button>`})).join('')}
+   ${connected}</div>
    <button class="btn btn-primary btn-sm" onclick="IN.bEdit(-1)">+ Add branch / campus</button>`);
 }
 function modal(h){ closeM(); const m=document.createElement('div'); m.className='in-modal'; m.id='inModal'; m.setAttribute('role','dialog'); m.setAttribute('aria-modal','true'); m.innerHTML='<div>'+h+'</div>'; m.addEventListener('click',e=>{ if(e.target===m) closeM(); }); document.body.appendChild(m); }
