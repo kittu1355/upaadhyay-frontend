@@ -65,6 +65,75 @@
     document.getElementById('bjLocation').value = '';
     renderBrowseJobs();
   }
+
+  /* ---------- job card (list) helpers ---------- */
+  const JB_IC = {
+    bag:'<svg class="jb-ic" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2M3 13h18"/></svg>',
+    pin:'<svg class="jb-ic" viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>',
+    rupee:'<svg class="jb-ic" viewBox="0 0 24 24"><path d="M7 5h10M7 9h10M7 5c5 0 6 2.5 6 4s-1.5 4-6 4l7 6"/></svg>',
+    doc:'<svg class="jb-ic" viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg>',
+    mark:'<svg class="jb-ic" viewBox="0 0 24 24"><path d="M6 3h12v18l-6-4-6 4z"/></svg>',
+    cap:'<svg class="jb-ic" viewBox="0 0 24 24"><path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11.5V16c0 1.5 3 3 6 3s6-1.5 6-3v-4.5"/></svg>'
+  };
+  function jbToast(m){ try{ if(window.api && api.toast) return api.toast(m); }catch(e){} try{ showGenericToast(m); }catch(e){} }
+  function jbPostedText(d){ d = Number(d)||0; return d<=0 ? 'Posted today' : d===1 ? 'Posted 1 day ago' : d<7 ? 'Posted '+d+' days ago' : d<30 ? 'Posted '+Math.floor(d/7)+' week'+(Math.floor(d/7)>1?'s':'')+' ago' : 'Posted '+Math.floor(d/30)+' month'+(Math.floor(d/30)>1?'s':'')+' ago'; }
+  function jbExpText(j){
+    const mx = j.raw && j.raw.experience_max != null && j.raw.experience_max !== '' ? Number(j.raw.experience_max) : null;
+    if(j.minExp === 0 && !mx) return 'Freshers welcome';
+    return mx && mx > j.minExp ? j.minExp + '-' + mx + ' Yrs' : j.minExp + '+ Yrs';
+  }
+  function jbSavedList(){ try{ return JSON.parse(localStorage.getItem('upaadhyay_saved_jobs')||'[]')||[]; }catch(e){ return []; } }
+  function jbIsSaved(id){ return jbSavedList().indexOf(String(id)) > -1; }
+  function jbToggleSave(id, btn, ev){
+    if(ev) ev.stopPropagation();
+    let a = jbSavedList(); id = String(id);
+    const on = a.indexOf(id) < 0;
+    a = on ? a.concat(id) : a.filter(x => x !== id);
+    try{ localStorage.setItem('upaadhyay_saved_jobs', JSON.stringify(a)); }catch(e){}
+    document.querySelectorAll('[data-save-job="'+id+'"]').forEach(b => { b.classList.toggle('on', on); const t = b.querySelector('.t'); if(t) t.textContent = on ? 'Saved' : 'Save'; });
+    jbToast(on ? 'Job saved' : 'Removed from saved jobs');
+  }
+  function jbIsApplied(id){ try{ return (currentUser.appliedIds||[]).indexOf(String(id)) > -1; }catch(e){ return false; } }
+  function jbOpen(id){ location.href = 'job-view.html?id=' + encodeURIComponent(id); }
+  function jbCardClick(ev, id){ if(ev.target.closest('button,a')) return; jbOpen(id); }
+  function jbToggleDesc(btn, ev){
+    ev.stopPropagation();
+    const card = btn.closest('.jb-card'); const open = card.classList.toggle('open');
+    btn.textContent = open ? 'View less' : 'View more';
+  }
+  function jbCardHtml(j){
+    const tl = String(j.type||'').toLowerCase(), pc = tl.includes('part')||tl.includes('visit') ? 'part' : tl.includes('contract') ? 'con' : '';
+    const sk = (j.skills && j.skills.length ? j.skills : j.tags || []);
+    const desc = String(j.description || '').trim();
+    const id = String(j.id).replace(/'/g,'');
+    const saved = jbIsSaved(id), applied = jbIsApplied(id);
+    const dead = j.daysLeft === null ? '' : j.daysLeft <= 0 ? '<span class="jb-dead">Closing today</span>' : '<span class="jb-dead'+(j.daysLeft>7?' ok':'')+'">'+j.daysLeft+'d left</span>';
+    return `
+    <article class="jb-card" onclick="jbCardClick(event,'${id}')">
+      <div class="jb-head">
+        <div class="jb-main">
+          <h3 class="jb-title">${pfEsc(j.title)}</h3>
+          <div class="jb-org"><span class="jb-name">${pfEsc(j.org)}</span><span class="jb-type ${pc}">${pfEsc(j.type)}</span></div>
+        </div>
+        <div class="jb-logo">${bjLogoHtml({logo:j.logo, name:j.org, color:j.color, initials:j.initials}, 48)}</div>
+      </div>
+      <div class="jb-meta">
+        <span>${JB_IC.bag}${pfEsc(jbExpText(j))}</span>
+        <span>${JB_IC.pin}${pfEsc(j.city || 'India')}</span>
+        <span>${JB_IC.rupee}${pfEsc(j.salary || 'Not disclosed')}</span>
+      </div>
+      ${desc ? `<div><div class="jb-desc-wrap">${JB_IC.doc}<p class="jb-desc">${pfEsc(desc)}</p></div>${desc.length > 150 ? `<button class="jb-viewmore" onclick="jbToggleDesc(this,event)">View more</button>` : ''}</div>` : ''}
+      ${sk.length ? `<div class="jb-skills">${sk.slice(0,6).map(t=>`<span>${pfEsc(t)}</span>`).join('')}${sk.length>6?`<span>+${sk.length-6} more</span>`:''}</div>` : ''}
+      <div class="jb-foot">
+        <div class="jb-posted"><span>${jbPostedText(j.posted)}</span>${dead}</div>
+        <div class="jb-actions">
+          <button class="jb-btn save ${saved?'on':''}" data-save-job="${id}" onclick="jbToggleSave('${id}',this,event)" aria-label="Save job">${JB_IC.mark}<span class="t">${saved?'Saved':'Save'}</span></button>
+          <a class="jb-btn" href="job-view.html?id=${encodeURIComponent(id)}">View</a>
+          <button class="jb-btn pri" data-apply-job="${id}" data-title="${pfEsc(j.title)}" ${applied?'disabled':''} onclick="event.stopPropagation();applyToJob('${id}', this.dataset.title)">${applied?'Applied ✓':'Apply now'}</button>
+        </div>
+      </div>
+    </article>`;
+  }
   function renderBrowseJobs(){
     const keyword = (document.getElementById('bjKeyword').value || '').toLowerCase().trim();
     const checkedCats = Array.from(document.querySelectorAll('.bj-cat-check:checked')).map(cb=>cb.value);
@@ -85,25 +154,7 @@
       list.innerHTML = `<div class="bj-empty">No jobs match your filters right now. Try clearing a filter or broadening your search.</div>`;
       return;
     }
-    // >>> MODIFIED START: square job cards (title, company, exp/type/location, skills, salary, dates) <<<
-    list.innerHTML = filtered.map(j=>{
-      const tl = String(j.type||'').toLowerCase(), pc = tl.includes('part')||tl.includes('visit') ? 'part' : tl.includes('contract') ? 'con' : '';
-      const sk = (j.skills && j.skills.length ? j.skills : j.tags || []);
-      const exp = j.minExp === 0 ? 'Freshers welcome' : `${j.minExp}+ yrs exp`;
-      const desc = String(j.description || '').trim();
-      return `
-      <div class="bjn-card">
-        <div class="bjn-top"><span class="bjn-pill ${pc}">${pfEsc(j.type)}</span><span class="bjn-sal">${pfEsc(j.salary)}</span></div>
-        <h3 class="bjn-title">${pfEsc(j.title)}</h3>
-        <div class="bjn-inst"><span class="bjn-logo">${bjLogoHtml({logo:j.logo, name:j.org, color:j.color, initials:j.initials}, 26)}</span><span class="bjn-name">${pfEsc(j.org)}</span></div>
-        ${sk.length ? `<div class="bjn-chips">${sk.slice(0,3).map(t=>`<span class="bjn-chip">${pfEsc(t)}</span>`).join('')}${sk.length>3 ? `<span class="bjn-chip more">+${sk.length-3}</span>` : ''}</div>` : ''}
-        ${desc ? `<p class="bjn-desc">${pfEsc(desc)}</p>` : ''}
-        <div class="bjn-meta">${pfEsc(j.city)} · ${exp} · ${j.posted}d ago · ${j.daysLeft===null ? 'Open till filled' : j.daysLeft + 'd left'}</div>
-        <div class="bjn-line"></div>
-        <button class="bjn-btn" data-apply-job="${j.id}" data-title="${pfEsc(j.title)}" onclick="applyToJob(${j.id}, this.dataset.title)">Apply now</button>
-      </div>`;
-    }).join('');
-    // >>> MODIFIED END <<<
+    list.innerHTML = filtered.map(jbCardHtml).join('');
   }
 
   // Inline-edit handlers for the View Profile page (image-5 style: edit in place, no separate form)
