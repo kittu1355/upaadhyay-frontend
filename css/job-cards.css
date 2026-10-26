@@ -1,0 +1,157 @@
+/* ==========================================================================
+   job-cards.css — job list cards (jobs.html) + job detail page (job-view.html)
+   ========================================================================== */
+
+/* ---------- list layout ---------- */
+#bjJobList{ display:grid !important; grid-template-columns:1fr !important; gap:16px !important; }
+@media (min-width:1280px){ #bjJobList{ grid-template-columns:repeat(2,minmax(0,1fr)) !important; } }
+
+/* ---------- card ---------- */
+.jb-card{
+  position:relative; background:#fff; border:1px solid var(--line); border-radius:16px;
+  padding:20px 22px 16px; display:flex; flex-direction:column; gap:14px; min-width:0;
+  cursor:pointer; box-shadow:0 1px 2px rgba(15,35,80,.04);
+  transition:box-shadow .18s, border-color .18s, transform .18s;
+}
+.jb-card:hover{ box-shadow:0 10px 28px rgba(15,35,80,.10); border-color:#cfd9ee; transform:translateY(-2px); }
+.jb-head{ display:flex; align-items:flex-start; justify-content:space-between; gap:16px; }
+.jb-main{ min-width:0; flex:1; }
+.jb-title{
+  margin:0 0 6px; font-size:17px; font-weight:700; line-height:1.3; color:var(--ink);
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
+}
+.jb-card:hover .jb-title{ color:var(--blue-700); }
+.jb-org{ display:flex; align-items:center; flex-wrap:wrap; gap:6px 10px; font-size:14px; font-weight:600; color:var(--ink-soft); }
+.jb-org .jb-name{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:100%; }
+.jb-type{ font-size:11px; font-weight:700; letter-spacing:.02em; padding:3px 10px; border-radius:20px; background:#E3F7EC; color:#17753A; white-space:nowrap; }
+.jb-type.part{ background:#FFF1D6; color:#8A5A00; }
+.jb-type.con{ background:#E3EEFF; color:#1B4FBF; }
+.jb-logo{
+  flex-shrink:0; width:64px; height:64px; border-radius:14px; border:1px solid var(--line);
+  background:#fff; display:flex; align-items:center; justify-content:center; overflow:hidden; padding:6px; box-sizing:border-box;
+}
+.jb-logo img{ width:100%; height:100%; object-fit:contain; display:block; }
+.jb-logo span{ width:100% !important; height:100% !important; border-radius:10px !important; font-size:18px !important; }
+
+.jb-meta{ display:flex; flex-wrap:wrap; align-items:center; gap:8px 0; font-size:13.5px; color:var(--ink-soft); }
+.jb-meta > span{ display:inline-flex; align-items:center; gap:7px; padding:0 14px; border-left:1px solid var(--line); line-height:1.2; }
+.jb-meta > span:first-child{ padding-left:0; border-left:0; }
+.jb-ic{ width:16px; height:16px; flex-shrink:0; stroke:#7b8499; fill:none; stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round; }
+
+.jb-desc-wrap{ display:flex; gap:8px; align-items:flex-start; }
+.jb-desc-wrap .jb-ic{ margin-top:2px; }
+.jb-desc{
+  margin:0; font-size:13.5px; line-height:1.6; color:var(--ink-soft);
+  display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden;
+}
+.jb-card.open .jb-desc{ -webkit-line-clamp:unset; display:block; }
+.jb-viewmore{
+  background:none; border:0; padding:0; margin-top:4px; font:600 12.5px inherit; font-family:inherit;
+  color:var(--blue-700); cursor:pointer;
+}
+.jb-viewmore:hover{ text-decoration:underline; }
+
+.jb-skills{ display:flex; flex-wrap:wrap; align-items:center; gap:4px 0; font-size:13px; color:var(--ink-faint); }
+.jb-skills span + span::before{ content:"•"; margin:0 9px; color:#c3cadb; }
+
+.jb-foot{
+  display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;
+  padding-top:12px; border-top:1px solid var(--line); margin-top:auto;
+}
+.jb-posted{ display:flex; align-items:center; flex-wrap:wrap; gap:6px 10px; font-size:12.5px; color:var(--ink-faint); }
+.jb-dead{ font-size:11.5px; font-weight:600; padding:3px 9px; border-radius:20px; background:#FDECEA; color:#B3261E; }
+.jb-dead.ok{ background:#EEF2FF; color:var(--blue-700); }
+.jb-actions{ display:flex; align-items:center; gap:8px; }
+.jb-btn{
+  display:inline-flex; align-items:center; justify-content:center; gap:6px; font:600 13px inherit; font-family:inherit;
+  padding:8px 16px; border-radius:10px; border:1px solid var(--line); background:#fff; color:var(--ink);
+  cursor:pointer; white-space:nowrap; transition:.15s; text-decoration:none; line-height:1.2;
+}
+.jb-btn:hover{ border-color:var(--blue-500); color:var(--blue-700); background:var(--blue-50); }
+.jb-btn.pri{ background:var(--blue-700); border-color:var(--blue-700); color:#fff; }
+.jb-btn.pri:hover{ background:var(--blue-900); border-color:var(--blue-900); color:#fff; }
+.jb-btn.pri:disabled{ background:#17753A; border-color:#17753A; color:#fff; cursor:default; opacity:.95; }
+.jb-btn.save{ border-color:transparent; background:transparent; padding:8px 10px; color:var(--ink-soft); }
+.jb-btn.save .jb-ic{ stroke:currentColor; }
+.jb-btn.save.on{ color:var(--blue-700); }
+.jb-btn.save.on .jb-ic{ fill:var(--blue-700); }
+
+@media (max-width:560px){
+  .jb-card{ padding:16px 14px 12px; border-radius:14px; }
+  .jb-logo{ width:52px; height:52px; border-radius:12px; }
+  .jb-meta > span{ padding:0 10px; }
+  .jb-foot{ flex-direction:column; align-items:stretch; }
+  .jb-actions{ justify-content:space-between; }
+  .jb-actions .jb-btn.pri{ flex:1; }
+}
+
+/* ==========================================================================
+   Job detail page
+   ========================================================================== */
+.jd-page{ background:#F4F6FB; min-height:70vh; padding:24px 0 60px; }
+.jd-wrap{ max-width:1180px; margin:0 auto; padding:0 20px; box-sizing:border-box; }
+.jd-crumb{ font-size:13px; color:var(--ink-faint); margin:0 0 14px; }
+.jd-crumb a{ color:var(--blue-700); text-decoration:none; font-weight:600; }
+.jd-grid{ display:grid; grid-template-columns:minmax(0,1fr) 340px; gap:20px; align-items:start; }
+.jd-card{ background:#fff; border:1px solid var(--line); border-radius:16px; padding:24px 26px; box-shadow:0 1px 2px rgba(15,35,80,.04); margin-bottom:16px; }
+.jd-card h2{ margin:0 0 12px; font-size:18px; font-weight:700; color:var(--ink); }
+
+.jd-top{ display:flex; justify-content:space-between; gap:20px; align-items:flex-start; }
+.jd-top h1{ margin:0 0 6px; font-size:24px; line-height:1.25; font-weight:700; color:var(--ink); }
+.jd-org{ display:flex; align-items:center; flex-wrap:wrap; gap:6px 10px; font-size:15px; font-weight:600; color:var(--ink-soft); }
+.jd-logo{ flex-shrink:0; width:84px; height:84px; border-radius:18px; border:1px solid var(--line); background:#fff; display:flex; align-items:center; justify-content:center; overflow:hidden; padding:8px; box-sizing:border-box; }
+.jd-logo img{ width:100%; height:100%; object-fit:contain; }
+.jd-logo span{ width:100% !important; height:100% !important; border-radius:12px !important; font-size:24px !important; }
+.jd-facts{ display:flex; flex-direction:column; gap:10px; margin:18px 0 0; font-size:14.5px; color:var(--ink); }
+.jd-facts > div{ display:flex; align-items:center; gap:10px; }
+.jd-facts .jb-ic{ width:18px; height:18px; }
+.jd-facts .sep{ width:1px; height:16px; background:var(--line); margin:0 8px; }
+.jd-stats{ display:flex; flex-wrap:wrap; gap:6px 0; margin:22px 0 0; padding-top:18px; border-top:1px solid var(--line); font-size:13.5px; color:var(--ink-faint); }
+.jd-stats span{ padding:0 16px; border-left:1px solid var(--line); }
+.jd-stats span:first-child{ padding-left:0; border-left:0; }
+.jd-stats b{ color:var(--ink); font-weight:600; }
+.jd-cta{ display:flex; flex-wrap:wrap; gap:10px; margin-top:18px; }
+.jd-cta .jb-btn{ padding:12px 26px; font-size:14.5px; border-radius:999px; }
+.jd-cta .jb-btn.save{ border:1px solid var(--line); background:#fff; }
+
+.jd-desc{ font-size:14.5px; line-height:1.75; color:var(--ink-soft); white-space:pre-line; position:relative; }
+.jd-desc.clip{ max-height:230px; overflow:hidden; }
+.jd-desc.clip.open{ max-height:none; }
+.jd-desc.clip:not(.open)::after{ content:""; position:absolute; left:0; right:0; bottom:0; height:70px; background:linear-gradient(180deg,rgba(255,255,255,0),#fff); }
+.jd-readmore{ background:none; border:0; padding:0; margin-top:10px; font:600 14px inherit; font-family:inherit; color:var(--blue-700); cursor:pointer; }
+.jd-sub{ font-size:13px; color:var(--ink-faint); margin:-6px 0 12px; }
+.jd-chips{ display:flex; flex-wrap:wrap; gap:10px; }
+.jd-chip{ font-size:13.5px; padding:8px 16px; border:1px solid #d6deee; border-radius:999px; color:var(--ink-soft); background:#fff; }
+.jd-rows{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px 24px; }
+.jd-rows div{ font-size:14px; color:var(--ink); }
+.jd-rows small{ display:block; font-size:12px; color:var(--ink-faint); margin-bottom:2px; text-transform:uppercase; letter-spacing:.04em; }
+.jd-about{ font-size:14.5px; line-height:1.7; color:var(--ink-soft); margin:0; }
+
+.jd-side h3{ margin:0 0 14px; font-size:17px; font-weight:700; }
+.jd-sim{ display:flex; justify-content:space-between; gap:12px; padding:14px 0; border-top:1px solid var(--line); cursor:pointer; text-decoration:none; color:inherit; }
+.jd-sim:first-of-type{ border-top:0; padding-top:0; }
+.jd-sim:hover b{ color:var(--blue-700); }
+.jd-sim b{ display:block; font-size:14.5px; font-weight:600; line-height:1.3; margin-bottom:6px; color:var(--ink); }
+.jd-sim small{ display:flex; align-items:center; gap:6px; font-size:12.5px; color:var(--ink-soft); margin-top:3px; }
+.jd-sim .jb-ic{ width:14px; height:14px; }
+.jd-sim .jd-sl{ flex-shrink:0; width:46px; height:46px; border-radius:10px; border:1px solid var(--line); overflow:hidden; display:flex; align-items:center; justify-content:center; padding:4px; box-sizing:border-box; }
+.jd-sim .jd-sl img{ width:100%; height:100%; object-fit:contain; }
+.jd-sim .jd-sl span{ width:100% !important; height:100% !important; border-radius:8px !important; font-size:13px !important; }
+.jd-empty{ font-size:13.5px; color:var(--ink-faint); }
+
+@media (max-width:900px){
+  .jd-grid{ grid-template-columns:1fr; }
+  .jd-top h1{ font-size:20px; }
+  .jd-logo{ width:64px; height:64px; border-radius:14px; }
+  .jd-card{ padding:18px 16px; }
+  .jd-rows{ grid-template-columns:1fr; }
+  .jd-stats span{ padding:0 10px; }
+  .jd-cta .jb-btn{ flex:1; }
+}
+
+/* sans-serif headings (global h1-h3 use a serif face) */
+.jb-title, .jd-top h1, .jd-card h2, .jd-side h3, .jd-sim b{ font-family:'Poppins',system-ui,-apple-system,'Segoe UI',sans-serif; }
+
+/* "Ask questions" box inside the description card */
+#qaBox{ margin-top:22px; padding-top:20px; border-top:1px solid var(--line); }
+#qaBox h3{ margin:0 0 8px; font-size:16px; font-family:'Poppins',system-ui,sans-serif; }
