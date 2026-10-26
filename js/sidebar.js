@@ -67,6 +67,7 @@
     var t = 'company'; try{ t = sessionStorage.getItem('upadyay_emp_tab') || 'company'; }catch(e){}
     if(window.__empApps) return 'apps';
     if(t === 'post') return 'post'; if(t === 'myjobs') return 'myjobs'; if(t === 'candidates') return 'cands';
+    if(document.querySelector('#instRoot [data-sec="verify"]')) return 'verify';
     var el = document.querySelector('#instRoot .in-dash .in-step.on:not(.sub) .in-step-t'), x = el ? el.textContent.toLowerCase() : '';
     return /^verif/.test(x) ? 'verify' : /^(sub-)?branch/.test(x) ? 'reqs' : /^repres/.test(x) ? 'rep' : /^posted/.test(x) ? 'myjobs' : 'profile';
   }
