@@ -31,7 +31,7 @@
           <div id="dashNotifList" style="max-height:220px; overflow:auto;"></div>
         </div>
         <button class="nav-avatar-btn" id="dashTopAvatarBtn" onclick="toggleDashAccountMenu()" style="width:36px; height:36px; border-radius:50%; overflow:hidden; border:2px solid var(--blue-100); padding:0; background:var(--blue-50); cursor:pointer; position:relative;">
-          <img id="dashTopAvatarImg" src="" style="width:100%; height:100%; object-fit:cover; display:none;" alt="Profile photo">
+          <img id="dashTopAvatarImg" style="width:100%; height:100%; object-fit:cover; display:none;" alt="Profile photo">
           <span id="dashTopAvatarInit" style="display:flex; align-items:center; justify-content:center; width:100%; height:100%; font-weight:700; color:var(--blue-700); font-size:13px;"></span>
         </button>
         <div id="dashAccountMenu" class="dash-dropdown dash-dropdown-account" style="display:none;">
@@ -121,7 +121,7 @@
                 <div class="in-f" id="jf-category"><label>Category<i>Required</i></label><select id="jbCategory" onchange="jbClear('category'); jbOtherToggle('jbCategory')"><option value="">Select category</option><option>Schools</option><option>Intermediate</option><option>Higher Education</option><option>Other</option></select><input type="text" id="jbCategoryOther" placeholder="Type the category, or leave empty to show Other" style="display:none;margin-top:4px"><div class="in-err" role="alert"></div></div>
                 <div class="in-f" id="jf-dept"><label>Department / subject<i>Required</i></label><input type="text" id="jbDept" placeholder="e.g. Mathematics" oninput="jbClear('dept')"><div class="in-err" role="alert"></div></div>
                 <div class="in-f" id="jf-type"><label>Employment type<i>Required</i></label><select id="jbType" onchange="jbClear('type'); jbOtherToggle('jbType')"><option value="">Select type</option><option>Full-time</option><option>Part-time</option><option>Contract</option><option>Visiting faculty</option><option>Other</option></select><input type="text" id="jbTypeOther" placeholder="Type the employment type, or leave empty to show Other" style="display:none;margin-top:4px"><div class="in-err" role="alert"></div></div>
-                <div class="in-f" id="jf-vac"><label>Number of vacancies<i>Optional</i></label><input type="number" id="jbVac" min="1" placeholder="1"></div>
+                <div class="in-f" id="jf-vac"><label>Number of vacancies<i>Optional</i></label><input type="number" id="jbVac" min="1" step="1" placeholder="1" oninput="jbClear('vac')"><div class="in-err" role="alert"></div></div>
               </div>
             </div>
 
@@ -161,7 +161,7 @@
               <div class="in-grid">
                 <div class="in-f in-full"><label>Job description<i>Optional</i></label><textarea id="jbDesc" placeholder="Responsibilities, teaching load, research expectations and benefits"></textarea></div>
                 <div class="in-f"><label>Key skills<i>Optional</i></label><input type="text" id="jbSkills" placeholder="e.g. Python, Machine Learning, Research"></div>
-                <div class="in-f"><label>Apply before<i>Optional</i></label><input type="date" id="jbDeadline"></div>
+                <div class="in-f" id="jf-deadline"><label>Apply before<i>Optional</i></label><input type="date" id="jbDeadline" oninput="jbClear('deadline')"><div class="in-err" role="alert"></div></div>
               </div>
             </div>
 
@@ -221,7 +221,7 @@
         </div>
 
         <div class="dash-fullbleed" id="candidateListWrap" style="display:none; padding:0;">
-          <div class="candidates-section-head"><h3>Recommended Candidates</h3><span class="count" id="candidateCount"></span></div>
+          <div class="candidates-section-head"><h3>Candidates</h3><span class="count" id="candidateCount"></span></div>
           <div class="demo-grid dash-fullbleed-grid" id="candidateList"></div>
           <div id="candidateShowMoreWrap" style="display:none; justify-content:center; margin-top:22px;">
             <button class="btn btn-light" id="candidateShowMoreBtn" onclick="showMoreCandidates()">View more</button>
@@ -241,7 +241,8 @@
 <script src="../js/api.js?v=2"></script>
 <script src="../js/live-update.js?v=1"></script>
 <script src="../js/store.js?v=2"></script>
-<script src="../js/employer.js?v=16"></script>
+<script src="../js/employer.js?v=17"></script>
+<script>/* this page shows real data only: drop the built-in demo candidates */Object.keys(facultyProfiles).forEach(function(k){ delete facultyProfiles[k]; });</script>
 <script src="../js/logo-crop.js"></script>
 <script src="../js/institution.js?v=18"></script>
 <script>
@@ -249,19 +250,22 @@
 (function(){
   var N=6, cur=0, max=0, F=document.getElementById('jobPostForm'); if(!F) return;
   var $=function(id){return document.getElementById(id);}, val=function(id){return ($(id).value||'').trim();};
+  var TODAY=new Date(Date.now()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,10); try{ $('jbDeadline').min=TODAY; }catch(e){}
   var REQ=['jbTitle','jbRole','jbCategory','jbDept','jbType','jbQualification','jbNotice','jbExpMin','jbSalMin','jbSalMax','jbCampus'];
   function need(list){ var first=null; list.forEach(function(x){ if(!val(x[1])){ jbErr(x[0],x[2]); if(!first) first=x[1]; } }); return first; }
   var CHECK=[
-    function(){ return need([['title','jbTitle','Enter the job title'],['role','jbRole','Select the role'],['category','jbCategory','Select a category'],['dept','jbDept','Enter the department or subject'],['type','jbType','Select the employment type']]); },
+    function(){ return need([['title','jbTitle','Enter the job title'],['role','jbRole','Select the role'],['category','jbCategory','Select a category'],['dept','jbDept','Enter the department or subject'],['type','jbType','Select the employment type']]);
+      if(!f&&val('jbVac')!==''&&!(Number.isInteger(Number(val('jbVac')))&&Number(val('jbVac'))>=1)){ jbErr('vac','Enter a whole number of 1 or more'); f='jbVac'; } return f; },
     function(){ var f=need([['qual','jbQualification','Select the qualification needed'],['notice','jbNotice','Select the notice period you accept'],['exp','jbExpMin','Enter minimum experience. Use 0 for freshers']]);
       if(!f&&!(Number(val('jbExpMin'))>=0&&Number(val('jbExpMin'))<=50)){ jbErr('exp','Enter a number between 0 and 50'); f='jbExpMin'; }
-      if(!f&&val('jbExpMax')!==''&&Number(val('jbExpMax'))<Number(val('jbExpMin')||0)){ jbErr('expmax','Maximum cannot be lower than minimum'); f='jbExpMax'; } return f; },
+      if(!f&&val('jbExpMax')!==''&&Number(val('jbExpMax'))<Number(val('jbExpMin')||0)){ jbErr('expmax','Maximum cannot be lower than minimum'); f='jbExpMax'; }
+      if(!f&&val('jbExpMax')!==''&&Number(val('jbExpMax'))>50){ jbErr('expmax','Enter a number between 0 and 50'); f='jbExpMax'; } return f; },
     function(){ if($('jbSalNorms').checked) return null; var f=null;
       if(!(Number(val('jbSalMin'))>0)){ jbErr('salmin','Enter the minimum salary'); f='jbSalMin'; }
       if(!(Number(val('jbSalMax'))>0)){ jbErr('salmax','Enter the maximum salary'); f=f||'jbSalMax'; }
       else if(Number(val('jbSalMax'))<Number(val('jbSalMin')||0)){ jbErr('salmax','Maximum cannot be lower than minimum'); f=f||'jbSalMax'; } return f; },
     function(){ return need([['campus','jbCampus','Select the campus for this job']]); },
-    function(){ return null; },
+    function(){ var d=val('jbDeadline'); if(d&&d<TODAY&&!window.__jbEditing){ jbErr('deadline','Choose today or a later date'); return 'jbDeadline'; } return null; },
     function(){ var c=val('jbQaContact'); if(c&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(c)){ jbErr('qaContact','Enter a valid email address'); return 'jbQaContact'; } return null; }];
   function pct(){ var n=REQ.filter(function(id){ if($('jbSalNorms').checked&&(id==='jbSalMin'||id==='jbSalMax')) return true; return !!val(id); }).length; return Math.round(n/REQ.length*100); }
   function paint(){
@@ -279,10 +283,15 @@
   window.jbBack=function(){ if(cur>0) go(cur-1); };
   window.jbNext=function(e){
     if(cur<N-1){ var f=CHECK[cur](); if(f){ focusId(f); return; } go(cur+1); return; }
-    addJob(e);
+    if(window.__jbBusy) return;   // one post at a time: a double click can no longer make two jobs
+    var pr=addJob(e);
     var bad=F.querySelector('.in-f.err');
-    if(bad){ var st=bad.closest('.jb-step'); cur=+st.getAttribute('data-s'); max=Math.max(max,cur); paint(); var el=bad.querySelector('input,select'); if(el){ try{ el.focus({preventScroll:true}); }catch(e){ el.focus(); } } }
-    else { cur=0; max=0; paint(); }
+    if(!pr){
+      if(bad){ var st=bad.closest('.jb-step'); cur=+st.getAttribute('data-s'); max=Math.max(max,cur); paint(); var el=bad.querySelector('input,select'); if(el){ try{ el.focus({preventScroll:true}); }catch(e){ el.focus(); } } }
+      return;
+    }
+    window.__jbBusy=true; var btn=$('jbNext'); btn.disabled=true; btn.textContent='Saving\u2026';
+    pr.then(function(ok){ if(ok){ cur=0; max=0; } }).then(function(){ window.__jbBusy=false; btn.disabled=false; paint(); });
   };
   F.addEventListener('input',function(){ paint(); }); F.addEventListener('change',function(){ paint(); });
   paint();
