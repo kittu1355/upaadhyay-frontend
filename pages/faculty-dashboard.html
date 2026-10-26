@@ -38,8 +38,6 @@
             <div id="dashMenuName" style="font-weight:700; font-size:14px; color:var(--ink);">—</div>
             <div id="dashMenuMeta" style="font-size:12.5px; color:var(--ink-faint);">—</div>
           </div>
-          <button onclick="closeDashAccountMenu(); switchEmployerTab('company');" style="display:block; width:100%; text-align:left; padding:10px 14px; background:none; border:none; font-size:13.5px; color:var(--ink); cursor:pointer;">Institution profile</button>
-          <button onclick="document.getElementById('logoFile').click()" style="display:block; width:100%; text-align:left; padding:10px 14px; background:none; border:none; font-size:13.5px; color:var(--ink); cursor:pointer;">Upload logo</button>
           <button onclick="closeDashAccountMenu(); logoutUser();" style="display:block; width:100%; text-align:left; padding:10px 14px; background:none; border:none; font-size:13.5px; color:#B3261E; cursor:pointer; border-top:1px solid var(--line);">Log out</button>
         </div>
       </div>
@@ -691,10 +689,10 @@
 <script src="../js/profile-card.js?v=1"></script>
 <script src="../js/auth.js"></script>
 <script src="../js/faculty.js"></script>
-<script src="../js/settings.js?v=3"></script>
+<script src="../js/settings.js?v=4"></script>
 <script src="../js/sidebar.js?v=10"></script>
 <script src="../js/layout.js?v=2"></script><script src="../js/backend.js?v=8"></script>
-<script src="../js/faculty-profile.js?v=17"></script>
+<script src="../js/faculty-profile.js?v=18"></script>
 <script>document.addEventListener("input", function(e){ if(e.target && e.target.id && document.querySelector('.pf-upload[data-pf-target="'+e.target.id+'"]')) pfRefreshUploadPreviews(); });</script>
 <script>mountNav(); mountChrome(); requireLogin('seeker').then(function(ok){ if(ok){ openDash(currentUser.name || 'User', 'search'); fpMount(); } });</script>
 </body>
