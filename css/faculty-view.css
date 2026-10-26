@@ -1,0 +1,17 @@
+/* faculty-view.css — extras for the single faculty profile UI (js/faculty-view.js). Base look = .fp-pv-* in faculty-profile.css */
+.fv-viewer{margin:0!important}
+.fv-viewer .fp-pv-grid{padding:16px 0 0;grid-template-columns:1fr 1fr;gap:16px}
+.fv-badges{display:flex;gap:8px;flex-wrap:wrap}
+.fp-pv .fv-full{grid-column:1/-1}
+.fv-sub{font-size:12.5px;color:var(--ink-soft);margin-top:2px}
+.fv-none{padding:28px;text-align:center;color:var(--ink-faint);border:1.5px dashed var(--line);border-radius:6px}
+.fv-rs{border-top:1px solid var(--line);padding:8px 0}
+.fv-rs:first-of-type{border-top:0;padding-top:0}
+.fv-rs summary{cursor:pointer;display:flex;justify-content:space-between;gap:10px;font-weight:600;font-size:13.5px;color:var(--ink);list-style:none}
+.fv-rs summary::-webkit-details-marker{display:none}
+.fv-rs summary b{color:var(--blue-700)}
+.fv-rs-item{padding:8px 0 2px 2px;font-size:13px}
+.fv-rs-item b{display:block;font-weight:600;color:var(--ink)}
+.fv-rs-item small{display:block;color:var(--ink-faint);margin-top:1px;word-break:break-word}
+.fv-rs-item a,.fp-pv-link a,.fp-pv-kv a{color:var(--blue-600,#2563EB);font-weight:600;text-decoration:none}
+@media(max-width:700px){.fv-viewer .fp-pv-grid{grid-template-columns:1fr}}
