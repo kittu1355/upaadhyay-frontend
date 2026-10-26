@@ -596,7 +596,7 @@ function statusBody(){
    ${missPanel()}${m?'':note('We\'ll show your institution as verified after the submitted information has been reviewed.')}`;
 }
 /* ---------- guided verification flow (dashboard > Verification): Next / Back through each part ---------- */
-const VSTEPS=['Status','Representative','Authority','Documents']; let VS=0;
+const VSTEPS=['Status']; let VS=0;
 function verifyFlow(){
   const last=VS===VSTEPS.length-1;
   const tabs=VSTEPS.map((t,i)=>`<button class="in-step${i===VS?' on':i<VS?' done':''}" onclick="IN.vstep(${i})"><span class="in-step-n">${i+1}</span><span class="in-step-t">${t}</span></button>`).join('');
@@ -616,9 +616,9 @@ function dash(){
   const d=I.d, p=pct(), sc=I.sec;
   const SEC=dashSecs(), si=Math.max(0,SEC.findIndex(x=>x[0]===sc));
   const side=SEC.map((x,i)=>`<button class="in-step${i===si?' on':i<si?' done':''}" onclick="IN.sec('${x[0]}')"><span class="in-step-n">${i+1}</span><span class="in-step-t">${x[1]}</span></button>`
-    +(x[0]==='verify'&&sc==='verify'?VSTEPS.map((t,j)=>`<button class="in-step sub${j===VS?' on':j<VS?' done':''}" onclick="IN.vstep(${j})"><span class="in-step-n">${j+1}</span><span class="in-step-t">${t}</span></button>`).join(''):'')).join('');
+    ).join('');
   const canBack=si>0||(sc==='verify'&&VS>0), canNext=si<SEC.length-1;
-  const acts=`<div class="in-actions"><span class="in-stepof">Step ${si+1} of ${SEC.length}${sc==='verify'?' · '+VSTEPS[VS]:''}</span><div class="r">${canBack?'<button class="btn btn-ghost btn-sm" onclick="IN.sback()">Back</button>':''}${canNext?'<button class="btn btn-primary btn-sm" onclick="IN.snext()">Next</button>':''}</div></div>`;
+  const acts=`<div class="in-actions"><span class="in-stepof">Step ${si+1} of ${SEC.length}</span><div class="r">${canBack?'<button class="btn btn-ghost btn-sm" onclick="IN.sback()">Back</button>':''}${canNext?'<button class="btn btn-primary btn-sm" onclick="IN.snext()">Next</button>':''}</div></div>`;
   let body='';
   if(sc==='profile') body=profileBody();
   if(sc==='branches') body=branchMgr();
