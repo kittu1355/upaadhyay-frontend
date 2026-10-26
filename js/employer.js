@@ -206,8 +206,8 @@ if(typeof window.bkStatusBadge !== 'function'){
           ? [[`PhD, ${subject}`, `${COLLEGE_POOL[i % COLLEGE_POOL.length]} · 2008 – 2013`], [`MSc, ${subject}`, `${COLLEGE_POOL[(i+3) % COLLEGE_POOL.length]} · 2006 – 2008`]]
           : [[`${qual}, ${subject}`, `${COLLEGE_POOL[i % COLLEGE_POOL.length]} · 2016 – 2019`], [`BSc, ${subject}`, `${COLLEGE_POOL[(i+3) % COLLEGE_POOL.length]} · 2013 – 2016`]],
         stats: qual==='PhD'
-          ? [[String(Math.floor(Math.random()*20)+3),'Publications'],[String(Math.floor(Math.random()*300)+40),'Citations'],[String(Math.floor(Math.random()*3)),'Patents']]
-          : [[exp.split(' ')[0],'Yrs experience'],[String(Math.floor(Math.random()*3)+1),'Boards taught'],[String(Math.floor(Math.random()*150)+50)+'+','Students mentored']],
+          ? [[String(((i*7+3)%20)+3),'Publications'],[String(((i*53+17)%300)+40),'Citations'],[String(((i*5+1)%3)),'Patents']]
+          : [[exp.split(' ')[0],'Yrs experience'],[String(((i*5+2)%3)+1),'Boards taught'],[String(((i*29+7)%150)+50)+'+','Students mentored']],
         experience:[
           [`${qual==='PhD' ? 'Associate Professor' : 'Lecturer'}, ${role.split(' · ')[0]}`, `${city} Institute of Technology · 2019 – Present`],
           [`${qual==='PhD' ? 'Assistant Professor' : 'Junior Lecturer'}, ${role.split(' · ')[0]}`, `${city} College · 2014 – 2019`]
@@ -236,6 +236,7 @@ if(typeof window.bkStatusBadge !== 'function'){
     return `linear-gradient(135deg, ${c1}, ${c2})`;
   }
 
+  const VERIFIED_TICK='<span class="verified-tick" title="Verified profile"><svg viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17L4 12" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></span>';
   function docIcon(type){
     return type==='link'
       ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10 14L20 4M20 4H13M20 4V11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M18 13V18C18 19.1 17.1 20 16 20H6C4.9 20 4 19.1 4 18V8C4 6.9 4.9 6 6 6H11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>'
@@ -311,7 +312,8 @@ if(typeof window.bkStatusBadge !== 'function'){
     }
     const strengthPct = Math.min(100, 60 + p.links.length*10);
     document.getElementById('cpStrengthFill').style.width = strengthPct + '%';
-    document.getElementById('cpStrengthNote').textContent = strengthPct >= 90 ? 'Verified & document-complete' : 'Verified profile';
+    document.getElementById('cpStrengthNote').textContent = strengthPct >= 90 ? 'Profile and documents complete' : 'Some documents not added yet';
+    const cpTick = document.querySelector('.cp-verified'); if(cpTick) cpTick.style.display = p.verified ? '' : 'none';
 
     let actions = document.getElementById('cpActions');
     if(currentRole==='company'){
@@ -319,9 +321,9 @@ if(typeof window.bkStatusBadge !== 'function'){
       actions.innerHTML = `
         <button class="btn btn-light" onclick="messageCandidate('${id}')">Message</button>
         ${candidateStatus[id]==='shortlisted'
-          ? `<button class="btn btn-primary" disabled>Shortlisted</button>`
-          : `<button class="btn btn-primary" onclick="inviteCandidate('${id}'); renderCandidateProfilePage('${id}');">${candidateStatus[id]==='invited' ? 'Invited ✓' : 'Invite candidate'}</button>`}
-        ${candidateStatus[id]==='invited' ? `<button class="btn btn-ghost" onclick="shortlistCandidate('${id}'); renderCandidateProfilePage('${id}');">Shortlist</button>` : ''}
+          ? `<button class="btn btn-ghost" onclick="Promise.resolve(undoApplicant('${id}')).then(function(){ renderCandidateProfilePage('${id}'); })">Remove shortlist</button>`
+          : `<button class="btn btn-primary" onclick="Promise.resolve(shortlistCandidate('${id}')).then(function(){ renderCandidateProfilePage('${id}'); })">Shortlist</button>`}
+        ${candidateStatus[id]==='invited' || candidateStatus[id]==='shortlisted' ? '' : `<button class="btn btn-ghost" onclick="Promise.resolve(inviteCandidate('${id}')).then(function(){ renderCandidateProfilePage('${id}'); })">Invite candidate</button>`}
       `;
     } else {
       actions.style.display = 'none';
@@ -367,6 +369,7 @@ if(typeof window.bkStatusBadge !== 'function'){
     if(!window.__empLoad) window.__empApps = false;
     const $ = id => document.getElementById(id);
     if(!$('dashCompanyTab')) return;               // not on the employer page
+    if(which !== 'post' && editingJobId){ cancelEditJob(); }   // leaving the form ends an edit, so the next post is a new job
     if(LOCKED_EMP_TABS.indexOf(which) !== -1 && !employerApproved()){
       which = 'company';
       if(typeof showGenericToast === 'function') showGenericToast('Locked until an admin approves your institution.');
@@ -417,7 +420,7 @@ if(typeof window.bkStatusBadge !== 'function'){
     }
     wrap.innerHTML = ids.slice().reverse().map(id=>{ try{
       const job = jobsData[id];
-      const count = (job.applicantIds || []).length;
+      const count = Math.max((job.applicantIds || []).length, Number(job.applicantCount) || 0);
       const meta = [job.category, job.qualification, job.location].filter(Boolean).join(' \u00b7 ') || 'Posted just now';
       const extra = jobExtra(job);
       return `
@@ -425,7 +428,7 @@ if(typeof window.bkStatusBadge !== 'function'){
         <span class="pj-badge">${typeof bkStatusBadge==='function' ? bkStatusBadge(job) : ''}</span>
         <div class="job-logo pj-logo" style="${companyLogoStyle()}"></div>
         <div class="pj-college">${jbEsc((currentCompany && currentCompany.name) || 'Your institution')}</div>
-        <div class="pj-role">${jbEsc(job.role || job.title)}</div>
+        <div class="pj-role">${jbEsc(job.title || job.role)}</div>
         <div class="pj-price">${jbEsc(jobPriceText(job))}</div>
         <div class="pj-count"><b>${count}</b> ${count===1?'applicant':'applicants'}</div>
         <div class="pj-line"></div>
@@ -440,6 +443,7 @@ if(typeof window.bkStatusBadge !== 'function'){
     if(!file) return;
     const input = e.target;
     const apply = function(url){
+      if(window.IN && IN.setLogo){ IN.setLogo(url); return; }   /* the institution form uploads it and only keeps it if the upload works */
       currentCompany.logo = url;
       saveState();
       refreshDashTopAccount();
@@ -458,6 +462,8 @@ if(typeof window.bkStatusBadge !== 'function'){
   // currentCompany now lives in store.js (persisted across pages)
 
   function saveCompany(){
+    const _nm = document.getElementById('coName');
+    if(!_nm || !_nm.value.trim()){ if(typeof showGenericToast === 'function') showGenericToast('Use the institution profile form to save your details.'); return; }   /* the old hidden form is empty: never overwrite the real profile with blanks */
     currentCompany.name = document.getElementById('coName').value || 'Your institution';
     currentCompany.type = document.getElementById('coType').value;
     currentCompany.city = document.getElementById('coCity').value;
@@ -475,7 +481,7 @@ if(typeof window.bkStatusBadge !== 'function'){
     
     document.getElementById('employerTabsBar').style.display = 'flex';
     refreshDashTopAccount();
-    switchEmployerTab('post');
+    switchEmployerTab(employerApproved() ? 'post' : 'company');
     const note = document.getElementById('coSavedNote');
     note.style.display = 'inline';
     setTimeout(()=>{ note.style.display = 'none'; }, 2500);
@@ -498,38 +504,52 @@ if(typeof window.bkStatusBadge !== 'function'){
     const s = candidateStatus[id];
     if(s==='shortlisted') return '<span class="badge badge-accepted">Shortlisted</span>';
     if(s==='invited') return '<span class="badge badge-pending">Invited</span>';
+    if(s==='rejected') return '<span class="badge badge-pending" style="background:#FDECEA;color:#B3261E">Rejected</span>';
     return '';
   }
 
-  function inviteCandidate(id, ev){
-    if(ev) ev.stopPropagation();
-    candidateStatus[id] = 'invited';
-    saveState();
-    const p = facultyProfiles[id];
-    pushNotif(`Invited ${p ? p.name : 'a candidate'} to apply.`);
-    renderCandidates();
-    if(document.getElementById('applicantsView').style.display !== 'none') renderApplicants(activeJobId);
+  /* These actions need the server. backend.js replaces them with the real versions; if it did not load, say so instead of pretending. */
+  function _notConnected(ev){ if(ev && ev.stopPropagation) ev.stopPropagation(); if(typeof showGenericToast === 'function') showGenericToast('Not connected to the server. Reload the page and try again.'); }
+  function inviteCandidate(id, ev){ _notConnected(ev); }
+  function shortlistCandidate(id, ev){ _notConnected(ev); }
+  function rejectCandidate(id, ev){ _notConnected(ev); }
+  function undoApplicant(id, ev){ _notConnected(ev); }
+  function messageCandidate(id, ev){ _notConnected(ev); }
+
+  /* Small dialogs used instead of the browser's prompt() box. */
+  function _dlg(html){
+    const m = document.createElement('div'); m.className = 'in-modal'; m.setAttribute('role','dialog'); m.setAttribute('aria-modal','true');
+    m.innerHTML = '<div>' + html + '</div>'; document.body.appendChild(m); return m;
   }
-  function shortlistCandidate(id, ev){
-    if(ev) ev.stopPropagation();
-    candidateStatus[id] = 'shortlisted';
-    saveState();
-    const p = facultyProfiles[id];
-    pushNotif(`Shortlisted ${p ? p.name : 'a candidate'}.`);
-    renderCandidates();
-    if(document.getElementById('applicantsView').style.display !== 'none') renderApplicants(activeJobId);
+  function empAsk(name, def){
+    return new Promise(function(resolve){
+      const m = _dlg('<h4 style="margin:0 0 10px;font-size:18px">Message ' + jbEsc(name) + '</h4><textarea id="empAskTxt" rows="5" maxlength="2000" style="width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;font:inherit">' + jbEsc(def || '') + '</textarea><div class="in-actions"><span></span><div class="r"><button type="button" class="btn btn-ghost btn-sm" id="empAskNo">Cancel</button><button type="button" class="btn btn-primary btn-sm" id="empAskYes">Send message</button></div></div>');
+      const done = function(v){ m.remove(); resolve(v); };
+      m.querySelector('#empAskNo').onclick = function(){ done(null); };
+      m.querySelector('#empAskYes').onclick = function(){ const v = m.querySelector('#empAskTxt').value.trim(); if(v) done(v); };
+      m.addEventListener('click', function(e){ if(e.target === m) done(null); });
+      setTimeout(function(){ const t = m.querySelector('#empAskTxt'); if(t) t.focus(); }, 30);
+    });
   }
-  function messageCandidate(id, ev){
-    if(ev) ev.stopPropagation();
-    const p = facultyProfiles[id];
-    const msg = prompt(`Send a message to ${p ? p.name : 'this candidate'}:`, `Hi, we'd like to talk to you about an opening at ${currentCompany.name || 'our institution'}.`);
-    if(msg){ alert('Message sent to ' + (p ? p.name : 'candidate') + '.'); pushNotif(`Message sent to ${p ? p.name : 'a candidate'}.`); }
+  /* Ask which job an invitation is for (resolves to the server job id, or null if cancelled). */
+  function empPickJob(){
+    return new Promise(function(resolve){
+      const jobs = Object.keys(jobsData).map(function(k){ return jobsData[k]; }).filter(function(j){ return j.status === 'published'; });
+      if(!jobs.length){ if(typeof showGenericToast === 'function') showGenericToast('Post and publish a job first, then invite candidates to it.'); resolve(null); return; }
+      if(jobs.length === 1){ resolve(jobs[0].id); return; }
+      const m = _dlg('<h4 style="margin:0 0 10px;font-size:18px">Invite to which job?</h4><select id="empPickSel" style="width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;font:inherit">' + jobs.map(function(j){ return '<option value="' + jbEsc(j.id) + '">' + jbEsc(j.title) + (j.campus ? ' · ' + jbEsc(j.campus) : '') + '</option>'; }).join('') + '</select><div class="in-actions"><span></span><div class="r"><button type="button" class="btn btn-ghost btn-sm" id="empPickNo">Cancel</button><button type="button" class="btn btn-primary btn-sm" id="empPickYes">Send invitation</button></div></div>');
+      const done = function(v){ m.remove(); resolve(v); };
+      m.querySelector('#empPickNo').onclick = function(){ done(null); };
+      m.querySelector('#empPickYes').onclick = function(){ done(m.querySelector('#empPickSel').value); };
+      m.addEventListener('click', function(e){ if(e.target === m) done(null); });
+    });
   }
+  window.empAsk = empAsk; window.empPickJob = empPickJob;
 
   /* Faculty details shown on every candidate card */
   function facInfoHTML(p){
     const rows = [];
-    const qual = (p.education && p.education[0] && (p.education[0].degree || p.education[0].title)) || (p.tags && p.tags[0]) || '';
+    const qual = (p.education && p.education[0] && (Array.isArray(p.education[0]) ? p.education[0][0] : (p.education[0].degree || p.education[0].title))) || (p.tags && p.tags[0]) || '';
     const expTag = (p.tags || []).filter(t=>/experience/i.test(t))[0] || '';
     const locTag = (p.tags || []).filter(t=>!/experience/i.test(t) && t !== qual)[0] || '';
     if(qual) rows.push(['Qualification', qual]);
@@ -587,18 +607,18 @@ if(typeof window.bkStatusBadge !== 'function'){
     const expTag = (p.tags || []).filter(t=>/experience/i.test(t))[0] || '';
     const exp = expTag ? expTag.replace(/\s*experience/i,'').trim() : '';
     const loc = (p.tags || []).filter(t=>!/experience/i.test(t) && t !== qual)[0] || '';
-    const roleLine = [collegeShort(p.college), p.role || 'Faculty'].filter(Boolean).join('-');
+    const roleLine = p.role || 'Faculty';
     const chips = [qual].concat(p.skills || []).filter(Boolean);
     const shown = chips.slice(0,3), more = chips.length - shown.length;
-    const meta = [p.college, loc, exp ? exp + ' exp' : ''].filter(Boolean).join(' \u00b7 ');
+    const meta = [p.college ? 'Studied at ' + p.college : '', loc, exp ? exp + ' exp' : ''].filter(Boolean).join(' \u00b7 ');
     const ini = String(p.name||'?').replace(/^(dr|mr|mrs|ms|prof)\.?\s+/i,'').trim().split(/\s+/).slice(0,2).map(w=>w[0]||'').join('').toUpperCase() || '?';
     const av = p.avatar ? `<span class="cn-av" style="background-image:url('${jbEsc(p.avatar)}')"></span>` : `<span class="cn-av cn-av-ini">${jbEsc(ini)}</span>`;
     const st = statusBadge(id);
     const saved = savedCands().indexOf(id) > -1;
     return `
       <div class="cn-card" onclick="openProfile('${id}')">
-        <div class="cn-top"><span class="cn-pill">Open to opportunities</span>${st || (exp ? `<span class="cn-exp">${jbEsc(exp)}</span>` : '')}</div>
-        <h3 class="cn-name">${jbEsc(p.name)}<span class="verified-tick" title="Verified profile"><svg viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17L4 12" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></span></h3>
+        <div class="cn-top">${p.openToWork?'<span class="cn-pill">Open to opportunities</span>':''}${st || (exp ? `<span class="cn-exp">${jbEsc(exp)}</span>` : '')}</div>
+        <h3 class="cn-name">${jbEsc(p.name)}${p.verified?VERIFIED_TICK:''}</h3>
         <div class="cn-inst">${av}<span>${jbEsc(roleLine)}</span></div>
         <div class="cn-chips">${shown.map(t=>`<span class="cn-chip">${jbEsc(t)}</span>`).join('')}${more>0 ? `<span class="cn-chip more">+${more}</span>` : ''}</div>
         <p class="cn-meta">${meta ? jbEsc(meta) : 'Profile details not added yet'}</p>
@@ -616,7 +636,7 @@ if(typeof window.bkStatusBadge !== 'function'){
 
   /* Highest degree from a faculty profile (PhD > Master's > Bachelor's > anything else) */
   function highestDegree(p){
-    const list = (p.education || []).map(e=>e.degree || e.title || '').filter(Boolean);
+    const list = (p.education || []).map(e=>Array.isArray(e) ? (e[0] || '') : (e.degree || e.title || '')).filter(Boolean);
     const rank = d=> /ph\.?d|doctor/i.test(d) ? 4 : /m\.?(sc|a|tech|com|ed|phil)\b|master|mba|mca/i.test(d) ? 3 : /b\.?(sc|a|tech|com|ed)\b|bachelor|b\.?e\b/i.test(d) ? 2 : 1;
     list.sort((a,b)=>rank(b)-rank(a));
     return list[0] || (p.tags && p.tags[0]) || '';
@@ -634,9 +654,9 @@ if(typeof window.bkStatusBadge !== 'function'){
         <div class="ap-banner" style="background:${bannerGradient(p.name)};">${av}</div>
         <div class="ap-body">
           <div class="ap-info">
-            <p class="ap-name">${jbEsc(p.name)}<span class="verified-tick" title="Verified profile"><svg viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17L4 12" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></span></p>
+            <p class="ap-name">${jbEsc(p.name)}${p.verified?VERIFIED_TICK:''}</p>
             <p class="ap-role">${jbEsc(p.role || 'Faculty')}</p>
-            <div class="ap-tags">
+            <div class="ap-tags">${statusBadge(id)}
               ${jobs.length ? `<span class="ap-tag ap-tag-job">Applied for: ${jbEsc(jobs[0])}${jobs.length>1 ? ' +'+(jobs.length-1) : ''}</span>` : ''}
               ${deg ? `<span class="ap-tag ap-tag-deg">${jbEsc(deg)}</span>` : ''}
             </div>
@@ -644,8 +664,10 @@ if(typeof window.bkStatusBadge !== 'function'){
           <div class="ap-actions">
             <button class="btn btn-light btn-sm" onclick="event.stopPropagation(); messageCandidate('${id}', event)">Message</button>
             ${candidateStatus[id]==='shortlisted'
-              ? `<button class="btn btn-primary btn-sm" disabled>Shortlisted</button>`
-              : `<button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); inviteCandidate('${id}', event)">${candidateStatus[id]==='invited' ? 'Invited \u2713' : 'Invite'}</button>`}
+              ? `<button class="btn btn-light btn-sm" onclick="event.stopPropagation(); undoApplicant('${id}', event)">Remove shortlist</button>`
+              : candidateStatus[id]==='rejected'
+                ? `<button class="btn btn-light btn-sm" onclick="event.stopPropagation(); undoApplicant('${id}', event)">Undo reject</button>`
+                : `<button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); shortlistCandidate('${id}', event)">Shortlist</button><button class="btn btn-ghost btn-sm" style="color:#B3261E;border-color:#B3261E" onclick="event.stopPropagation(); rejectCandidate('${id}', event)">Reject</button>`}
           </div>
         </div>
       </div>`;
@@ -736,8 +758,8 @@ if(typeof window.bkStatusBadge !== 'function'){
     const on = document.getElementById('jbQaOn');
     try{ localStorage.setItem('upaadhyay_jobqa_' + id, JSON.stringify({ on: on ? !!on.checked : true, contact: g('jbQaContact'), faq: g('jbQaFaq') })); }catch(e){}
   }
-  function jbLoadQa(id){
-    let q = {}; try{ q = JSON.parse(localStorage.getItem('upaadhyay_jobqa_' + id) || '{}'); }catch(e){}
+  function jbLoadQa(id, qa){
+    let q = qa || {}; if(!qa){ try{ q = JSON.parse(localStorage.getItem('upaadhyay_jobqa_' + id) || '{}'); }catch(e){} }
     const on = document.getElementById('jbQaOn'), c = document.getElementById('jbQaContact'), f = document.getElementById('jbQaFaq');
     if(on) on.checked = q.on !== false; if(c) c.value = q.contact || ''; if(f) f.value = q.faq || '';
   }
@@ -745,7 +767,7 @@ if(typeof window.bkStatusBadge !== 'function'){
     if(e && e.preventDefault) e.preventDefault();
     const v = id => (document.getElementById(id).value || '').trim();
     const chk = id => !!document.getElementById(id).checked;
-    ['title','role','category','dept','type','qual','notice','exp','expmax','salmin','salmax','campus'].forEach(jbClear);
+    ['title','role','category','dept','type','qual','notice','exp','expmax','salmin','salmax','campus','vac','deadline'].forEach(jbClear);
 
     const title = v('jbTitle'), role = (v('jbRole') === 'Other' && v('jbRoleOther')) ? v('jbRoleOther') : v('jbRole'), category = jbPick('jbCategory'), dept = v('jbDept'), type = jbPick('jbType');
     const qualification = jbPick('jbQualification'), notice = jbPick('jbNotice');
@@ -753,6 +775,9 @@ if(typeof window.bkStatusBadge !== 'function'){
     const salMin = v('jbSalMin'), salMax = v('jbSalMax'), salPeriod = v('jbSalPeriod') || 'month';
     const salNeg = chk('jbSalNeg'), salNorms = chk('jbSalNorms');
     const campusVal = v('jbCampus');
+    const vacV = v('jbVac'), dlV = v('jbDeadline');
+    const editingNow = (editingJobId && jobsData[editingJobId]) ? jobsData[editingJobId] : null;
+    const todayISO = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10);
 
     let first = null;
     const bad = (k, m) => { jbErr(k, m); if(!first) first = k; };
@@ -772,11 +797,14 @@ if(typeof window.bkStatusBadge !== 'function'){
       else if(salMin !== '' && Number(salMax) < Number(salMin)) bad('salmax', 'Maximum cannot be lower than minimum');
     }
     if(!campusVal) bad('campus', 'Select the campus for this job');
+    if(vacV !== '' && !(Number.isInteger(Number(vacV)) && Number(vacV) >= 1)) bad('vac', 'Enter a whole number of 1 or more');
+    if(expMax !== '' && Number(expMax) > 50) bad('expmax', 'Enter a number between 0 and 50');
+    if(dlV && dlV < todayISO && !(editingNow && editingNow.deadline === dlV)) bad('deadline', 'Choose today or a later date');
 
     if(first){
       const el = document.querySelector('#jf-'+first+' input, #jf-'+first+' select');
       if(el){ try{ el.focus({preventScroll:true}); }catch(e){ el.focus(); } }
-      return;
+      return null;
     }
 
     let campus = '', campusLoc = '';
@@ -787,11 +815,12 @@ if(typeof window.bkStatusBadge !== 'function'){
     const location = v('jbLocation') || campusLoc;
     const jobPayload = {
       title, role, dept, type, category, qualification, notice,
-      vacancies: v('jbVac'), expMin, expMax, salMin, salMax, salPeriod, salNeg, salNorms,
+      vacancies: v('jbVac'), expMin, expMax, salMin: salNorms ? '' : salMin, salMax: salNorms ? '' : salMax, salPeriod, salNeg, salNorms,
+      qa: { on: chk('jbQaOn'), contact: v('jbQaContact'), faq: v('jbQaFaq') },
       campus, campusLoc, location, desc: v('jbDesc'), skills: v('jbSkills'), deadline: v('jbDeadline')
     };
     const editing = (editingJobId && jobsData[editingJobId]) ? jobsData[editingJobId] : null;
-    (editing ? bkUpdateJob(editing.id, jobPayload) : bkPostJob(jobPayload)).then(function(res){
+    return (editing ? bkUpdateJob(editing.id, jobPayload) : bkPostJob(jobPayload)).then(function(res){
     jbSaveQa((res && res.id) || (editing && editing.id));
     if(editing) endEditJob();
 
@@ -807,12 +836,13 @@ if(typeof window.bkStatusBadge !== 'function'){
     if(ok){
       ok.innerHTML = editing
         ? '<b>Changes saved.</b> ' + jbEsc(title) + (campus ? ' · ' + jbEsc(campus) : '') + ' has been updated. Find it under Posted jobs.'
-        : '<b>Job posted.</b> ' + jbEsc(title) + (campus ? ' · ' + jbEsc(campus) : '') + ' is now live. Find it under Posted jobs.';
+        : '<b>Job posted.</b> ' + jbEsc(title) + (campus ? ' · ' + jbEsc(campus) : '') + (res && res.status === 'draft' ? ' is saved as a draft and goes live once your institution is approved.' : ' is now live. Find it under Posted jobs.');
       ok.style.display = 'block';
       
       setTimeout(()=>{ ok.style.display = 'none'; }, 7000);
     }
-    }).catch(function(err){ api.toast(err.message || (editing ? 'Could not save the changes.' : 'Could not post the job.')); });
+    return res || true;
+    }).catch(function(err){ api.toast(err.message || (editing ? 'Could not save the changes.' : 'Could not post the job.')); return null; });
   }
 
   // ---------- Edit / close / reopen / delete a posted job (all saved on the server) ----------
@@ -838,7 +868,7 @@ if(typeof window.bkStatusBadge !== 'function'){
     jbSetVal('jbSalPeriod', j.salPeriod || 'month');
     const neg = document.getElementById('jbSalNeg'), norms = document.getElementById('jbSalNorms');
     if(neg) neg.checked = !!j.salNeg; if(norms) norms.checked = !!j.salNorms;
-    jbSetVal('jbLocation', j.location); jbSetVal('jbDesc', j.desc); jbSetVal('jbSkills', j.skills); jbSetVal('jbDeadline', j.deadline); jbLoadQa(j.id);
+    jbSetVal('jbLocation', j.location); jbSetVal('jbDesc', j.desc); jbSetVal('jbSkills', j.skills); jbSetVal('jbDeadline', j.deadline); jbLoadQa(j.id, j.qa);
     const camp = document.getElementById('jbCampus');
     if(camp && typeof instCampusOptions === 'function'){ const o = instCampusOptions().find(function(x){ return x.n === j.campus; }); camp.value = o ? o.v : ''; if(typeof instCampusChange === 'function') instCampusChange(); }
     const bar = document.getElementById('jbEditBar');
@@ -895,7 +925,7 @@ if(typeof window.bkStatusBadge !== 'function'){
       const item = document.createElement('div');
       item.className = 'job-list-item jl-card';
       item.onclick = ()=> openApplicantsView(id);
-      const n = (job.applicantIds||[]).length;
+      const n = Math.max((job.applicantIds||[]).length, Number(job.applicantCount) || 0);
       let price = '';
       if(job.salMin) price = jbMoney(job.salMin) + '\u2013' + jbMoney(job.salMax) + ' / ' + (job.salPeriod === 'year' ? 'yr' : 'mo');
       else if(job.salNorms) price = 'As per UGC / AICTE norms';
@@ -904,7 +934,7 @@ if(typeof window.bkStatusBadge !== 'function'){
         <span class="jl-badge">${bkStatusBadge(job)}</span>
         <div class="job-logo jl-logo" style="${companyLogoStyle()}"></div>
         <div class="jl-college">${jbEsc((currentCompany && currentCompany.name) || 'Your institution')}</div>
-        <div class="jl-role">${jbEsc(job.role || job.title)}</div>
+        <div class="jl-role">${jbEsc(job.title || job.role)}</div>
         <div class="jl-price">${jbEsc(price || 'Salary not specified')}</div>
         <div class="jl-line"></div>
         <button class="jl-view" onclick="event.stopPropagation(); openApplicantsView('${id}')">View applicants (${n})</button>`;
@@ -930,6 +960,7 @@ if(typeof window.bkStatusBadge !== 'function'){
   window.openAllApplicants = openAllApplicants;
 
   function openApplicantsView(jobId){
+    if(editingJobId){ cancelEditJob(); }
     activeJobId = jobId;
     window.__empApps = false;
     // stay in whichever option the user is in (Posted jobs / Post a job): hide that option's list, show this job's applicants
@@ -958,11 +989,12 @@ if(typeof window.bkStatusBadge !== 'function'){
   function renderApplicants(jobId){
     const job = jobsData[jobId];
     if(!job) return;
-    document.getElementById('apList').innerHTML = job.applicantIds.map(applicantCardHTML).join('') || `
+    const _ids = job.applicantIds || [];
+    document.getElementById('apList').innerHTML = _ids.map(applicantCardHTML).join('') || `
       <div class="empty-state">
         <div class="empty-state-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2" stroke="currentColor" stroke-width="2"/><circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="2"/></svg></div>
         <h4>No applicants yet</h4>
         <p>Once faculty or staff apply to this job, they'll show up here.</p>
       </div>`;
-    document.getElementById('apCount').textContent = job.applicantIds.length + (job.applicantIds.length===1 ? ' applicant' : ' applicants');
+    document.getElementById('apCount').textContent = _ids.length + (_ids.length===1 ? ' applicant' : ' applicants');
   }
