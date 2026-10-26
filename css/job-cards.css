@@ -8,7 +8,7 @@
 
 /* ---------- card ---------- */
 .jb-card{
-  position:relative; background:#fff; border:1px solid var(--line); border-radius:16px;
+  position:relative; background:#fff; border:1px solid var(--line); border-radius:5px;
   padding:20px 22px 16px; display:flex; flex-direction:column; gap:14px; min-width:0;
   cursor:pointer; box-shadow:0 1px 2px rgba(15,35,80,.04);
   transition:box-shadow .18s, border-color .18s, transform .18s;
@@ -23,15 +23,15 @@
 .jb-card:hover .jb-title{ color:var(--blue-700); }
 .jb-org{ display:flex; align-items:center; flex-wrap:wrap; gap:6px 10px; font-size:14px; font-weight:600; color:var(--ink-soft); }
 .jb-org .jb-name{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:100%; }
-.jb-type{ font-size:11px; font-weight:700; letter-spacing:.02em; padding:3px 10px; border-radius:20px; background:#E3F7EC; color:#17753A; white-space:nowrap; }
+.jb-type{ font-size:11px; font-weight:700; letter-spacing:.02em; padding:3px 10px; border-radius:5px; background:#E3F7EC; color:#17753A; white-space:nowrap; }
 .jb-type.part{ background:#FFF1D6; color:#8A5A00; }
 .jb-type.con{ background:#E3EEFF; color:#1B4FBF; }
 .jb-logo{
-  flex-shrink:0; width:64px; height:64px; border-radius:14px; border:1px solid var(--line);
+  flex-shrink:0; width:64px; height:64px; border-radius:5px; border:1px solid var(--line);
   background:#fff; display:flex; align-items:center; justify-content:center; overflow:hidden; padding:6px; box-sizing:border-box;
 }
 .jb-logo img{ width:100%; height:100%; object-fit:contain; display:block; }
-.jb-logo span{ width:100% !important; height:100% !important; border-radius:10px !important; font-size:18px !important; }
+.jb-logo span{ width:100% !important; height:100% !important; border-radius:5px!important; font-size:18px !important; }
 
 .jb-meta{ display:flex; flex-wrap:wrap; align-items:center; gap:8px 0; font-size:13.5px; color:var(--ink-soft); }
 .jb-meta > span{ display:inline-flex; align-items:center; gap:7px; padding:0 14px; border-left:1px solid var(--line); line-height:1.2; }
@@ -59,12 +59,12 @@
   padding-top:12px; border-top:1px solid var(--line); margin-top:auto;
 }
 .jb-posted{ display:flex; align-items:center; flex-wrap:wrap; gap:6px 10px; font-size:12.5px; color:var(--ink-faint); }
-.jb-dead{ font-size:11.5px; font-weight:600; padding:3px 9px; border-radius:20px; background:#FDECEA; color:#B3261E; }
+.jb-dead{ font-size:11.5px; font-weight:600; padding:3px 9px; border-radius:5px; background:#FDECEA; color:#B3261E; }
 .jb-dead.ok{ background:#EEF2FF; color:var(--blue-700); }
 .jb-actions{ display:flex; align-items:center; gap:8px; }
 .jb-btn{
   display:inline-flex; align-items:center; justify-content:center; gap:6px; font:600 13px inherit; font-family:inherit;
-  padding:8px 16px; border-radius:10px; border:1px solid var(--line); background:#fff; color:var(--ink);
+  padding:8px 16px; border-radius:5px; border:1px solid var(--line); background:#fff; color:var(--ink);
   cursor:pointer; white-space:nowrap; transition:.15s; text-decoration:none; line-height:1.2;
 }
 .jb-btn:hover{ border-color:var(--blue-500); color:var(--blue-700); background:var(--blue-50); }
@@ -77,8 +77,8 @@
 .jb-btn.save.on .jb-ic{ fill:var(--blue-700); }
 
 @media (max-width:560px){
-  .jb-card{ padding:16px 14px 12px; border-radius:14px; }
-  .jb-logo{ width:52px; height:52px; border-radius:12px; }
+  .jb-card{ padding:16px 14px 12px; border-radius:5px; }
+  .jb-logo{ width:52px; height:52px; border-radius:5px; }
   .jb-meta > span{ padding:0 10px; }
   .jb-foot{ flex-direction:column; align-items:stretch; }
   .jb-actions{ justify-content:space-between; }
@@ -93,15 +93,15 @@
 .jd-crumb{ font-size:13px; color:var(--ink-faint); margin:0 0 14px; }
 .jd-crumb a{ color:var(--blue-700); text-decoration:none; font-weight:600; }
 .jd-grid{ display:grid; grid-template-columns:minmax(0,1fr) 340px; gap:20px; align-items:start; }
-.jd-card{ background:#fff; border:1px solid var(--line); border-radius:16px; padding:24px 26px; box-shadow:0 1px 2px rgba(15,35,80,.04); margin-bottom:16px; }
+.jd-card{ background:#fff; border:1px solid var(--line); border-radius:5px; padding:24px 26px; box-shadow:0 1px 2px rgba(15,35,80,.04); margin-bottom:16px; }
 .jd-card h2{ margin:0 0 12px; font-size:18px; font-weight:700; color:var(--ink); }
 
 .jd-top{ display:flex; justify-content:space-between; gap:20px; align-items:flex-start; }
 .jd-top h1{ margin:0 0 6px; font-size:24px; line-height:1.25; font-weight:700; color:var(--ink); }
 .jd-org{ display:flex; align-items:center; flex-wrap:wrap; gap:6px 10px; font-size:15px; font-weight:600; color:var(--ink-soft); }
-.jd-logo{ flex-shrink:0; width:84px; height:84px; border-radius:18px; border:1px solid var(--line); background:#fff; display:flex; align-items:center; justify-content:center; overflow:hidden; padding:8px; box-sizing:border-box; }
+.jd-logo{ flex-shrink:0; width:84px; height:84px; border-radius:5px; border:1px solid var(--line); background:#fff; display:flex; align-items:center; justify-content:center; overflow:hidden; padding:8px; box-sizing:border-box; }
 .jd-logo img{ width:100%; height:100%; object-fit:contain; }
-.jd-logo span{ width:100% !important; height:100% !important; border-radius:12px !important; font-size:24px !important; }
+.jd-logo span{ width:100% !important; height:100% !important; border-radius:5px!important; font-size:24px !important; }
 .jd-facts{ display:flex; flex-direction:column; gap:10px; margin:18px 0 0; font-size:14.5px; color:var(--ink); }
 .jd-facts > div{ display:flex; align-items:center; gap:10px; }
 .jd-facts .jb-ic{ width:18px; height:18px; }
@@ -111,7 +111,7 @@
 .jd-stats span:first-child{ padding-left:0; border-left:0; }
 .jd-stats b{ color:var(--ink); font-weight:600; }
 .jd-cta{ display:flex; flex-wrap:wrap; gap:10px; margin-top:18px; }
-.jd-cta .jb-btn{ padding:12px 26px; font-size:14.5px; border-radius:999px; }
+.jd-cta .jb-btn{ padding:12px 26px; font-size:14.5px; border-radius:5px; }
 .jd-cta .jb-btn.save{ border:1px solid var(--line); background:#fff; }
 
 .jd-desc{ font-size:14.5px; line-height:1.75; color:var(--ink-soft); white-space:pre-line; position:relative; }
@@ -121,7 +121,7 @@
 .jd-readmore{ background:none; border:0; padding:0; margin-top:10px; font:600 14px inherit; font-family:inherit; color:var(--blue-700); cursor:pointer; }
 .jd-sub{ font-size:13px; color:var(--ink-faint); margin:-6px 0 12px; }
 .jd-chips{ display:flex; flex-wrap:wrap; gap:10px; }
-.jd-chip{ font-size:13.5px; padding:8px 16px; border:1px solid #d6deee; border-radius:999px; color:var(--ink-soft); background:#fff; }
+.jd-chip{ font-size:13.5px; padding:8px 16px; border:1px solid #d6deee; border-radius:5px; color:var(--ink-soft); background:#fff; }
 .jd-rows{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px 24px; }
 .jd-rows div{ font-size:14px; color:var(--ink); }
 .jd-rows small{ display:block; font-size:12px; color:var(--ink-faint); margin-bottom:2px; text-transform:uppercase; letter-spacing:.04em; }
@@ -134,15 +134,15 @@
 .jd-sim b{ display:block; font-size:14.5px; font-weight:600; line-height:1.3; margin-bottom:6px; color:var(--ink); }
 .jd-sim small{ display:flex; align-items:center; gap:6px; font-size:12.5px; color:var(--ink-soft); margin-top:3px; }
 .jd-sim .jb-ic{ width:14px; height:14px; }
-.jd-sim .jd-sl{ flex-shrink:0; width:46px; height:46px; border-radius:10px; border:1px solid var(--line); overflow:hidden; display:flex; align-items:center; justify-content:center; padding:4px; box-sizing:border-box; }
+.jd-sim .jd-sl{ flex-shrink:0; width:46px; height:46px; border-radius:5px; border:1px solid var(--line); overflow:hidden; display:flex; align-items:center; justify-content:center; padding:4px; box-sizing:border-box; }
 .jd-sim .jd-sl img{ width:100%; height:100%; object-fit:contain; }
-.jd-sim .jd-sl span{ width:100% !important; height:100% !important; border-radius:8px !important; font-size:13px !important; }
+.jd-sim .jd-sl span{ width:100% !important; height:100% !important; border-radius:5px!important; font-size:13px !important; }
 .jd-empty{ font-size:13.5px; color:var(--ink-faint); }
 
 @media (max-width:900px){
   .jd-grid{ grid-template-columns:1fr; }
   .jd-top h1{ font-size:20px; }
-  .jd-logo{ width:64px; height:64px; border-radius:14px; }
+  .jd-logo{ width:64px; height:64px; border-radius:5px; }
   .jd-card{ padding:18px 16px; }
   .jd-rows{ grid-template-columns:1fr; }
   .jd-stats span{ padding:0 10px; }
