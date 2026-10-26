@@ -90,6 +90,8 @@ window.UP_LOC={countries:COUNTRIES,india:INDIA};
 (function(){
 'use strict';
 const KEY='upadyay_inst_v1', $=id=>document.getElementById(id);
+const DEV=(function(){ try{ return /[?&]dev=1\b/.test(location.search)||localStorage.getItem('up_dev')==='1'; }catch(e){ return false; } })();   /* demo helpers only show with ?dev=1 */
+const emOk=()=>approved(), aemOk=()=>approved();   /* an email counts as verified only after the admin approves the institution */
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const ck=s=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="vertical-align:-2px"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>`;
 const PIN_IC='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px"><path d="M12 21s7-6.2 7-11a7 7 0 10-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>';
@@ -104,7 +106,7 @@ const ROLES=['HR Representative','Recruitment Consultant','Placement Agency','Ad
 const BTYPES=['Campus','Branch','Extension centre','Study centre','Other'];
 const PINS={'500072':['Telangana','Hyderabad','Hyderabad','Kukatpally'],'506002':['Telangana','Warangal','Warangal','Hanamkonda'],'500003':['Telangana','Hyderabad','Secunderabad','Secunderabad'],'560001':['Karnataka','Bengaluru Urban','Bengaluru','MG Road']};
 const ACAD=['University','College','School','Institute'];
-const LOC=window.UP_LOC||{countries:['India'],india:{}}, COUNTRIES=['India'], INDIA=LOC.india;
+const LOC=window.UP_LOC||{countries:['India'],india:{}}, COUNTRIES=(LOC.countries&&LOC.countries.length)?LOC.countries:['India'], INDIA=LOC.india;
 const REGR=['HR / Recruitment','Administration','Placement','Authorized Representative','Director / Principal / Owner'];
 const ADES=['Dean','Principal','Director','Registrar','Head of Institution','Other Authorized Head'];
 const XTYPES=['Registration','Accreditation','Affiliation','Authorization Letter','Institution ID','Other'];
@@ -180,7 +182,7 @@ const othLbl=o=>(o.o||[]).find(x=>/^Other/.test(x));
 const fval=(f,S)=>{const v=((S||I.d)[f.k]||'').trim();return f.oth&&v===othLbl(f)?'':v};
 function chk(o,v){
   v=(v||'').trim(); if(o.oth&&v===othLbl(o)) return 'Please specify';  if(!v) return o.req?'This field is required':'';
-  if(o.v==='phone') return /^\d{10}$/.test(v.replace(/[\s+-]|^91/g,''))?'':MSG.phone;
+  if(o.v==='phone'){ let ph=v.replace(/\D/g,''); if(ph.length===12&&ph.slice(0,2)==='91') ph=ph.slice(2); else if(ph.length===11&&ph[0]==='0') ph=ph.slice(1); return /^[2-9]\d{9}$/.test(ph)?'':MSG.phone; }
   if(o.v==='year'){ const y=+v; return RX.year.test(v)&&y>=1800&&y<=new Date().getFullYear()?'':MSG.year; }
   if(o.v) return RX[o.v].test(v)?'':MSG[o.v];
   return '';
@@ -347,8 +349,8 @@ function extraBlock(){
 
 /* ---------- step 4 sections: two-level verification ---------- */
 const aPub=()=>isPub(I.d.aemail);
-const repVerified=()=>repOk()&&okDoc('rep')&&(pubMail()?okDoc('reg'):I.em==='ok');
-const authEmailOk=()=>!!I.d.aemail&&(aPub()?okDoc('aprf'):I.aem==='ok');
+const repVerified=()=>repOk()&&okDoc('rep')&&(pubMail()?okDoc('reg'):emOk());
+const authEmailOk=()=>!!I.d.aemail&&(aPub()?okDoc('aprf'):aemOk());
 const authVerified=()=>authEmailOk()&&okDoc('auth');
 const vList=l=>`<ul class="in-list">${l.map(x=>`<li>${dot(x[0],rowIc(x[0]))}${x[1]}</li>`).join('')}</ul>`;
 const pill=v=>`<span class="in-vbadge${v?'':' p'}">${v?ck(12)+' Verified':CLKs+' Pending'}</span>`;
@@ -361,12 +363,14 @@ function repVCard(){
   return `<div class="in-card"><div class="inv-stat-h"><h4>Representative Verification</h4>${pill(v)}</div><p class="sub2">Verify the person registering.</p>`
    +(p?note(PUBMSG,'in-warn'):'')
    +vList([
-     p?[okDoc('reg')?'ok':'warn',okDoc('reg')?'Public email accepted: official document uploaded':'Official email not available: upload registration proof']:I.em==='ok'?['ok','Official email verified']:['wait','Official email not verified yet'],
+     p?[okDoc('reg')?'ok':'warn',okDoc('reg')?'Public email accepted: official document uploaded':'Official email not available: upload registration proof']:emOk()?['ok','Official email verified']:['wait','Official email not verified yet'],
      [repOk()?'ok':'wait',repOk()?'Representative details submitted':'Representative details incomplete'],
      [okDoc('rep')?'ok':'wait',okDoc('rep')?'Institution / employee proof uploaded':'Institution / employee proof not uploaded']])
    +`<a href="#" class="inv-link" onclick="IN.go(2);return false">Edit representative details</a></div>`;
 }
 function authMail(){
+  if(aemOk()) return note(`<b>${ck(13)} Authority email verified</b><br>${esc(I.d.aemail)}`,'in-ok');
+  return note('<b>Admin check.</b> Our team confirms the authority email during review. No code is needed.');
   const e=I.aem, d=I.d;
   if(e==='ok') return note(`<b>${ck(13)} Authority email verified</b><br>${esc(d.aemail)}`,'in-ok');
   if(e==='sent') return note(`<b>Check the authority inbox</b><br>We sent a verification code to ${esc(d.aemail)}`)
@@ -393,7 +397,7 @@ function docsCard(){
 }
 
 /* ---------- verification status ---------- */
-function vState(){ if(I.vs==='verified'&&repVerified()&&authVerified()) return 'verified'; if(I.vs==='changes'||missing().length) return 'info'; return 'pending'; }
+function vState(){ if(approved()) return 'verified'; if(I.vs==='changes'||missing().length) return 'info'; return 'pending'; }
 function vRows(){
   const m=!missing().length, r=repVerified(), a=authVerified();
   return [
@@ -418,14 +422,14 @@ function vBanner(){
 }
 function authDashCard(){
   const d=I.d;
-  return card('Institution Authority','Dean, Principal, Director, Registrar or other authorized head who can confirm this institution.',kvs([['Authority name',esc(d.aname)],['Designation',esc(d.adesig)],['Official institution email',d.aemail?esc(d.aemail)+(aPub()?' <span class="in-tag y">Public email</span>':I.aem==='ok'?' <span class="in-tag g">Verified</span>':''):''],['Phone',esc(d.aphone)]])+'<button class="btn btn-ghost btn-sm" onclick="IN.edit(2)">Edit</button>');
+  return card('Institution Authority','Dean, Principal, Director, Registrar or other authorized head who can confirm this institution.',kvs([['Authority name',esc(d.aname)],['Designation',esc(d.adesig)],['Official institution email',d.aemail?esc(d.aemail)+(aPub()?' <span class="in-tag y">Public email</span>':aemOk()?' <span class="in-tag g">Verified</span>':''):''],['Phone',esc(d.aphone)]])+'<button class="btn btn-ghost btn-sm" onclick="IN.edit(2)">Edit</button>');
 }
 
 /* ---------- company profile (dashboard) ---------- */
 function profileBody(){
   const d=I.d, pub=isPub(d.email);
   const addr=[d.address,d.area,d.city,d.state,d.pin].filter(Boolean).map(esc).join(', ');
-  const ems=d.email?esc(d.email)+(I.em==='ok'?(pub?' <span class="in-tag y">Public email</span>':' <span class="in-tag g">Verified</span>'):''):'';
+  const ems=d.email?esc(d.email)+(emOk()?(pub?' <span class="in-tag y">Public email</span>':' <span class="in-tag g">Verified</span>'):''):'';
   const web=d.website?lnk(d.website)+(I.web?' <span class="in-tag g">Confirmed</span>':''):'';
   const ed=n=>`<button class="btn btn-ghost btn-sm" onclick="IN.edit(${n})">Edit</button>`;
   const camps=[{name:d.name||'Main campus',img:d.logo,loc:locStr(d),t:'Main campus'}].concat(I.branches.map(b=>({name:b.name,img:b.img,loc:locStr(b),t:b.type}))).map(b=>`<div class="in-camp"><div class="lft">${thumb(b)}<div><b>${esc(b.name)}</b><span>${esc(b.loc)||'Location not added'}${b.t?' · '+esc(b.t):''}</span></div></div></div>`).join('');
@@ -440,7 +444,7 @@ function profileBody(){
 /* ---------- completion + badges ---------- */
 function pct(){
   const d=I.d, ks=F0.concat(F1,F2).filter(f=>!f.sh||f.sh(d)).map(f=>f.k);
-  const n=ks.filter(k=>d[k]).length+(d.logo?1:0)+(I.em==='ok'?1:0)+(anyDoc()?1:0);
+  const n=ks.filter(k=>d[k]).length+(d.logo?1:0)+(d.email&&!isPub(d.email)?1:0)+(anyDoc()?1:0);
   return Math.min(100,Math.round(n/(ks.length+3)*100));
 }
 function vBadge(){
@@ -467,7 +471,7 @@ function wiz(){
       ${[s0,s1,s2,s3,s5][s]()}
       <div class="in-actions"><span class="in-stepof">Step ${s+1} of ${STEPS.length}</span>
       <div class="r">${s>0?'<button class="btn btn-ghost btn-sm" onclick="IN.back()">Back</button>':''}<button class="btn btn-primary btn-sm" id="nextBtn" onclick="IN.next()">${last?(I.sub?'Save changes and resubmit':'Submit institution profile'):'Next'}</button></div></div>
-      <div class="in-demo">Demo helper: <button onclick="IN.sample()">Fill with sample data</button><button onclick="IN.reset()">Start over</button></div>
+      ${DEV?'<div class="in-demo">Demo helper: <button onclick="IN.sample()">Fill with sample data</button><button onclick="IN.reset()">Start over</button></div>':''}
     </div>
   </div></div>`;
 }
@@ -485,10 +489,10 @@ function s1(){
 function s2(){
   return card('Person Registering / Institution Representative','Your details as the person registering this institution.',grid(F2.concat(EIDF),'d')+roleSel()+note('This is the person creating and managing the institution account.'))
   + card('Institution Authority','Provide the details of the Dean, Principal, Director, Registrar, or other authorized head who can confirm this institution and your authority to represent it.',grid(F2A,'d')+note('Use an official email on the institution domain where possible.'))
-  + card('Email verification','Verify the official institution email you entered in step 1.',emailInner());
+  + card('Official email','Our admin team checks this email during review.',emailInner());
 }
 function emailInner(){
-  const e=I.em, d=I.d;
+  const e=emOk()?'ok':'idle', d=I.d; if(e!=='ok') return `<div class="in-grid">${fld(EMAILF,'d')}</div>`+note('<b>Admin check.</b> Our team confirms this official email during review. You do not need to enter a code.');
   if(e==='ok') return isPub(d.email)?note(`<b>${BANGs} Public email detected — additional verification required</b><br>${esc(d.email)}<br>This email is accepted. Upload the documents below to complete verification.`,'in-warn'):note(`<b>${ck(13)} Official email verified</b><br>${esc(d.email)}`,'in-ok');
   if(e==='sent') return note(`<b>Check your email</b><br>We sent a verification code to ${esc(d.email)}`)+
    `<div class="in-otp">${[0,1,2,3,4,5].map(i=>`<input maxlength="1" inputmode="numeric" aria-label="Digit ${i+1}" oninput="IN.otp(this,${i})" onkeydown="IN.otpKey(event,${i})">`).join('')}</div>
@@ -500,7 +504,7 @@ function emailInner(){
 }
 function s3(){
   return card('Verify your institution','Provide official information that helps us confirm that this institution exists and that you are authorized to represent it.',`<div class="in-methods">
-  <div class="in-method rec"><h5>Official institution email <span class="in-tag g">Recommended</span>${I.em==='ok'?(isPub(I.d.email)?'<span class="in-tag y">Public email</span>':'<span class="in-tag g">Verified</span>'):''}</h5><p class="sub2">Verify using your institution's official email address.</p>${emailInner()}</div>
+  <div class="in-method rec"><h5>Official institution email <span class="in-tag g">Recommended</span>${emOk()?(isPub(I.d.email)?'<span class="in-tag y">Public email</span>':'<span class="in-tag g">Verified</span>'):''}</h5><p class="sub2">Verify using your institution's official email address.</p>${emailInner()}</div>
   <div class="in-method"><h5>Official website${I.web?'<span class="in-tag g">Confirmed</span>':''}</h5><p class="sub2">Confirm the institution's official website.</p><div class="in-grid">${fld(WEBF,'d')}</div>
    ${note('Your website should clearly represent the same institution name.')}<button class="btn btn-ghost btn-sm" onclick="IN.web()">Confirm website</button></div>
 </div>`)
@@ -519,9 +523,9 @@ function s5(){
   const S=[
    ['Institution details',0,`<b>${esc(d.name)}</b><br>${r('Type',d.type)}${r('Website',d.website)}${r('Email',d.email)}${r('Phone',d.phone)}`],
    ['Location',1,`${esc(locStr(d))}<br>${r('PIN code',d.pin)}${r('Area',d.area)}${r('Address',d.address)}`],
-   ['Representative details',2,`<b>${esc(d.rname)}</b><br>${esc(d.rdes)}${d.rdep?', '+esc(d.rdep):''}<br>${esc(d.remail)}<br>${r('Registration role',I.regRole)}${I.em==='ok'?ck(12)+' Email verified':'Email not verified yet'}`],
+   ['Representative details',2,`<b>${esc(d.rname)}</b><br>${esc(d.rdes)}${d.rdep?', '+esc(d.rdep):''}<br>${esc(d.remail)}<br>${r('Registration role',I.regRole)}${emOk()?ck(12)+' Email verified':'Email not verified yet'}`],
    ['Institution authority',2,`<b>${esc(d.aname)||'—'}</b><br>${esc(d.adesig)}<br>${esc(d.aemail)}`],
-   ['Verification',3,`${I.em==='ok'?ck(12)+' Official email verified':'Official email not verified'}<br>${I.aem==='ok'?ck(12)+' Authority email verified':aPub()?'Authority uses a public email, official document required':'Authority email not verified'}<br>${docsLine()}<br>Review pending after submission`]];
+   ['Verification',3,`${emOk()?ck(12)+' Official email verified':'Official email not verified'}<br>${aemOk()?ck(12)+' Authority email verified':aPub()?'Authority uses a public email, official document required':'Authority email not verified'}<br>${docsLine()}<br>Review pending after submission`]];
   return card('Review your institution profile','Check everything before you submit.',S.map((x,i)=>`<div class="in-acc${i===0?' open':''}"><button onclick="this.parentNode.classList.toggle('open')"><span>${x[0]}</span><span><a href="#" onclick="event.stopPropagation();IN.edit(${x[1]});return false" style="color:var(--blue-700);font-size:13px">Edit</a></span></button><div class="body">${x[2]}</div></div>`).join('')
    +`<label class="in-check"><input type="checkbox" id="finalChk"${I.c2?' checked':''} onchange="IN.c2(this.checked)"> I confirm that the information provided is accurate.</label><div class="in-err" id="finalErr" style="display:none;margin-bottom:8px">Confirm that the information is accurate before submitting.</div>`);
 }
@@ -579,7 +583,7 @@ function statusBody(){
    <button class="btn btn-ghost btn-sm" onclick="IN.edit(0)">Edit</button></div>`;
   }
   if(I.vs==='changes') return `<div class="in-status"><div class="big" style="background:#B3261E">${BANG}</div><h3 style="margin:0 0 6px">Additional information required</h3><p style="color:var(--ink-soft);margin:0">We need some additional information before we can complete your institution verification.</p></div>
-   ${note('<b>Reason</b><br>The uploaded document does not clearly match the institution name.','in-bad')}
+   ${note('<b>Reason</b><br>'+(I.reason?esc(I.reason):'Open your notifications to see what the admin asked for.'),'in-bad')}
    ${missPanel()}
    <div class="in-actions" style="justify-content:flex-start"><button class="btn btn-primary btn-sm" onclick="IN.edit(0)">Update information</button><button class="btn btn-ghost btn-sm" onclick="IN.edit(3)">Replace document</button></div>
    <p class="sub2" style="margin-top:12px">Your profile information has not been deleted. You can update the required details and resubmit.</p>`;
@@ -597,7 +601,7 @@ function verifyFlow(){
   return body;
 }
 
-const demoBar=()=>`<div class="in-demo">Demo: preview a state <button onclick="IN.vs('pending')">Pending</button><button onclick="IN.vs('verified')">Verified</button><button onclick="IN.vs('changes')">Changes required</button></div>`;
+const demoBar=()=>!DEV?'':`<div class="in-demo">Demo: preview a state <button onclick="IN.vs('pending')">Pending</button><button onclick="IN.vs('verified')">Verified</button><button onclick="IN.vs('changes')">Changes required</button></div>`;
 function statusPage(){
   return `<div class="in-wrap"><div class="in-head"><h3>Institution verification</h3></div><div class="in-card">${statusBody()}<div class="in-actions" style="justify-content:flex-end"><button class="btn btn-primary btn-sm" onclick="IN.dash()">Go to dashboard</button></div></div>${demoBar()}</div>`;
 }
@@ -616,7 +620,7 @@ function dash(){
   if(sc==='profile') body=profileBody();
   if(sc==='branches') body=branchMgr();
   if(sc==='verify') body=verifyFlow()+demoBar();
-  if(sc==='rep') body=card('Person Registering / Institution Representative','The person responsible for managing this institution profile.',rows([['Name',d.rname],['Designation',d.rdes],['Registration role',I.regRole],['Department',d.rdep],['Employee ID',d.eid],['Work email',d.remail+(I.em==='ok'?' (verified)':'')],['Work phone',d.rphone],['Connection',I.auth==='behalf'?'On behalf: '+I.role:'Authorized to represent']])+`<button class="btn btn-ghost btn-sm" onclick="IN.edit(2)">Edit details</button>`)+authDashCard();
+  if(sc==='rep') body=card('Person Registering / Institution Representative','The person responsible for managing this institution profile.',rows([['Name',d.rname],['Designation',d.rdes],['Registration role',I.regRole],['Department',d.rdep],['Employee ID',d.eid],['Work email',d.remail+(emOk()?' (verified)':'')],['Work phone',d.rphone],['Connection',I.auth==='behalf'?'On behalf: '+I.role:'Authorized to represent']])+`<button class="btn btn-ghost btn-sm" onclick="IN.edit(2)">Edit details</button>`)+authDashCard();
   if(sc==='jobs'){ const n=typeof postedJobs!=='undefined'?Object.keys(postedJobs).length:0;
     body=card('Posted jobs',n?`${n} ${n===1?'job':'jobs'} posted from this institution.`:'',n?'<button class="btn btn-primary btn-sm" onclick="IN.tab(\'myjobs\')">View posted jobs</button> <button class="btn btn-ghost btn-sm" onclick="IN.tab(\'post\')">Post another job</button>':'<div class="empty-state"><h4>No jobs posted yet</h4><p>Post your first faculty opening and choose which campus it belongs to.</p></div><button class="btn btn-primary btn-sm" onclick="IN.tab(\'post\')">Post a job</button>'); }
   return `<div class="in-wrap in-dash">${vBanner()}<div class="in-card"><div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap">${logoBox(64)}<div style="flex:1;min-width:200px"><h3 style="margin:0;font-size:20px;color:var(--blue-900)">${esc((d.name||'').toUpperCase())}</h3><div style="margin:5px 0;display:flex;gap:6px;flex-wrap:wrap;align-items:center">${vBadge()}${d.type?`<span class="in-tag">${esc(d.type)}</span>`:''}</div><span style="font-size:13px;color:var(--ink-soft)">${PIN_IC} ${esc(locStr(d))}</span></div></div>
@@ -729,7 +733,7 @@ window.IN={
     if(!/^\d{6}$/.test(c)){ e.textContent='Enter the 6-digit code sent to the authority email.'; e.style.display='block'; return; }
     I.aem='ok'; save(); render(); toast('Authority email verified'); },
   auth(v){ I.auth=v; save(); render(); }, role(v){ const was=I.role==='Other'||(I.role&&!ROLES.includes(I.role)); I.role=v; save(); if(v==='Other'||was){ render(); const el=document.querySelector('[data-role-other]'); if(el) el.focus(); } }, roleTxt(v){ I.role=v.trim()||'Other'; save(); }, c1(v){ I.c1=v; save(); }, c2(v){ I.c2=v; save(); },
-  vs(v){ I.vs=v; save(); render(); },
+  vs(v){ if(!DEV) return; I.vs=v; save(); render(); },
   dash(){ I.view='dash'; save(); render(); top(); },
   sec(k){ I.sec=k; if(k==='verify') VS=0; render(); },
   snext(){ const S=dashSecs(), i=S.findIndex(x=>x[0]===I.sec); if(I.sec==='verify'&&VS<VSTEPS.length-1) VS++; else if(i<S.length-1){ I.sec=S[i+1][0]; if(I.sec==='verify') VS=0; } render(); toLayout(); },
@@ -770,7 +774,7 @@ window.IN={
   bView(i){ const b=I.branches[i];
     modal(`<div style="display:flex;gap:14px;align-items:center;margin-bottom:14px">${thumb(b)}<div><h4 style="margin:0;font-size:18px">${esc(b.name)}</h4><span style="font-size:13px;color:var(--ink-soft)">${esc(locStr(b))}</span></div></div>${b.img?`<img src="${b.img}" alt="Campus" style="width:100%;max-height:180px;object-fit:cover;margin-bottom:12px">`:''}${rows([['Type',b.type],['Code',b.code],['Contact person',b.cname],['Designation',b.cdes],['Email',b.email],['Phone',b.phone],['Location',locStr(b)],['Address',b.address]])}<p style="font-size:13.5px;color:var(--ink-soft)">${esc(b.desc)}</p>
     <div class="in-actions"><button class="btn btn-ghost btn-sm" style="color:#B3261E;border-color:#B3261E" onclick="IN.bDel(${i})">Remove</button><div class="r"><button class="btn btn-ghost btn-sm" onclick="IN.closeM()">Close</button><button class="btn btn-primary btn-sm" onclick="IN.bEdit(${i})">Edit</button></div></div>`); },
-  bDel(i){ modal(`<h4 style="margin:0 0 8px;font-size:18px">Remove ${esc(I.branches[i].name)}?</h4><p style="color:var(--ink-soft);font-size:14px">This campus will be removed from your institution profile. Jobs already posted to it stay live.</p>
+  bDel(i){ modal(`<h4 style="margin:0 0 8px;font-size:18px">Remove ${esc(I.branches[i].name)}?</h4><p style="color:var(--ink-soft);font-size:14px">This campus will be removed from your institution profile. Jobs already posted keep the campus name, but if you edit one of them you will need to choose a new campus.</p>
     <div class="in-actions"><span></span><div class="r"><button class="btn btn-ghost btn-sm" onclick="IN.closeM()">Cancel</button><button class="btn btn-primary btn-sm" style="background:#B3261E" onclick="IN.bDelOk(${i})">Remove campus</button></div></div>`); },
   bDelOk(i){ const b=I.branches[i], n=b.name; I.branches.splice(i,1); save();
     if(b.imgId&&window.bkDeleteFile) bkDeleteFile(b.imgId).catch(()=>{});                     /* its photo goes from storage too */
