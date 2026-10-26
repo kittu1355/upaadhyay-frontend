@@ -614,6 +614,7 @@ function dashSecs(){ return [['profile','Institution profile'],['branches','Bran
 function toLayout(){ const L=document.querySelector('#instRoot .in-layout'); if(L&&L.scrollIntoView) L.scrollIntoView({block:'start'}); }
 function dash(){
   const d=I.d, p=pct(), sc=I.sec;
+  if(sc==='verify') return `<div class="in-wrap in-dash"><div class="in-head"><h3>Institution verification</h3></div><div class="in-card in-sq">${statusBody()}</div>${demoBar()}</div>`;
   const SEC=dashSecs(), si=Math.max(0,SEC.findIndex(x=>x[0]===sc));
   const side=SEC.map((x,i)=>`<button class="in-step${i===si?' on':i<si?' done':''}" onclick="IN.sec('${x[0]}')"><span class="in-step-n">${i+1}</span><span class="in-step-t">${x[1]}</span></button>`
     ).join('');
