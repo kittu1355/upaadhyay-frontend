@@ -94,7 +94,7 @@ function completion(){const req=[['Personal details',S.first&&S.last&&age(S.dob)
 const R={
 0:()=>`<h3>Personal Details</h3><p class="fp-sub">Basic professional identity shown to institutions.</p><div class="fp-grid g3">
  ${F('Title','opt',SEL('title',OPT.title))}${F('First name','req',I('first',{v:'req'}))}${F('Middle name','opt',I('middle'))}${F('Last name','req',I('last',{v:'req'}))}
- ${F('Date of birth','req',I('dob',{v:'dob',ph:'DD / MM / YYYY'})+`<span class="fp-age" id="fpAge"></span>`,{hint:'Age is calculated automatically.'})}${F('Gender','opt',SEL('gender',OPT.gender))}</div>
+ ${F('Date of birth','req',I('dob',{v:'dob',ph:'DD/MM/YYYY'})+`<span class="fp-age" id="fpAge"></span>`,{hint:'Age is calculated automatically.'})}${F('Gender','opt',SEL('gender',OPT.gender))}</div>
  <div class="fp-grid" style="margin-top:14px">${F('Profile photo','opt',`<div class="fp-up ${S.files.photo?'has':''}" data-up="photo">${UPin('photo')}</div>`,{hint:RULES.photo.label})}
  ${F('Professional headline','rec',I('headline',{ph:'e.g. Assistant Professor - Computer Science'}))}
  ${F('Email','req',I('email',{dis:true}),{hint:'Your login email. It cannot be changed here.'})}${F('Phone number','req',I('phone',{v:'phone'}))}${F('Alternative phone','opt',I('phone2'))}</div>
@@ -160,6 +160,7 @@ const R={
 /* ---------- Verification step ---------- */
 /* For now the login email and the phone number the user adds are shown as verified automatically. OTP verification is marked Coming soon. */
 const VF_ST={none:['p-no','circle','Not verified'],pend:['p-pend','clock','Under review'],ok:['p-ok','check','Verified'],bad:['p-upd','alert','Rejected']};
+const vfAdded=k=>k==='ok'?pill('p-ok','check','Added'):vfPill(k);
 const vfPill=k=>{const x=VF_ST[k]||VF_ST.none;return pill(x[0],x[1],x[2])};
 const vfRow=(label,hint,pl,act)=>`<div class="fp-row"><span><b>${label}</b>${hint?`<div class="fp-hint" style="margin:2px 0 0">${hint}</div>`:''}</span><span style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">${pl}${act||''}</span></div>`;
 function vfEmail(){return S.email?'ok':'none'}
@@ -180,9 +181,9 @@ function verifyHTML(){
  return `<h3>Profile Verification</h3><p class="fp-sub">Verified contact details and documents help institutions trust your profile. Verification is optional and does not change your profile strength.</p>
  <div class="fp-note"><b>${done} of 3 checks complete</b> · Email, phone and an ID proof.</div>
  <div class="fp-card"><h4>1. Contact verification</h4>
-  ${vfRow('Email',esc(S.email)?esc(S.email)+' · the account you logged in with':'No email on this account',vfPill(em),vfSoon)}
-  ${vfRow('Phone',esc(S.phone)||'Add your phone number in Account &amp; Contact',vfPill(ph),ph==='ok'?vfSoon:`<button type="button" class="fp-btn sm" data-go="1">Add phone</button>`)}
-  <div class="fp-hint" style="margin-top:8px">Your login email and the phone number you add are marked verified for now. OTP verification is coming soon.</div>
+  ${vfRow('Email',esc(S.email)?esc(S.email)+' · the account you logged in with':'No email on this account',vfAdded(em),vfSoon)}
+  ${vfRow('Phone',esc(S.phone)||'Add your phone number in Personal Details',vfAdded(ph),ph==='ok'?vfSoon:`<button type="button" class="fp-btn sm" data-go="0">Add phone</button>`)}
+  <div class="fp-hint" style="margin-top:8px">Your login email and phone are shown as added, not verified. OTP verification is coming soon.</div>
  </div>
  <div class="fp-card"><h4>2. Identity proof ${tag('opt')}</h4><div class="fp-hint" style="margin:0 0 10px">Aadhaar, PAN, passport, voter ID or driving licence. Only our verification team can see it.</div>
   <div class="fp-row" style="border:0;padding:0 0 10px">${vfPill(idst)}${idst==='bad'?'<span class="fp-hint" style="margin:0">Please upload a clearer copy.</span>':idst==='pend'?'<span class="fp-hint" style="margin:0">Our team will review it. You will see the result here.</span>':''}</div>
@@ -240,7 +241,7 @@ function checkSec(){let ok=true,first=null;$$(`.fp-sec.open [data-v]`).forEach(e
 document.addEventListener('input',e=>{const t=e.target;if(!t.closest||!t.closest('#fpRoot'))return;
  if(t.matches('.fp-ms input')){msOpen(t.closest('.fp-ms'),t.value);return}
  const k=t.dataset.k;if(!k||t.type==='radio'||t.type==='checkbox')return;set(k,t.value);
- if(k==='dob'){ageUpd();if(t.value.length===2||t.value.length===5){}}
+ if(k==='dob'){let d=t.value.replace(/[^\d]/g,'').slice(0,8);if(d.length>4)d=d.slice(0,2)+'/'+d.slice(2,4)+'/'+d.slice(4);else if(d.length>2)d=d.slice(0,2)+'/'+d.slice(2);if(d!==t.value){t.value=d;set(k,d)}ageUpd()}
  clearTimeout(window._fh);window._fh=setTimeout(()=>{$('#fpHero').innerHTML=S.open===11?'':heroHTML()},250)});
 document.addEventListener('focusout',e=>{const t=e.target;if(t.dataset&&t.dataset.v&&t.closest('#fpRoot'))check(t)});
 document.addEventListener('change',e=>{const t=e.target;if(!t.closest||!t.closest('#fpRoot'))return;
@@ -331,7 +332,7 @@ async function uploadFile(p,f){if(ST.busy[p]||ST.saving)return;const m=checkFile
   else if(await saveProfile())toast('File uploaded',1);else toast('File uploaded, but the profile was not saved. Press Save.',0,1)}
  catch(e){delete ST.busy[p];if(prev)S.files[p]=prev;else delete S.files[p];paintUp(p,(e&&e.message)||'Upload failed. Please try again.')}}
 async function removeFile(p){const f=S.files[p];if(!f||ST.busy[p]||ST.saving)return;if(!confirm('Remove this file?'))return;ST.busy[p]=1;paintUp(p);
- try{if(p==='photo'){await api.del('/candidate/profile/photo');currentUser.avatar=(typeof DEFAULT_USER!=="undefined"?DEFAULT_USER.avatar:"")||'';delete S.files.photo;if(typeof saveState==='function')saveState();delete ST.busy[p];paintUp(p);refreshChrome();toast('Photo removed',1)}
+ try{if(p==='photo'){try{await api.del('/candidate/profile/photo')}catch(er){if(er&&(er.status===404||er.status===405)&&f.id){await api.del('/files/'+f.id)}else throw er}currentUser.avatar=(typeof DEFAULT_USER!=="undefined"?DEFAULT_USER.avatar:"")||'';delete S.files.photo;if(typeof saveState==='function')saveState();delete ST.busy[p];paintUp(p);refreshChrome();toast('Photo removed',1)}
   else{if(f.id)await api.del('/files/'+f.id);delete S.files[p];delete ST.busy[p];paintUp(p);if(await saveProfile())toast('File removed',1)}}
  catch(e){delete ST.busy[p];paintUp(p);toast('Could not remove the file: '+((e&&e.message)||'error'),0,1)}}
 async function dropFiles(i,re){const ks=Object.keys(S.files),out={};for(const k of ks){const m=re.exec(k);if(!m){out[k]=S.files[k];continue}const n=+m[1];if(n===i){const f=S.files[k];if(f&&f.id){try{await api.del('/files/'+f.id)}catch(e){}}}else if(n>i){out[k.replace(/\d+/,n-1)]=S.files[k]}else out[k]=S.files[k]}S.files=out}
