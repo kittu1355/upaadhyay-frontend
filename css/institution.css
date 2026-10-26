@@ -446,3 +446,12 @@
 .in-vcard-edit{box-shadow:0 2px 6px rgba(11,29,58,.28);background:#fff;font-weight:600}
 .in-vcard-edit:hover{box-shadow:0 4px 12px rgba(11,29,58,.32);transform:translateY(-1px)}
 #dashInnerWide .in-vcard,#dashInnerWide .in-vcard-edit{border-radius:2px}
+
+/* square verification card */
+#instRoot .in-card.in-sq,#dashInnerWide #instRoot .in-main .in-card.in-sq,#dashInnerWide .in-card.in-sq{max-width:460px;margin:24px auto;padding:28px 26px;background:#fff;border:1px solid var(--line);border-radius:2px;box-shadow:0 8px 28px rgba(15,35,80,.14)}
+.in-sq .in-status{padding:6px 0 14px}
+.in-sq .in-list{margin:8px 0 14px}
+.in-sq .in-note{border-radius:2px}
+.in-sq .in-actions,#dashInnerWide .in-sq .in-actions{position:static;padding:0;border:0;background:none;margin-top:14px}
+.in-sq .in-actions .btn{width:100%;justify-content:center;border-radius:2px;box-shadow:0 2px 6px rgba(11,29,58,.28)}
+.in-sq .in-vcard.full{box-shadow:0 4px 14px rgba(15,35,80,.10)}
