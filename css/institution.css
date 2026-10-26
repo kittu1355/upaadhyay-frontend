@@ -455,3 +455,18 @@
 .in-sq .in-actions,#dashInnerWide .in-sq .in-actions{position:static;padding:0;border:0;background:none;margin-top:14px}
 .in-sq .in-actions .btn{width:100%;justify-content:center;border-radius:2px;box-shadow:0 2px 6px rgba(11,29,58,.28)}
 .in-sq .in-vcard.full{box-shadow:0 4px 14px rgba(15,35,80,.10)}
+
+/* Ask Questions builder (institution + sub-branch job forms) */
+.qa-host{width:100%}
+.qa-rows{display:grid;gap:10px;margin-bottom:10px}
+.qa-row{display:flex;align-items:center;gap:8px}
+.qa-n{flex:none;width:24px;height:24px;border-radius:50%;background:#EEF3FF;color:var(--blue-700,#1d4fd7);font-size:12px;font-weight:700;display:inline-flex;align-items:center;justify-content:center}
+.qa-q{flex:1;min-width:0;padding:10px 12px;border:1px solid var(--line,#dfe5f0);border-radius:2px;font:inherit;font-size:14px}
+.qa-t{flex:none;width:92px;padding:10px 8px;border:1px solid var(--line,#dfe5f0);border-radius:2px;font:inherit;font-size:13.5px;background:#fff}
+.qa-x{flex:none;width:32px;height:32px;border:1px solid var(--line,#dfe5f0);border-radius:2px;background:#fff;color:#B3261E;font-size:18px;line-height:1;cursor:pointer}
+.qa-x:hover{background:#FDECEA}
+.qa-foot{display:flex;align-items:center;gap:12px}
+.qa-add:disabled{opacity:.5;cursor:not-allowed}
+.qa-count{font-size:12.5px;font-weight:600;color:var(--ink-soft,#5b6577)}
+.qa-hint{margin:8px 0 0;font-size:12.5px;color:var(--ink-faint,#8a93a6)}
+@media(max-width:560px){.qa-row{flex-wrap:wrap}.qa-q{flex-basis:calc(100% - 40px)}}
