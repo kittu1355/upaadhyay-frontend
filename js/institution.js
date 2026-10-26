@@ -606,7 +606,7 @@ function verifyFlow(){
 
 const demoBar=()=>!DEV?'':`<div class="in-demo">Demo: preview a state <button onclick="IN.vs('pending')">Pending</button><button onclick="IN.vs('verified')">Verified</button><button onclick="IN.vs('changes')">Changes required</button></div>`;
 function statusPage(){
-  return `<div class="in-wrap"><div class="in-head"><h3>Institution verification</h3></div><div class="in-card in-sq">${statusBody()}<div class="in-actions" style="justify-content:stretch"><button class="btn btn-primary btn-sm" onclick="IN.dash()">Go to dashboard</button></div></div>${demoBar()}</div>`;
+  return `<div class="in-wrap" data-sec="verify"><div class="in-head"><h3>Institution verification</h3></div><div class="in-card in-sq">${statusBody()}<div class="in-actions" style="justify-content:stretch"><button class="btn btn-primary btn-sm" onclick="IN.dash()">Go to dashboard</button></div></div>${demoBar()}</div>`;
 }
 const rows=p=>`<div class="in-grid">${p.map(x=>`<div class="in-f"><label>${x[0]}</label><div style="font-size:14px">${esc(x[1])||'—'}</div></div>`).join('')}</div>`;
 const LOCK_IC='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-1px;margin-left:5px"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>';
@@ -614,7 +614,7 @@ function dashSecs(){ return [['profile','Institution profile'],['branches','Bran
 function toLayout(){ const L=document.querySelector('#instRoot .in-layout'); if(L&&L.scrollIntoView) L.scrollIntoView({block:'start'}); }
 function dash(){
   const d=I.d, p=pct(), sc=I.sec;
-  if(sc==='verify') return `<div class="in-wrap in-dash"><div class="in-head"><h3>Institution verification</h3></div><div class="in-card in-sq">${statusBody()}</div>${demoBar()}</div>`;
+  if(sc==='verify') return `<div class="in-wrap in-dash" data-sec="verify"><div class="in-head"><h3>Institution verification</h3></div><div class="in-card in-sq">${statusBody()}</div>${demoBar()}</div>`;
   const SEC=dashSecs(), si=Math.max(0,SEC.findIndex(x=>x[0]===sc));
   const side=SEC.map((x,i)=>`<button class="in-step${i===si?' on':i<si?' done':''}" onclick="IN.sec('${x[0]}')"><span class="in-step-n">${i+1}</span><span class="in-step-t">${x[1]}</span></button>`
     ).join('');
