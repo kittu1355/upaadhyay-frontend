@@ -439,3 +439,10 @@
 .in-vcard-name{margin:0 0 2px; font-size:15px; font-weight:700; color:var(--blue-900); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
 .in-vcard-sub{margin:0 0 6px; font-size:12.5px; color:var(--ink-soft);}
 @media(max-width:480px){.in-vcard{flex-wrap:wrap;}}
+
+/* verified state: approved status, checklist and edit card */
+.in-vcard.full{max-width:none;margin:18px 0 4px;padding:16px 18px;border-radius:2px;box-shadow:0 6px 20px rgba(15,35,80,.12)}
+.in-vcard.full .in-vcard-logo{border-radius:2px}
+.in-vcard-edit{box-shadow:0 2px 6px rgba(11,29,58,.28);background:#fff;font-weight:600}
+.in-vcard-edit:hover{box-shadow:0 4px 12px rgba(11,29,58,.32);transform:translateY(-1px)}
+#dashInnerWide .in-vcard,#dashInnerWide .in-vcard-edit{border-radius:2px}
