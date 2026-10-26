@@ -1,0 +1,32 @@
+/* profile-ui.css — LinkedIn-style profile cards (Browse faculty, Sub-branches, campuses) */
+.pf-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:16px;margin:4px 0 14px}
+.pf-card{position:relative;background:#121212;color:#fff;border:1px solid #232323;border-radius:20px;overflow:hidden;display:flex;flex-direction:column;min-width:0;cursor:pointer;box-shadow:0 8px 24px rgba(15,35,80,.18);transition:transform .15s,box-shadow .15s}
+.pf-card:hover{transform:translateY(-3px);box-shadow:0 14px 32px rgba(15,35,80,.28)}
+.pf-cover{height:84px;background:#cdcdcd;position:relative;flex:none}
+.pf-flag{position:absolute;top:10px;left:12px;font-size:11.5px;font-weight:700;color:#fff;background:#E39A12;padding:3px 10px;border-radius:999px}
+.pf-flag:empty{display:none}
+.pf-av{position:relative;z-index:1;flex:none;width:84px;height:84px;margin:-44px 0 0 18px;border-radius:50%;border:3px solid #121212;background:#d3d3d3 center/cover no-repeat;display:flex;align-items:center;justify-content:center;font:700 24px/1 inherit;color:#2a2a2a;overflow:hidden}
+.pf-body{padding:10px 18px 18px;display:flex;flex-direction:column;gap:3px;flex:1;min-width:0}
+.pf-name{margin:0;font-size:19px;font-weight:700;line-height:1.25;color:#fff;display:flex;align-items:center;gap:7px;min-width:0}
+.pf-name>span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pf-ver{display:inline-flex;flex:none;color:#fff}
+.pf-sub{font-size:14px;color:#f1f1f1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pf-meta{font-size:12.5px;color:#9b9b9b;line-height:1.45}
+.pf-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.pf-chip{font-size:11.5px;padding:3px 10px;border:1px solid #3a3a3a;border-radius:999px;color:#d6d6d6;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pf-stats{font-size:12.5px;color:#a8a8a8;margin-top:8px}
+.pf-acts{display:flex;gap:8px;align-items:center;margin-top:auto;padding-top:16px}
+.pf-btn{flex:1;min-width:0;height:38px;padding:0 12px;border-radius:999px;font:600 13.5px inherit;font-family:inherit;border:1.5px solid #3fa3ff;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;white-space:nowrap}
+.pf-btn.pri{background:#3fa3ff;color:#06121f}
+.pf-btn.pri:hover{background:#63b4ff}
+.pf-btn.out{background:transparent;color:#fff}
+.pf-btn.out:hover{background:rgba(63,163,255,.14)}
+.pf-btn:disabled{opacity:.55;cursor:default}
+.pf-more{flex:none;width:38px;height:38px;border-radius:50%;border:1.5px solid #3fa3ff;background:transparent;color:#fff;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-size:18px;line-height:1;letter-spacing:1px}
+.pf-more:hover{background:rgba(63,163,255,.14)}
+.pf-menu{display:none;position:absolute;right:16px;bottom:62px;min-width:140px;background:#1c1c1c;border:1px solid #333;border-radius:12px;padding:6px;box-shadow:0 10px 24px rgba(0,0,0,.4);z-index:5}
+.pf-menu.open{display:block}
+.pf-menu button{display:block;width:100%;text-align:left;background:none;border:0;color:#f1f1f1;font:600 13px inherit;font-family:inherit;padding:8px 10px;border-radius:8px;cursor:pointer}
+.pf-menu button:hover{background:#2a2a2a}
+.pf-menu button.bad{color:#ff8a80}
+.pf-card .in-vbadge{font-size:11.5px}
