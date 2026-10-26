@@ -68,4 +68,4 @@ function qaSend(jid){var t=document.getElementById('qaText'),e=document.getEleme
  var qs=qaGet('upaadhyay_jobqs_'+jid,[]);qs.push({q:v,d:new Date().toLocaleDateString('en-IN')});
  try{localStorage.setItem('upaadhyay_jobqs_'+jid,JSON.stringify(qs))}catch(x){}t.value='';qaDraw(jid);
  if(window.showGenericToast)showGenericToast('Question sent')}
-spLoadJobs().then(function(){if(!id)return list();spGetJob(id).then(function(j){if(j&&SP_JOBS.indexOf(j)<0)SP_JOBS.push(j);detail();if(j)qaMount(j.id)})});</script></body></html>
+spLoadJobs().then(function(){if(!id)return list();spGetJob(id).then(function(j){if(j&&SP_JOBS.indexOf(j)<0)SP_JOBS.push(j);detail()})});</script></body></html>
