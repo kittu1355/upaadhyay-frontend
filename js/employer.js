@@ -768,12 +768,13 @@ if(typeof window.bkStatusBadge !== 'function'){
     if(!id) return;
     const g = function(i){ const el = document.getElementById(i); return el ? (el.value || '').trim() : ''; };
     const on = document.getElementById('jbQaOn');
-    try{ localStorage.setItem('upaadhyay_jobqa_' + id, JSON.stringify({ on: on ? !!on.checked : true, contact: g('jbQaContact'), faq: g('jbQaFaq') })); }catch(e){}
+    try{ localStorage.setItem('upaadhyay_jobqa_' + id, JSON.stringify({ on: on ? !!on.checked : true, contact: g('jbQaContact'), faq: g('jbQaFaq'), questions: (window.QA ? QA.get('jbQaList') : []) })); }catch(e){}
   }
   function jbLoadQa(id, qa){
     let q = qa || {}; if(!qa){ try{ q = JSON.parse(localStorage.getItem('upaadhyay_jobqa_' + id) || '{}'); }catch(e){} }
     const on = document.getElementById('jbQaOn'), c = document.getElementById('jbQaContact'), f = document.getElementById('jbQaFaq');
     if(on) on.checked = q.on !== false; if(c) c.value = q.contact || ''; if(f) f.value = q.faq || '';
+    if(window.QA) QA.set('jbQaList', q.questions || []);
   }
   function addJob(e){
     if(e && e.preventDefault) e.preventDefault();
@@ -828,7 +829,7 @@ if(typeof window.bkStatusBadge !== 'function'){
     const jobPayload = {
       title, role, dept, type, category, qualification, notice,
       vacancies: v('jbVac'), expMin, expMax, salMin: salNorms ? '' : salMin, salMax: salNorms ? '' : salMax, salPeriod, salNeg, salNorms,
-      qa: { on: chk('jbQaOn'), contact: v('jbQaContact'), faq: v('jbQaFaq') },
+      qa: { on: chk('jbQaOn'), contact: v('jbQaContact'), faq: '', questions: (window.QA ? QA.get('jbQaList') : []) },
       campus, campusLoc, location, desc: v('jbDesc'), skills: v('jbSkills'), deadline: v('jbDeadline')
     };
     const editing = (editingJobId && jobsData[editingJobId]) ? jobsData[editingJobId] : null;
@@ -842,7 +843,7 @@ if(typeof window.bkStatusBadge !== 'function'){
     document.getElementById('jbSalPeriod').value = 'month';
     document.getElementById('jbSalNeg').checked = false;
     document.getElementById('jbSalNorms').checked = false;
-    const qaOn = document.getElementById('jbQaOn'); if(qaOn) qaOn.checked = true;
+    const qaOn = document.getElementById('jbQaOn'); if(qaOn) qaOn.checked = true; if(window.QA) QA.set('jbQaList', []);
     if(typeof instCampusChange === 'function') instCampusChange();
     const ok = document.getElementById('jbOk');
     if(ok){
@@ -898,6 +899,7 @@ if(typeof window.bkStatusBadge !== 'function'){
     ['jbTitle','jbRole','jbRoleOther','jbCategory','jbCategoryOther','jbDept','jbType','jbTypeOther','jbVac','jbQualification','jbQualificationOther','jbNotice','jbNoticeOther','jbExpMin','jbExpMax','jbSalMin','jbSalMax','jbLocation','jbDesc','jbSkills','jbDeadline','jbCampus','jbQaContact','jbQaFaq'].forEach(function(i){ const el = document.getElementById(i); if(el) el.value = ''; });
     ['jbRoleOther','jbCategoryOther','jbTypeOther','jbQualificationOther','jbNoticeOther'].forEach(function(i){ const el = document.getElementById(i); if(el) el.style.display = 'none'; });
     const p = document.getElementById('jbSalPeriod'); if(p) p.value = 'month';
+    if(window.QA) QA.set('jbQaList', []);
     const n1 = document.getElementById('jbSalNeg'), n2 = document.getElementById('jbSalNorms'); if(n1) n1.checked = false; if(n2) n2.checked = false;
     if(typeof instCampusChange === 'function') instCampusChange();
     if(typeof jbJump === 'function') jbJump(0);
