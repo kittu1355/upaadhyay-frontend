@@ -542,6 +542,11 @@
       if(x2.length){ expRows.length = 0; x2.forEach(function(r){ expRows.push(r); }); }
       (fp.links || []).forEach(function(l){ if(l && l.u) links.push([l.t || l.u, 'link', l.u]); });
     }
+    const view = window.FacultyView ? FacultyView.normalize(u, { fileUrl: fileUrl }) : null;
+    if(view && view._hasFp){ /* real uploaded documents (resume, CV, certificates, letters) with proper labels */
+      const dl = FacultyView.docLinks(view);
+      if(dl.length){ for(let i = links.length - 1; i >= 0; i--){ if(links[i][1] === 'doc') links.splice(i, 1); } dl.forEach(function(l){ links.push(l); }); }
+    }
     return {
       id: u.id, avatar: fileUrl(cp.profile_photo) || (pd.avatar && pd.avatar.indexOf('data:') !== 0 ? pd.avatar : DEFAULT_AVATAR),
       name: u.name || 'Candidate', role: cp.current_job_title || pd.currentDesignation || (pd.fp && pd.fp.desig) || pd.subject || 'Faculty',
@@ -549,8 +554,8 @@
       college: pd.college || pd.currentOrg || ((((pd.fp && pd.fp.jobs) || []).filter(function(j){ return j && j.cur; })[0]) || {}).org || '', about: cp.bio || pd.about || (pd.fp && pd.fp.headline) || '',
       skills: skillNames.length ? skillNames : [].concat(pd.academicSkills || [], (pd.fp && pd.fp.subjects) || [], splitList(pd.programmingLanguages), splitList(pd.softwareTools)).slice(0, 14),
       education: edu, experience: expRows,
-      stats: [[String(pd.journalPublications || 0), 'Publications'], [String(pd.totalPatents || 0), 'Patents'], [String(pd.numProjects || 0), 'Projects']],
-      links: links,
+      stats: (view && view._hasFp) ? FacultyView.stats(view) : [[String(pd.journalPublications || 0), 'Publications'], [String(pd.totalPatents || 0), 'Patents'], [String(pd.numProjects || 0), 'Projects']],
+      links: links, view: view,
       interests: { departments: splitList(pd.preferredDepartments).concat((pd.fp && pd.fp.prefLevels) || []), designations: splitList(pd.preferredDesignations).concat((pd.fp && pd.fp.prefJob) || []), subjects: splitList(pd.preferredTeachingSubjects).concat((pd.fp && pd.fp.prefSubs) || []),
                    orgType: pd.preferredOrgType || '', location: pd.preferredLocation || pd.preferredWorkLocation || ((pd.fp && pd.fp.prefLoc) || []).join(', '), employmentType: pd.preferredEmploymentType || '' },
       salary: { presentCtc: pd.presentCtc, expectedCtc: pd.expectedCtc, minAcceptable: '' } /* employers never receive the minimum acceptable salary */
@@ -588,6 +593,14 @@
     if(document.getElementById('candidateList') && typeof renderCandidates === 'function') renderCandidates();
   }
   window.bkReloadEmployer = loadEmployer;
+
+  /* Sub-branch / any page that browses candidates without the full employer hydrate: drop the hardcoded demo faculty, load real ones. */
+  window.bkLoadCandidates = async function(){
+    Object.keys(facultyProfiles).forEach(function(k){ delete facultyProfiles[k]; });
+    if(!api.hasToken()) return;
+    try{ (await paged('/company/candidates', {}, 5)).forEach(setProfile); }
+    catch(e){ console.warn('[backend] candidates', e); }
+  };
 
   window.bkEnsureCandidate = async function(id){
     if(facultyProfiles[String(id)]) return facultyProfiles[String(id)];
