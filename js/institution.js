@@ -287,6 +287,7 @@ const missing=()=>DOCR().filter(c=>isReq(c)&&!okDoc(c.k));
 const pubMail=()=>isPub(I.d.email);
 const instOk=()=>F0.concat(F1).filter(f=>f.req).every(f=>fval(f));
 const repOk=()=>F2.filter(f=>f.req).every(f=>fval(f))&&!!I.regRole;
+const EDI='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:6px"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>';
 const dot=(c,i)=>`<span class="in-dot${c?' '+c:''}">${i||''}</span>`;
 const rowIc=c=>c==='ok'?ck(11):c==='warn'?BANGd:c==='wait'?CLKd:'';
 const kvs=l=>`<div class="inv-kv">${l.map(x=>`<div${x[2]?' class="inv-full"':''}><span>${x[0]}</span><b>${x[1]||'<em>Not added</em>'}</b></div>`).join('')}</div>`;
@@ -578,9 +579,11 @@ function statusBody(){
   if(vState()==='verified'){
     const sub=[d.type,d.city].filter(Boolean).map(esc).join(' \u00b7 ');
     const ini=esc(String(d.name||'?').trim().split(/\s+/).slice(0,2).map(w=>w[0]||'').join('').toUpperCase()||'?');
-    return `<div class="in-vcard"><div class="in-vcard-logo">${d.logo?`<img src="${d.logo}" alt="">`:ini}</div>
+    return `<div class="in-status"><div class="big" style="background:#1E8E5A">${ck(26)}</div><h3 style="margin:0 0 6px">Admin approved</h3><p style="color:var(--ink-soft);margin:0">Your institution has been reviewed and verified.</p></div>
+   <ul class="in-list">${vRows().map(x=>`<li>${dot(x[0],rowIc(x[0]))}${x[1]}</li>`).join('')}<li>${dot('ok',ck(11))}<b>Admin approved</b></li></ul>
+   <div class="in-vcard full"><div class="in-vcard-logo">${d.logo?`<img src="${d.logo}" alt="">`:ini}</div>
    <div class="in-vcard-txt"><p class="in-vcard-name">${esc(d.name||'Your institution')}</p>${sub?`<p class="in-vcard-sub">${sub}</p>`:''}${vBadge()}</div>
-   <button class="btn btn-ghost btn-sm" onclick="IN.edit(0)">Edit</button></div>`;
+   <button class="btn btn-ghost btn-sm in-vcard-edit" onclick="IN.edit(0)">${EDI}Edit</button></div>`;
   }
   if(I.vs==='changes') return `<div class="in-status"><div class="big" style="background:#B3261E">${BANG}</div><h3 style="margin:0 0 6px">Additional information required</h3><p style="color:var(--ink-soft);margin:0">We need some additional information before we can complete your institution verification.</p></div>
    ${note('<b>Reason</b><br>'+(I.reason?esc(I.reason):'Open your notifications to see what the admin asked for.'),'in-bad')}
