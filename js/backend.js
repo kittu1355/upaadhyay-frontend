@@ -107,7 +107,7 @@
       posted: daysSince(j.published_at || j.created_at), daysLeft: daysUntil(j.application_deadline),
       applicants: j.applications_count || 0, minExp: Number(j.experience_min || 0),
       color: COLORS[(j.id || 0) % COLORS.length], initials: initials(co.company_name),
-      role: m.role || '', dept: m.dept || '', qualification: m.qualification || '', description: j.description || '', raw: j
+      role: m.role || '', dept: m.dept || '', qualification: m.qualification || '', description: j.description || '', qa: m.qa || null, raw: j
     };
   }
   async function fetchJobs(params){ return (await paged('/jobs', params, 4)).map(mapJob); }
@@ -145,6 +145,55 @@
     renderBrowseJobs();
   };
 
+  /* Employer's "Ask Questions" (Post a job, step 6): every question must be answered before the application is sent. */
+  async function jobQuestions(id){
+    let qa = null;
+    try{ qa = mapJob(await api.get('/jobs/' + id, { noAuthRedirect: true })).qa; }catch(e){}
+    if(!qa){ try{ qa = JSON.parse(localStorage.getItem('upaadhyay_jobqa_' + id) || 'null'); }catch(e){} } /* same-browser fallback until the API returns meta.qa */
+    return ((qa && qa.questions) || []).filter(function(x){ return x && String(x.q || '').trim(); }).slice(0, 5);
+  }
+  function askQuestions(qs, title){
+    return new Promise(function(resolve){
+      if(!document.getElementById('qaApStyle')){
+        const st = document.createElement('style'); st.id = 'qaApStyle';
+        st.textContent = '.qa-ap{position:fixed;inset:0;z-index:2000;background:rgba(11,29,58,.5);display:flex;align-items:center;justify-content:center;padding:16px}'
+          + '.qa-ap-card{background:#fff;width:100%;max-width:560px;max-height:90vh;overflow:auto;padding:22px;border-radius:8px;box-shadow:0 20px 50px rgba(11,29,58,.3);font-family:inherit}'
+          + '.qa-ap-card h3{margin:0 0 4px;font-size:18px}.qa-ap-sub{margin:0 0 14px;font-size:13px;color:#5b6577}'
+          + '.qa-ap-item{margin-bottom:14px}.qa-ap-item label{display:block;font-size:14px;font-weight:600;margin-bottom:6px}.qa-ap-item label small{font-weight:500;color:#8a93a6;margin-left:4px}'
+          + '.qa-ap-item textarea{width:100%;box-sizing:border-box;min-height:84px;padding:10px 12px;border:1px solid #cfd6e4;border-radius:6px;font:inherit;font-size:14px;resize:vertical}'
+          + '.qa-ap-item textarea.bad{border-color:#B42318;outline:1px solid #B42318}.qa-ap-err{min-height:16px;margin-top:3px;font-size:12.5px;color:#B42318}'
+          + '.qa-ap-foot{display:flex;justify-content:flex-end;gap:10px;margin-top:6px}.qa-ap-foot button{padding:10px 18px;border-radius:6px;font:inherit;font-weight:600;cursor:pointer;border:1px solid #cfd6e4;background:#fff}'
+          + '.qa-ap-foot .qa-ap-go{background:#1d4fd7;border-color:#1d4fd7;color:#fff}';
+        document.head.appendChild(st);
+      }
+      const box = document.createElement('div'); box.className = 'qa-ap';
+      box.innerHTML = '<div class="qa-ap-card" role="dialog" aria-modal="true" aria-labelledby="qaApT"><h3 id="qaApT">Answer these questions to apply</h3>'
+        + '<p class="qa-ap-sub">' + (title ? esc(title) + ' · ' : '') + qs.length + ' question' + (qs.length > 1 ? 's' : '') + ' from the employer. All answers are required.</p>'
+        + qs.map(function(x, i){ return '<div class="qa-ap-item"><label for="qaAp' + i + '">' + (i + 1) + '. ' + esc(x.q) + '<small>· about ' + (+x.mins || 1) + ' min</small></label>'
+            + '<textarea id="qaAp' + i + '" maxlength="1000" rows="3" placeholder="Type your answer"></textarea><div class="qa-ap-err"></div></div>'; }).join('')
+        + '<div class="qa-ap-foot"><button type="button" class="qa-ap-cancel">Cancel</button><button type="button" class="qa-ap-go">Submit application</button></div></div>';
+      document.body.appendChild(box);
+      const tas = box.querySelectorAll('textarea');
+      function close(v){ document.removeEventListener('keydown', onKey); box.remove(); resolve(v); }
+      function onKey(e){ if(e.key === 'Escape') close(null); }
+      document.addEventListener('keydown', onKey);
+      box.addEventListener('mousedown', function(e){ if(e.target === box) close(null); });
+      box.querySelector('.qa-ap-cancel').onclick = function(){ close(null); };
+      [].forEach.call(tas, function(t){ t.addEventListener('input', function(){ t.classList.remove('bad'); t.nextSibling.textContent = ''; }); });
+      box.querySelector('.qa-ap-go').onclick = function(){
+        let first = null;
+        [].forEach.call(tas, function(t){
+          const ok = t.value.trim().length >= 2;
+          t.classList.toggle('bad', !ok); t.nextSibling.textContent = ok ? '' : 'Please answer this question.';
+          if(!ok && !first) first = t;
+        });
+        if(first){ first.focus(); return; }
+        close(qs.map(function(x, i){ return { q: x.q, mins: +x.mins || 1, a: tas[i].value.trim() }; }));
+      };
+      if(tas[0]) tas[0].focus();
+    });
+  }
+
   /* Apply (seeker). */
   window.applyToJob = async function(id, title){
     if(String(id).indexOf('demo-')===0){ api.toast('This is a demo job. Live jobs posted by institutions can be applied to.'); return; }
@@ -152,7 +201,10 @@
     if(!isLoggedIn){ goTo('register', { role: 'seeker' }); return; }
     if(currentRole !== 'seeker'){ api.toast('Only faculty accounts can apply to jobs.'); return; }
     try{
-      await api.post('/jobs/' + id + '/apply', {});
+      const qs = await jobQuestions(id);
+      let body = {};
+      if(qs.length){ const ans = await askQuestions(qs, title); if(!ans) return; body = { answers: ans }; }
+      await api.post('/jobs/' + id + '/apply', body);
       try{ currentUser.appliedIds = currentUser.appliedIds || []; if(currentUser.appliedIds.indexOf(String(id)) < 0){ currentUser.appliedIds.push(String(id)); saveState(); } }catch(e){}
       api.toast('Application sent' + (title ? ' for ' + title : ''));
       document.querySelectorAll('[data-apply-job="' + id + '"]').forEach(function(b){ b.textContent = 'Applied ✓'; b.disabled = true; });
