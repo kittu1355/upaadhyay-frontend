@@ -128,34 +128,7 @@ const R={
  ${F('Work location','opt',RAD('prefWork',['On-site','Remote','Hybrid']))}${F('Preferred locations','opt',MS('prefLoc','cities','Add cities / states'))}${F('Willing to relocate','opt',RAD('reloc',['Yes','No','Maybe']))}
  ${F('Expected salary','opt',I('salary',{ph:'e.g. ₹ per month'}),{hint:'Never required for profile completion.'})}</div>`,
 10:()=>verifyHTML(),
-11:()=>{const a=age(S.dob),m=months(),ed=(EDU[S.high]||[]).filter(x=>['ug','pg','phd','mphil','dip'].includes(x)).reverse();
- const lab={ug:"Bachelor's",pg:"Master's",phd:'Ph.D.',mphil:'M.Phil',dip:'Diploma'},ch=l=>l&&l.length?l.map(x=>`<span class="fp-chip">${esc(x)}</span>`).join(''):'<span class="fp-hint">Not added</span>';
- const jobs=S.jobs.filter(j=>j.org).map(j=>`<div class="fp-tl"><i class="${j.cur?'cur':''}"></i><div><b>${esc(j.desig)}</b>${j.cur?' '+pill('p-ok','check','Current'):''}<div>${esc(j.org)}${j.dept?' · '+esc(j.dept):''}</div><small>${fmt(j.start)} – ${j.cur?'Present':fmt(j.end)} · ${esc(sh(j.type,j.typeOth)||'')}</small></div></div>`).join('');
- const eds=ed.map(k=>{const e=S.edu[k]||{};return `<div class="fp-tl"><i></i><div><b>${esc((e.type?sh(e.type,e.typeOth)+' ':'')+(e.major||lab[k]))}</b><div>${esc(e.uni||'')}</div><small>${esc(lab[k])}${e.end?' · '+esc(e.end):''}</small></div></div>`}).join('');
- const kv=(l,v)=>{v=Array.isArray(v)?v.join(', '):v;return v?`<div class="fp-pv-kv"><span>${l}</span><b>${esc(v)}</b></div>`:''},
-  fileRow=(l,f)=>`<div class="fp-pv-file">${ic('file',16)}<div><b>${esc(l)}</b><small>${esc(f.name||'File')}${szt(f)}</small></div>${f.url?`<a href="${esc(f.url)}" target="_blank" rel="noopener">View</a>`:''}</div>`,
-  contact=[kv('Email',S.email),kv('Phone',S.phone),kv('Alt. phone',S.phone2),kv('Location',[S.area,S.city,S.district,S.state].filter(Boolean).join(', ')+(S.pin?' - '+S.pin:'')),kv('Gender',sh(S.gender,S.genderOth)),kv('Visible to',S.vis)].join(''),
-  resume=pvItem('resumes','Resume')+pvItem('cvs','CV'),
-  tqs=S.tq.filter(q=>q&&q.name).map(q=>`<div class="fp-pv-link">${ic('award',12)}<span><b>${esc(qn(q))}</b>${q.spec?' · '+esc(q.spec):''}</span></div>`).join(''),
-  tex=[kv('Experience level',S.expLevel),kv('Medium',shl(S.medium,S.mediumOth)),kv('Classes taught',shl(S.taught,S.taughtOth)),kv('Subjects taught',shl(S.taughtSubs,S.taughtSubsOth)),kv('Boards',shl(S.boards,S.boardsOth))].join(''),
-  docs=docList().filter(([l])=>l!=='Profile photo'&&l!=='Resume').map(([l,f])=>fileRow(l,f)).join(''),
-  prefs=[kv('Levels',S.prefLevels),kv('Subjects',S.prefSubs),kv('Job type',S.prefJob),kv('Work mode',S.prefWork),kv('Locations',S.prefLoc),kv('Relocate',S.reloc),kv('Expected salary',S.salary)].join('');
- return `<div class="fp-pv"><div class="fp-pv-ban"></div><div class="fp-pv-head">${avatarHTML()}<div style="flex:1;min-width:200px"><h2>${esc([TT(),S.first,S.middle,S.last].filter(Boolean).join(' '))}</h2><div class="fp-pv-role">${esc(S.headline||sh(S.desig,S.desigOth)||'')}</div><div class="fp-meta"><span>${ic('pin',13)}${esc([S.city,S.state].filter(Boolean).join(', ')||'Location not set')}</span><span>${ic('clock',13)}${m>=12?Math.floor(m/12)+'+ years':m+' months'} experience</span>${a!==null?`<span>${ic('cal',13)}${a} yrs</span>`:''}</div></div><button class="fp-btn pri" data-go="0">Edit Profile</button></div>
- 
- <div class="fp-pv-grid">
-  ${pvBox('Contact & location',1,contact,'Add your email, phone and location.')}
-  ${pvBox('Resume',8,resume,'No resume published yet. Add one in Add Resume.')}
-  ${pvBox('Teaching levels',2,S.levels&&S.levels.length?`<div class="fp-chips">${ch(shl(S.levels,S.levelsOth))}</div>`:'','Add the levels you teach, e.g. Primary, High School, Degree.')}
-  ${pvBox('Subjects',2,S.subjects&&S.subjects.length?`<div class="fp-chips">${ch(shl(S.subjects,S.subjectsOth))}</div>`:'','Add the subjects you teach or specialise in.')}
-  ${pvBox('Experience',5,jobs,'Fresher or not added yet. Add your employment history.')}
-  ${pvBox('Education',3,eds,'Add your highest qualification and details.')}
-  ${pvBox('Teaching qualifications',4,tqs,'Add B.Ed., TET, NET or other teaching qualifications.')}
-  ${pvBox('Teaching experience',6,tex,'Add the classes, subjects and boards you have taught.')}
-  ${pvBox('Documents',7,docs,'No documents uploaded yet.')}
-  ${pvBox('Research',7,rsPv(),'Add journal papers, patents, conference papers, books and chapters.')}
-  ${pvBox('Editions',8,S.editions.filter(x=>x.name).map(x=>`<div class="fp-pv-link">${ic('link',12)} <span>${x.url?`<a href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.name)}</a>`:esc(x.name)}</span></div>`).join(''),'Add your editions with a name and link.')}
-  ${pvBox('Teaching preferences',9,prefs,'Add preferred levels, subjects, job type and locations.')}
-</div></div>`}};
+11:()=>FacultyView.html(S,{mode:'self'})};
 
 /* ---------- Verification step ---------- */
 /* For now the login email and the phone number the user adds are shown as verified automatically. OTP verification is marked Coming soon. */
