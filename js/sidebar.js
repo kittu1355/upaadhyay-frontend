@@ -68,6 +68,7 @@
     if(window.__empApps) return 'apps';
     if(t === 'post') return 'post'; if(t === 'myjobs') return 'myjobs'; if(t === 'candidates') return 'cands';
     if(document.querySelector('#instRoot [data-sec="verify"]')) return 'verify';
+    if(document.querySelector('#instRoot [data-sec="branches"]')) return 'reqs';
     var el = document.querySelector('#instRoot .in-dash .in-step.on:not(.sub) .in-step-t'), x = el ? el.textContent.toLowerCase() : '';
     return /^verif/.test(x) ? 'verify' : /^(sub-)?branch/.test(x) ? 'reqs' : /^repres/.test(x) ? 'rep' : /^posted/.test(x) ? 'myjobs' : 'profile';
   }
@@ -77,7 +78,7 @@
       list:[ { k:'ov', t:'Overview', i:'grid', go:overview },
         { k:'profile', t:'Institution profile', i:'building', go:function(){ sec('profile'); } },
         { k:'verify', t:'Verification', i:'shield', go:function(){ sec('verify'); }, flag:!ok },
-        { k:'reqs', t:'Sub-branches', i:'tree', go:function(){ sec('branches'); }, lock:!ok, n:c.pending },
+        { k:'reqs', t:'Sub-branches', i:'tree', go:function(){ if(!approvedMain()){ toast('Locked until an admin approves your institution.'); return; } sec('branches'); }, lock:!ok, n:c.pending },
         { k:'post', t:'Post a job', i:'plus', go:function(){ tab('post'); }, lock:!ok },
         { k:'myjobs', t:'Posted jobs', i:'list', go:function(){ tab('myjobs'); }, lock:!ok, n:c.stats[2][0] },
         { k:'apps', t:'Applicants', i:'people', go:function(){ if(typeof openAllApplicants === 'function') openAllApplicants(); else tab('myjobs'); }, lock:!ok, n:c.stats[3][0] },
