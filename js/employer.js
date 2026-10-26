@@ -603,13 +603,14 @@ if(typeof window.bkStatusBadge !== 'function'){
     if(!p) return '';
     const ed = (p.education || [])[0];
     const edTitle = Array.isArray(ed) ? ed[0] : (ed && (ed.degree || ed.title)) || '';
-    const qual = edTitle || (p.tags && p.tags[0]) || '';
+    const qual = highestDegree(p) || edTitle || (p.tags && p.tags[0]) || '';
     const expTag = (p.tags || []).filter(t=>/experience/i.test(t))[0] || '';
     const exp = expTag ? expTag.replace(/\s*experience/i,'').trim() : '';
     const loc = (p.tags || []).filter(t=>!/experience/i.test(t) && t !== qual)[0] || '';
     const roleLine = p.role || 'Faculty';
-    const chips = [qual].concat(p.skills || []).filter(Boolean);
-    const shown = chips.slice(0,3), more = chips.length - shown.length;
+    const colShort = collegeShort(p.college);
+    const chipList = [{t:qual, tip:'Highest qualification'}, {t:colShort, tip:p.college || ''}].concat((p.skills || []).map(t=>({t:t, tip:''}))).filter(c=>c.t).filter((c,i,a)=>a.findIndex(x=>x.t.toLowerCase()===c.t.toLowerCase())===i);
+    const shown = chipList.slice(0,4), more = chipList.length - shown.length;
     const meta = [p.college ? 'Studied at ' + p.college : '', loc, exp ? exp + ' exp' : ''].filter(Boolean).join(' \u00b7 ');
     const ini = String(p.name||'?').replace(/^(dr|mr|mrs|ms|prof)\.?\s+/i,'').trim().split(/\s+/).slice(0,2).map(w=>w[0]||'').join('').toUpperCase() || '?';
     const av = p.avatar ? `<span class="cn-av" style="background-image:url('${jbEsc(p.avatar)}')"></span>` : `<span class="cn-av cn-av-ini">${jbEsc(ini)}</span>`;
@@ -628,7 +629,7 @@ if(typeof window.bkStatusBadge !== 'function'){
           <h3 class="pf-name"><span>${jbEsc(p.name)}</span>${p.verified ? SHIELD : ''}</h3>
           <div class="pf-sub">${jbEsc(sub)}</div>
           <div class="pf-meta">${where ? jbEsc(where) : 'Profile details not added yet'}</div>
-          ${shown.length ? `<div class="pf-chips">${shown.map(t=>`<span class="pf-chip">${jbEsc(t)}</span>`).join('')}${more>0 ? `<span class="pf-chip">+${more}</span>` : ''}</div>` : ''}
+          ${shown.length ? `<div class="pf-chips">${shown.map(c=>`<span class="pf-chip" title="${jbEsc(c.tip)}">${jbEsc(c.t)}</span>`).join('')}${more>0 ? `<span class="pf-chip">+${more}</span>` : ''}</div>` : ''}
           <div class="pf-stats">${[exp ? exp + ' experience' : '', st ? '' : ''].filter(Boolean).join(' \u00b7 ')}${st ? st : ''}</div>
           <div class="pf-acts">
             <button class="pf-btn pri" onclick="event.stopPropagation(); openProfile('${id}')">View profile</button>
