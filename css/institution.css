@@ -463,10 +463,13 @@
 .qa-n{flex:none;width:24px;height:24px;border-radius:50%;background:#EEF3FF;color:var(--blue-700,#1d4fd7);font-size:12px;font-weight:700;display:inline-flex;align-items:center;justify-content:center}
 .qa-q{flex:1;min-width:0;padding:10px 12px;border:1px solid var(--line,#dfe5f0);border-radius:2px;font:inherit;font-size:14px}
 .qa-t{flex:none;width:92px;padding:10px 8px;border:1px solid var(--line,#dfe5f0);border-radius:2px;font:inherit;font-size:13.5px;background:#fff}
+/* the form's generic ".in-f input/select{width:100%}" outranks the two rules above, so the select took the whole row and the question box shrank to a sliver: re-assert the widths with higher specificity */
+.qa-host .qa-row .qa-q{flex:1 1 auto;width:auto;min-width:0}
+.qa-host .qa-row .qa-t{flex:none;width:92px}
 .qa-x{flex:none;width:32px;height:32px;border:1px solid var(--line,#dfe5f0);border-radius:2px;background:#fff;color:#B3261E;font-size:18px;line-height:1;cursor:pointer}
 .qa-x:hover{background:#FDECEA}
 .qa-foot{display:flex;align-items:center;gap:12px}
 .qa-add:disabled{opacity:.5;cursor:not-allowed}
 .qa-count{font-size:12.5px;font-weight:600;color:var(--ink-soft,#5b6577)}
 .qa-hint{margin:8px 0 0;font-size:12.5px;color:var(--ink-faint,#8a93a6)}
-@media(max-width:560px){.qa-row{flex-wrap:wrap}.qa-q{flex-basis:calc(100% - 40px)}}
+@media(max-width:560px){.qa-row{flex-wrap:wrap}.qa-host .qa-row .qa-q{flex-basis:calc(100% - 40px)}}
