@@ -58,6 +58,7 @@ function qaMount(jid){var host=document.getElementById('jdDesc')||document.query
  var faq=(cfg.faq||'').split('\n').map(function(l){var p=l.split('|');return{q:(p[0]||'').trim(),a:p.slice(1).join('|').trim()}}).filter(function(x){return x.q});
  var box=document.createElement('div');box.id='qaBox';
  box.innerHTML='<h3>Ask questions about this role</h3>'+(cfg.contact?'<p>You can also email <a href="mailto:'+E(cfg.contact)+'">'+E(cfg.contact)+'</a>.</p>':'')+
+  (cfg.questions&&cfg.questions.length?'<div id="qaQs"><p style="margin:12px 0 4px"><b>Questions from the employer</b></p>'+cfg.questions.map(function(x,i){return'<p style="margin:6px 0">'+(i+1)+'. '+E(x.q)+' <small style="color:#6b7280">· '+E(String(x.mins))+' min to answer</small></p>'}).join('')+'</div>':'')+
   (faq.length?'<div id="qaFaq">'+faq.map(function(x){return'<p style="margin:10px 0 2px"><b>'+E(x.q)+'</b></p><p style="margin:0">'+(x.a?E(x.a):'<i>Answer coming soon.</i>')+'</p>'}).join('')+'</div>':'')+
   '<div id="qaList"></div><textarea id="qaText" rows="3" maxlength="500" placeholder="Type your question about this role (for example, teaching load or joining date)" style="width:100%;margin-top:12px;padding:10px;border:1px solid #cfd6e4;border-radius:8px;font:inherit"></textarea><div id="qaErr" style="color:#B42318;font-size:13px;min-height:18px"></div><button class="sp-btn" type="button" onclick="qaSend('+jid+')">Send question</button>';
  host.appendChild(box);qaDraw(jid)}
