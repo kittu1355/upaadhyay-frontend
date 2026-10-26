@@ -615,6 +615,7 @@ function toLayout(){ const L=document.querySelector('#instRoot .in-layout'); if(
 function dash(){
   const d=I.d, p=pct(), sc=I.sec;
   if(sc==='verify') return `<div class="in-wrap in-dash" data-sec="verify"><div class="in-head"><h3>Institution verification</h3></div><div class="in-card in-sq">${statusBody()}</div>${demoBar()}</div>`;
+  if(sc==='branches') return `<div class="in-wrap in-dash" data-sec="branches"><div class="in-head"><h3>Sub-branches</h3></div>${branchMgr()}</div>`;
   const SEC=dashSecs(), si=Math.max(0,SEC.findIndex(x=>x[0]===sc));
   const side=SEC.map((x,i)=>`<button class="in-step${i===si?' on':i<si?' done':''}" onclick="IN.sec('${x[0]}')"><span class="in-step-n">${i+1}</span><span class="in-step-t">${x[1]}</span></button>`
     ).join('');
@@ -739,7 +740,7 @@ window.IN={
   auth(v){ I.auth=v; save(); render(); }, role(v){ const was=I.role==='Other'||(I.role&&!ROLES.includes(I.role)); I.role=v; save(); if(v==='Other'||was){ render(); const el=document.querySelector('[data-role-other]'); if(el) el.focus(); } }, roleTxt(v){ I.role=v.trim()||'Other'; save(); }, c1(v){ I.c1=v; save(); }, c2(v){ I.c2=v; save(); },
   vs(v){ if(!DEV) return; I.vs=v; save(); render(); },
   dash(){ I.view='dash'; save(); render(); top(); },
-  sec(k){ I.sec=k; if(k==='verify') VS=0; render(); },
+  sec(k){ I.sec=k; if(k==='verify') VS=0; if(I.view==='status'&&k!=='verify'){ I.view='dash'; save(); } render(); },
   snext(){ const S=dashSecs(), i=S.findIndex(x=>x[0]===I.sec); if(I.sec==='verify'&&VS<VSTEPS.length-1) VS++; else if(i<S.length-1){ I.sec=S[i+1][0]; if(I.sec==='verify') VS=0; } render(); toLayout(); },
   sback(){ const S=dashSecs(), i=S.findIndex(x=>x[0]===I.sec); if(I.sec==='verify'&&VS>0) VS--; else if(i>0){ I.sec=S[i-1][0]; if(I.sec==='verify') VS=VSTEPS.length-1; } render(); toLayout(); },
   vstep(i){ VS=i; render(); },
