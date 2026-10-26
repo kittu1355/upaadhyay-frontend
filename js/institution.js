@@ -600,13 +600,13 @@ const VSTEPS=['Status','Representative','Authority','Documents']; let VS=0;
 function verifyFlow(){
   const last=VS===VSTEPS.length-1;
   const tabs=VSTEPS.map((t,i)=>`<button class="in-step${i===VS?' on':i<VS?' done':''}" onclick="IN.vstep(${i})"><span class="in-step-n">${i+1}</span><span class="in-step-t">${t}</span></button>`).join('');
-  const body=[()=>`<div class="in-card">${statusBody()}</div>`,repVCard,authVCard,docsCard][VS]();
+  const body=[()=>`<div class="in-card in-sq">${statusBody()}</div>`,repVCard,authVCard,docsCard][VS]();
   return body;
 }
 
 const demoBar=()=>!DEV?'':`<div class="in-demo">Demo: preview a state <button onclick="IN.vs('pending')">Pending</button><button onclick="IN.vs('verified')">Verified</button><button onclick="IN.vs('changes')">Changes required</button></div>`;
 function statusPage(){
-  return `<div class="in-wrap"><div class="in-head"><h3>Institution verification</h3></div><div class="in-card">${statusBody()}<div class="in-actions" style="justify-content:flex-end"><button class="btn btn-primary btn-sm" onclick="IN.dash()">Go to dashboard</button></div></div>${demoBar()}</div>`;
+  return `<div class="in-wrap"><div class="in-head"><h3>Institution verification</h3></div><div class="in-card in-sq">${statusBody()}<div class="in-actions" style="justify-content:stretch"><button class="btn btn-primary btn-sm" onclick="IN.dash()">Go to dashboard</button></div></div>${demoBar()}</div>`;
 }
 const rows=p=>`<div class="in-grid">${p.map(x=>`<div class="in-f"><label>${x[0]}</label><div style="font-size:14px">${esc(x[1])||'—'}</div></div>`).join('')}</div>`;
 const LOCK_IC='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-1px;margin-left:5px"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>';
