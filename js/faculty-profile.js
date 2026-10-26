@@ -127,10 +127,7 @@ const R={
  ${F('Preferred teaching level','opt',MS('prefLevels','pref'))}${F('Preferred subjects','opt',MS('prefSubs','subjects'))}${F('Preferred job type','opt',MS('prefJob','jobtype'))}
  ${F('Work location','opt',RAD('prefWork',['On-site','Remote','Hybrid']))}${F('Preferred locations','opt',MS('prefLoc','cities','Add cities / states'))}${F('Willing to relocate','opt',RAD('reloc',['Yes','No','Maybe']))}
  ${F('Expected salary','opt',I('salary',{ph:'e.g. ₹ per month'}),{hint:'Never required for profile completion.'})}</div>`,
-10:()=>`<h3>Profile Verification</h3><p class="fp-sub">Document verification is not available yet.</p>
- <div class="fp-card"><div class="fp-row" style="border:0;padding:0"><b>Email</b><span>${esc(S.email)||'—'}</span></div></div>
- <div class="fp-card"><div class="fp-row" style="border:0;padding:0"><b>Education, experience &amp; identity</b>${pill('p-no','circle','Not verified')}</div><div class="fp-hint" style="margin-top:8px">Upload certificates in Education and Employment History. Verification by our team will be shown here once it is available.</div></div>
- <div class="fp-note">Identity verification is not required to create a faculty profile.</div>`,
+10:()=>verifyHTML(),
 11:()=>{const a=age(S.dob),m=months(),ed=(EDU[S.high]||[]).filter(x=>['ug','pg','phd','mphil','dip'].includes(x)).reverse();
  const lab={ug:"Bachelor's",pg:"Master's",phd:'Ph.D.',mphil:'M.Phil',dip:'Diploma'},ch=l=>l&&l.length?l.map(x=>`<span class="fp-chip">${esc(x)}</span>`).join(''):'<span class="fp-hint">Not added</span>';
  const jobs=S.jobs.filter(j=>j.org).map(j=>`<div class="fp-tl"><i class="${j.cur?'cur':''}"></i><div><b>${esc(j.desig)}</b>${j.cur?' '+pill('p-ok','check','Current'):''}<div>${esc(j.org)}${j.dept?' · '+esc(j.dept):''}</div><small>${fmt(j.start)} – ${j.cur?'Present':fmt(j.end)} · ${esc(sh(j.type,j.typeOth)||'')}</small></div></div>`).join('');
@@ -159,6 +156,48 @@ const R={
   ${pvBox('Editions',8,S.editions.filter(x=>x.name).map(x=>`<div class="fp-pv-link">${ic('link',12)} <span>${x.url?`<a href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.name)}</a>`:esc(x.name)}</span></div>`).join(''),'Add your editions with a name and link.')}
   ${pvBox('Teaching preferences',9,prefs,'Add preferred levels, subjects, job type and locations.')}
 </div></div>`}};
+
+/* ---------- Verification step ---------- */
+/* Server routes used by the Send / Verify buttons. Change them here to match your Laravel routes. */
+const VERIFY_API={emailSend:'/email/verification-notification',phoneSend:'/candidate/phone/send-otp',phoneVerify:'/candidate/phone/verify-otp'};
+const VF_ST={none:['p-no','circle','Not verified'],pend:['p-pend','clock','Under review'],ok:['p-ok','check','Verified'],bad:['p-upd','alert','Rejected']};
+const vfPill=k=>{const x=VF_ST[k]||VF_ST.none;return pill(x[0],x[1],x[2])};
+const vfRow=(label,hint,pl,act)=>`<div class="fp-row"><span><b>${label}</b>${hint?`<div class="fp-hint" style="margin:2px 0 0">${hint}</div>`:''}</span><span style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">${pl}${act||''}</span></div>`;
+function vfEmail(){const U=currentUser||{};return (S.ver.email==='ok'||U.emailVerified||U.email_verified_at||U.email_verified)?'ok':'none'}
+function vfPhone(){return S.ver.phone==='ok'?'ok':'none'}
+function vfDocState(keys,sec){const f=keys.map(k=>S.files[k]).filter(Boolean);if(!f.length)return 'none';const v=S.ver[sec];return v==='ok'?'ok':v==='bad'?'bad':'pend'}
+function vfDocs(){const rows=[];
+ const names={ug:"Bachelor's degree certificate",pg:"Master's degree certificate",mphil:'M.Phil certificate',dip:'Diploma certificate',phd:'Ph.D. certificate',oth:'Other qualification certificate'};
+ (EDU[S.high]||[]).filter(k=>names[k]).forEach(k=>rows.push([names[k],[k+'cert'],'edu',3,'Education & Qualifications']));
+ S.tq.forEach((q,i)=>rows.push([esc(qn(q)||'Teaching qualification'),['tq'+i],'edu',4,'Teaching Qualifications']));
+ S.jobs.forEach((j,i)=>rows.push([`Experience documents${j.org?' · '+esc(j.org):''}`,['j'+i+'exp','j'+i+'app','j'+i+'rel'],'exp',5,'Employment History']));
+ const html=rows.map(r=>{const st=vfDocState(r[1],r[2]),n=r[1].filter(k=>S.files[k]).length;
+  return vfRow(r[0],n?`${n} file${n>1?'s':''} uploaded`:'No file uploaded',vfPill(st),`<button type="button" class="fp-btn sm" data-go="${r[3]}">${n?'View':'Upload'} in ${r[4]}</button>`)}).join('');
+ return html||`<div class="fp-hint" style="padding:10px 0">Add your qualifications and employment first. Their documents will be listed here.</div>`}
+function verifyHTML(){
+ const em=vfEmail(),ph=vfPhone(),idf=S.files.idproof,idst=idf?(S.ver.id==='ok'?'ok':S.ver.id==='bad'?'bad':'pend'):'none',
+  items=[em==='ok',ph==='ok',idst==='ok'],done=items.filter(Boolean).length,
+  otp=ST.vfOtp?`<div class="fp-row" style="border:0;gap:8px"><input class="fp-in" id="vfCode" maxlength="6" inputmode="numeric" placeholder="Enter 6-digit code" style="max-width:200px"><button type="button" class="fp-btn pri sm" data-vf="phoneVerify">Verify</button><button type="button" class="fp-btn sm" data-vf="phoneCancel">Cancel</button></div>`:'';
+ return `<h3>Profile Verification</h3><p class="fp-sub">Verified contact details and documents help institutions trust your profile. Verification is optional and does not change your profile strength.</p>
+ <div class="fp-note"><b>${done} of 3 checks complete</b> · Email, phone and an ID proof.</div>
+ <div class="fp-card"><h4>1. Contact verification</h4>
+  ${vfRow('Email',esc(S.email)||'No email on this account',vfPill(em),em==='ok'?'':`<button type="button" class="fp-btn sm" data-vf="emailSend">Send verification link</button>`)}
+  ${vfRow('Phone',esc(S.phone)||'Add your phone number in Account &amp; Contact',vfPill(ph),ph==='ok'?'':(S.phone?`<button type="button" class="fp-btn sm" data-vf="phoneSend">Send OTP</button>`:`<button type="button" class="fp-btn sm" data-go="1">Add phone</button>`))}
+  ${otp}
+ </div>
+ <div class="fp-card"><h4>2. Identity proof ${tag('opt')}</h4><div class="fp-hint" style="margin:0 0 10px">Aadhaar, PAN, passport, voter ID or driving licence. Only our verification team can see it.</div>
+  <div class="fp-row" style="border:0;padding:0 0 10px">${vfPill(idst)}${idst==='bad'?'<span class="fp-hint" style="margin:0">Please upload a clearer copy.</span>':idst==='pend'?'<span class="fp-hint" style="margin:0">Our team will review it. You will see the result here.</span>':''}</div>
+  ${UP('idproof','ID proof document')}</div>
+ <div class="fp-card"><h4>3. Education &amp; experience documents</h4>${vfDocs()}</div>
+ <div class="fp-note">Identity verification is not required to create a faculty profile.</div>`}
+document.addEventListener('click',async e=>{const b=e.target.closest('[data-vf]');if(!b||ST.vfBusy)return;const a=b.dataset.vf,rr=()=>{renderSec(10);paint()};
+ const call=async(path,body,okMsg)=>{ST.vfBusy=1;b.disabled=true;try{const r=await api.post(path,body||{});toast(okMsg,1);return r||true}catch(x){toast((x&&x.message)||'Could not complete this. Please try again later.',0,1);return false}finally{ST.vfBusy=0;b.disabled=false}};
+ if(a==='emailSend'){await call(VERIFY_API.emailSend,{},'Verification link sent to '+(S.email||'your email'))}
+ else if(a==='phoneSend'){if(await call(VERIFY_API.phoneSend,{phone:S.phone},'OTP sent to '+S.phone)){ST.vfOtp=1;rr()}}
+ else if(a==='phoneCancel'){ST.vfOtp=0;rr()}
+ else if(a==='phoneVerify'){const c=($('#vfCode')||{}).value||'';if(!/^\d{6}$/.test(c.trim())){toast('Enter the 6-digit code.',0,1);return}
+  if(await call(VERIFY_API.phoneVerify,{phone:S.phone,code:c.trim()},'Phone verified')){S.ver.phone='ok';ST.vfOtp=0;await saveProfile();rr()}}
+});
 function pvBox(t,sec,body,empty){return `<div class="fp-pv-box ${body?'':'empty'}"><div class="fp-pv-bh"><h5>${t}</h5><button type="button" class="fp-pv-add" data-go="${sec}">${body?'Edit':'+ Add'}</button></div>${body||`<div class="fp-pv-ph">${empty}</div>`}</div>`}
 function eduBlock(k){const hi=(EDU[S.high]||[]).slice(-1)[0]===k,rq=hi?'req':(k==='ssc'||k==='hsc'?'rec':'some');const T=(t)=>tag(rq==='some'?'Required for some jobs':rq,rq==='some'?t:undefined);
  const e=`edu.${k}.`,names={ssc:'10th / SSC',hsc:'12th / Intermediate',ug:"Bachelor's Degree",pg:"Master's Degree",phd:'Ph.D. / Doctoral Details',mphil:'M.Phil',dip:'Diploma',oth:'Other qualification'};
@@ -180,7 +219,7 @@ function jobCard(j,i){const p=`jobs.${i}.`;return `<div class="fp-card"><div cla
  ${j.cur?`<div class="fp-cur"><b>${ic('check',13)} Current employment</b><br>Current Position: ${esc(j.desig)} · Institution: ${esc(j.org)} · Department: ${esc(j.dept||'—')}<br>Currently working since: <b>${fmt(j.start)||'—'} – Present</b></div>`:''}
  <div class="fp-grid g3" style="margin-top:12px">${UP('j'+i+'exp','Experience certificate','opt')}${UP('j'+i+'app','Appointment letter','opt')}${UP('j'+i+'rel','Relieving letter','opt')}</div></div>`}
 function linksHTML(){return S.links.length?S.links.map((l,i)=>`<div class="fp-row"><span><b>${esc(l.t)}</b><br><a href="${esc(l.u)}" target="_blank" rel="noopener">${esc(l.u)}</a></span><span><button class="fp-btn sm" data-act="editlink:${i}">Edit</button> <button class="fp-btn sm dng" data-act="rmlink:${i}">Remove</button></span></div>`).join(''):`<div class="fp-empty">No links added yet.</div>`}
-function docList(){const nm={photo:'Profile photo',resume:'Resume',phdcert:'Ph.D. certificate',ugcert:"Bachelor's certificate",pgcert:"Master's certificate",mphilcert:'M.Phil certificate',dipcert:'Diploma certificate',othcert:'Certificate'};return Object.entries(S.files).map(([k,f])=>[nm[k]||(/^tq/.test(k)?'Teaching qualification':/^j\d/.test(k)?'Employment document':'Document'),f])}
+function docList(){const nm={photo:'Profile photo',resume:'Resume',phdcert:'Ph.D. certificate',ugcert:"Bachelor's certificate",pgcert:"Master's certificate",mphilcert:'M.Phil certificate',dipcert:'Diploma certificate',othcert:'Certificate',idproof:'ID proof'};return Object.entries(S.files).map(([k,f])=>[nm[k]||(/^tq/.test(k)?'Teaching qualification':/^j\d/.test(k)?'Employment document':'Document'),f])}
 /* ---------- shell ---------- */
 function heroHTML(){const c=completion(),m=months(),nx=c.rec.find(x=>!x[1]),miss=c.req.find(x=>!x[1]);
  return `${bannerHTML()}<div class="fp-hero"><div class="fp-hero-l">${avatarHTML()}<div><h2>${esc([TT(),S.first,S.last].filter(Boolean).join(' ')||'Your name')}</h2><p>${esc(S.headline||sh(S.desig,S.desigOth)||'Add a professional headline')}</p><div class="fp-meta"><span>${ic('pin',13)}${esc(S.city||'Add location')}</span><span>${ic('cap',13)}${esc(sh(S.high,S.highOth)||'Add qualification')}</span><span>${ic('clock',13)}${m>=12?Math.floor(m/12)+'+ yrs':m+' mo'}</span></div></div></div>
@@ -286,7 +325,7 @@ async function saveProfile(validated){if(ST.saving)return false;if(ST.loading){t
   toast(e&&e.status===0?'Could not reach the server. Your changes are still on this page — try again.':'Could not save: '+((e&&e.message)||'unknown error'),0,1);return false}
  finally{setBusy(false);paint()}}
 function checkFile(p,f){const r=RULES[kindOf(p)],ext=(f.name.split('.').pop()||'').toLowerCase();if(f.name.indexOf('.')<0||r.ext.indexOf(ext)<0)return 'Unsupported file type. Accepted: '+r.label.split(' · ')[0]+'.';if(f.size>r.mb*1048576)return 'File exceeds the '+r.mb+' MB limit.';if(f.size===0)return 'This file is empty.';return''}
-const DOCNAME=p=>({resume:'Resume',phdcert:'Ph.D. certificate',ugcert:"Bachelor's certificate",pgcert:"Master's certificate",mphilcert:'M.Phil certificate',dipcert:'Diploma certificate',othcert:'Certificate'}[p]||(/^tq/.test(p)?'Teaching qualification certificate':/^j\d/.test(p)?'Employment document':'Document'));
+const DOCNAME=p=>({resume:'Resume',phdcert:'Ph.D. certificate',ugcert:"Bachelor's certificate",pgcert:"Master's certificate",mphilcert:'M.Phil certificate',dipcert:'Diploma certificate',othcert:'Certificate',idproof:'ID proof'}[p]||(/^tq/.test(p)?'Teaching qualification certificate':/^j\d/.test(p)?'Employment document':'Document'));
 function paintUp(p,msg){const box=$(`.fp-up[data-up="${p}"]`);if(!box)return;box.classList.toggle('has',!!S.files[p]);box.classList.toggle('bad',!!msg);box.innerHTML=msg?`<span class="nm" role="alert" style="color:#B42318">${esc(msg)}</span><button type="button" class="fp-btn sm" data-pick="${p}">Try again</button>`:UPin(p);paint()}
 async function uploadFile(p,f){if(ST.busy[p]||ST.saving)return;const m=checkFile(p,f);if(m){paintUp(p,m);return}
  const k=kindOf(p),fd=new FormData(),prev=S.files[p];fd.append('file',f,f.name);let path;
