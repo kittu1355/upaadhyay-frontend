@@ -201,7 +201,7 @@
     contact:function(){
       var r = role(), em = document.getElementById('stEmail').value.trim(), ph = document.getElementById('stPhone').value.trim();
       if(em && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) return toast('Enter a valid email address.');
-      if(ph && !/^[0-9+\-\s]{10,15}$/.test(ph)) return toast('Enter a valid mobile number.');
+      if(ph && !/^\+?\d[\d\s-]{7,18}$/.test(ph)) return toast('Enter a valid mobile number.');
       set(r, 'ac.email', em); set(r, 'ac.phone', ph); toast('Saved');
     },
     pw:function(){
