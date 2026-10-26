@@ -456,7 +456,7 @@
       salPeriod: m.salary_period || 'month', salNeg: !!m.salary_negotiable, salNorms: !!m.salary_as_per_norms,
       campus: m.campus || '', campusLoc: m.campus_loc || '', location: j.location, desc: j.description,
       skills: (j.skills || []).map(function(s){ return s.name; }).join(', '),
-      deadline: j.application_deadline ? String(j.application_deadline).slice(0, 10) : '', applicantIds: [], applicantCount: j.applications_count || 0
+      deadline: j.application_deadline ? String(j.application_deadline).slice(0, 10) : '', applicantIds: [], applicantCount: j.applications_count || 0, qa: m.qa || null
     };
   }
   function mapCandidate(u){
@@ -504,12 +504,12 @@
       salary: { presentCtc: pd.presentCtc, expectedCtc: pd.expectedCtc, minAcceptable: '' } /* employers never receive the minimum acceptable salary */
     };
   }
-  function setProfile(u){ const p = mapCandidate(u); facultyProfiles[String(u.id)] = p; return p; }
+  function setProfile(u){ const p = mapCandidate(u), cpv = u.candidate_profile || u.candidateProfile || {}; p.verified = !!(u.is_verified || cpv.is_verified || cpv.verified); facultyProfiles[String(u.id)] = p; return p; }
 
   async function loadEmployer(){
     const fetched = await Promise.all([
       paged('/company/jobs', {}, 10),
-      paged('/company/applicants', {}, 10),
+      paged('/company/applicants', {}, 40),
       api.get('/company/candidates?per_page=50', { silent403: true }).catch(function(e){ console.warn('[backend] candidates', e); return []; })
     ]);
     Object.keys(facultyProfiles).forEach(function(k){ delete facultyProfiles[k]; });
@@ -526,6 +526,7 @@
       appByJobCand[key + ':' + cid] = a.id;
       if(!appByCandidate[cid] || a.id > appByCandidate[cid]) appByCandidate[cid] = a.id;
       if(['shortlisted','interview','selected'].indexOf(a.status) > -1) candidateStatus[cid] = 'shortlisted';
+      else if(a.status === 'rejected') candidateStatus[cid] = 'rejected';
     });
     const cands = fetched[2];
     items(cands).forEach(function(u){ if(!facultyProfiles[String(u.id)]) setProfile(u); });
@@ -611,7 +612,7 @@
       vacancy_count: Math.max(1, parseInt(f.vacancies, 10) || 1), application_deadline: f.deadline || null,
       skills: splitList(f.skills).slice(0, 30),
       meta: { role: f.role, dept: f.dept, qualification: f.qualification, notice: f.notice, type_label: f.type, category_label: f.category,
-              salary_period: f.salPeriod, salary_negotiable: !!f.salNeg, salary_as_per_norms: !!f.salNorms, campus: f.campus, campus_loc: f.campusLoc }
+              salary_period: f.salPeriod, salary_negotiable: !!f.salNeg, salary_as_per_norms: !!f.salNorms, campus: f.campus, campus_loc: f.campusLoc, qa: f.qa || null }
     };
   }
   /* Put a job returned by the API into the posted-jobs list, keeping the applicant list the page already has. */
@@ -673,11 +674,14 @@
     if(typeof renderCandidates === 'function' && document.getElementById('candidateList')) renderCandidates(false);
     const av = document.getElementById('applicantsView');
     if(av && av.style.display !== 'none' && typeof renderApplicants === 'function') renderApplicants(activeJobId);
+    else if(window.__empApps && typeof paintAllApplicants === 'function') paintAllApplicants();   // the all-applicants list also refreshes
   }
   window.inviteCandidate = async function(id, ev){
     if(ev) ev.stopPropagation();
     try{
-      await api.post('/company/invitations', { candidate_id: Number(id), job_id: activeApiJobId() });
+      let jobId = activeApiJobId();
+      if(!jobId){ jobId = await empPickJob(); if(!jobId) return; }   // an invitation always belongs to a job
+      await api.post('/company/invitations', { candidate_id: Number(id), job_id: Number(jobId) });
       candidateStatus[id] = 'invited'; _origSaveState();
       const p = facultyProfiles[id]; api.toast('Invitation sent to ' + (p ? p.name : 'the candidate') + '.');
       refreshCandidateViews();
@@ -695,10 +699,25 @@
       refreshCandidateViews();
     }catch(e){ api.toast(e.message); }
   };
+  async function setAppStatus(id, status, doneMsg, ev){
+    if(ev) ev.stopPropagation();
+    const key = (typeof activeJobId !== 'undefined' && activeJobId) ? activeJobId : null;
+    const appId = key ? appByJobCand[key + ':' + id] : appByCandidate[id];
+    if(!appId){ api.toast('This candidate has not applied to this job.'); return; }
+    try{
+      await api.put('/company/applications/' + appId + '/status', { status: status });
+      if(status === 'applied') delete candidateStatus[id]; else candidateStatus[id] = (status === 'rejected' ? 'rejected' : 'shortlisted');
+      _origSaveState();
+      const p = facultyProfiles[id]; api.toast(doneMsg + ' ' + (p ? p.name : 'candidate') + '.');
+      refreshCandidateViews();
+    }catch(e){ api.toast(e.message); }
+  }
+  window.rejectCandidate = function(id, ev){ return setAppStatus(id, 'rejected', 'Rejected', ev); };
+  window.undoApplicant = function(id, ev){ return setAppStatus(id, 'applied', 'Moved back to applied:', ev); };
   window.messageCandidate = async function(id, ev){
     if(ev) ev.stopPropagation();
     const p = facultyProfiles[id];
-    const msg = prompt('Send a message to ' + (p ? p.name : 'this candidate') + ':', "Hi, we'd like to talk to you about an opening at " + (currentCompany.name || 'our institution') + '.');
+    const msg = await empAsk(p ? p.name : 'this candidate', "Hi, we'd like to talk to you about an opening at " + (currentCompany.name || 'our institution') + '.');
     if(!msg || !msg.trim()) return;
     try{ await api.post('/company/messages', { candidate_id: Number(id), message: msg.trim().slice(0, 2000) }); api.toast('Message sent.'); }
     catch(e){ api.toast(e.message); }
