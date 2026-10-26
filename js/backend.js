@@ -173,6 +173,7 @@
   window.spLoadJobs = function(){
     if(!_spPromise){
       _spPromise = fetchJobs({}).then(function(rows){
+        if(!rows.length && (window.UPADYAY_DEMO_JOBS === true || /^(localhost|127\.0\.0\.1)$/.test(location.hostname))) rows = demoJobs(); /* same demo rule as Browse Jobs */
         SP_JOBS = rows.map(function(j){
           return { id: j.id, cat: spCatFor(j), title: j.title, inst: j.org, loc: j.city, subj: j.dept, qual: j.qualification || '—',
                    exp: j.minExp, type: j.type, sal: j.salary, desc: j.description, raw: j };
@@ -186,6 +187,10 @@
     await spLoadJobs();
     let j = SP_JOBS.filter(function(x){ return x.id == id; })[0];
     if(j) return j;
+    if(String(id).indexOf('demo-') === 0){
+      const d = demoJobs().filter(function(x){ return x.id == id; })[0];
+      if(d) return { id: d.id, cat: spCatFor(d), title: d.title, inst: d.org, loc: d.city, subj: d.dept, qual: d.qualification || (d.tags && d.tags[0]) || '—', exp: d.minExp, type: d.type, sal: d.salary, desc: d.description, raw: d };
+    }
     try{
       const m = mapJob(await api.get('/jobs/' + id, { noAuthRedirect: true }));
       return { id: m.id, cat: spCatFor(m), title: m.title, inst: m.org, loc: m.city, subj: m.dept, qual: m.qualification || '—', exp: m.minExp, type: m.type, sal: m.salary, desc: m.description, raw: m };
