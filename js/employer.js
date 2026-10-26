@@ -266,53 +266,13 @@ if(typeof window.bkStatusBadge !== 'function'){
     document.getElementById('cpName').textContent = p.name;
     document.getElementById('cpRole').textContent = p.role;
     document.getElementById('cpTags').innerHTML = p.tags.map(t=>`<span class="hp-tag">${jbEsc(t)}</span>`).join('');
-    document.getElementById('cpAbout').textContent = p.about || '';
-    document.getElementById('cpStats').innerHTML = p.stats.map(([num,label])=>`<div class="hp-stat"><span class="num tabular">${jbEsc(num)}</span><span class="label">${jbEsc(label)}</span></div>`).join('');
-    document.getElementById('cpExperience').innerHTML = p.experience.map(([t1,t2])=>`<div class="slide-exp-item"><div class="slide-exp-dot"></div><div><div class="t1">${jbEsc(t1)}</div><div class="t2">${jbEsc(t2)}</div></div></div>`).join('');
-    document.getElementById('cpEducation').innerHTML = (p.education||[]).map(([t1,t2])=>`<div class="slide-exp-item"><div class="slide-exp-dot"></div><div><div class="t1">${jbEsc(t1)}</div><div class="t2">${jbEsc(t2)}</div></div></div>`).join('');
-    document.getElementById('cpSkills').innerHTML = (p.skills||[]).map(s=>`<span class="hp-tag">${jbEsc(s)}</span>`).join('');
-    document.getElementById('cpLinks').innerHTML = p.links.map(([label,type,fid])=>`<a class="slide-link" href="javascript:void(0)" ${fid?`onclick="bkOpenFile(${fid})"`:''}>${docIcon(type)}${jbEsc(label)}</a>`).join('');
+    // One shared profile UI (js/faculty-view.js): everything the faculty entered in their editor, incl. research + documents
+    const cpView = document.getElementById('cpView');
+    if(cpView) cpView.innerHTML = (window.FacultyView && p.view) ? FacultyView.html(p.view, { mode: 'viewer' }) : '<div class="fv-none">Profile details are not available yet.</div>';
     document.getElementById('cpCollege').textContent = p.college || '—';
-
-    // Roles / departments the candidate is interested in
-    const cpInterests = document.getElementById('cpInterests');
-    if(cpInterests){
-      const iv = p.interests || {};
-      const rows = [
-        ['Departments', iv.departments],
-        ['Designations', iv.designations],
-        ['Preferred subjects', iv.subjects],
-        ['Organisation type', iv.orgType ? [iv.orgType] : null],
-        ['Preferred location', iv.location ? [iv.location] : null],
-        ['Employment type', iv.employmentType ? [iv.employmentType] : null]
-      ].filter(([,v]) => v && v.length);
-      cpInterests.innerHTML = rows.length
-        ? rows.map(([label,vals])=>`
-            <div class="cp-interest-row">
-              <div class="cp-interest-label">${jbEsc(label)}</div>
-              <div class="jc-tags">${vals.map(v=>`<span class="hp-tag">${jbEsc(v)}</span>`).join('')}</div>
-            </div>`).join('')
-        : '<p class="slide-side-note">Not specified by the candidate yet.</p>';
-    }
-
-    // Salary — present / expected / proposed, with auto-calculated hike
-    const cpSalary = document.getElementById('cpSalary');
-    if(cpSalary){
-      const s = p.salary || {};
-      const fmtINR = n => n || n===0 ? '₹' + Number(n).toLocaleString('en-IN') : '—';
-      const present = Number(s.presentCtc)||0, expected = Number(s.expectedCtc)||0;
-      const hikePct = present>0 ? Math.round(((expected-present)/present)*100) : null;
-      cpSalary.innerHTML = `
-        <div class="cp-salary-grid">
-          <div class="cp-salary-cell"><div class="t2">Present salary</div><div class="t1 tabular">${fmtINR(present)}</div></div>
-          <div class="cp-salary-cell"><div class="t2">Expected salary</div><div class="t1 tabular">${fmtINR(expected)}</div></div>
-          <div class="cp-salary-cell"><div class="t2">Min. acceptable</div><div class="t1 tabular">${fmtINR(s.minAcceptable)}</div></div>
-          <div class="cp-salary-cell"><div class="t2">Hike expected</div><div class="t1 tabular">${hikePct!==null ? hikePct+'%' : '—'}</div></div>
-        </div>`;
-    }
-    const strengthPct = Math.min(100, 60 + p.links.length*10);
+    const strengthPct = (window.FacultyView && p.view) ? FacultyView.completion(p.view) : 0;
     document.getElementById('cpStrengthFill').style.width = strengthPct + '%';
-    document.getElementById('cpStrengthNote').textContent = strengthPct >= 90 ? 'Profile and documents complete' : 'Some documents not added yet';
+    document.getElementById('cpStrengthNote').textContent = strengthPct + '% complete' + (strengthPct >= 90 ? ' — profile and documents added' : strengthPct >= 60 ? ' — most details added' : ' — some details not added yet');
     const cpTick = document.querySelector('.cp-verified'); if(cpTick) cpTick.style.display = p.verified ? '' : 'none';
 
     let actions = document.getElementById('cpActions');
