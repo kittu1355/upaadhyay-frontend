@@ -596,7 +596,7 @@ if(typeof window.bkStatusBadge !== 'function'){
     document.querySelectorAll('.cr-menu.open').forEach(x=>x.classList.remove('open'));
     if(m && !open) m.classList.add('open');
   }
-  document.addEventListener('click', function(){ document.querySelectorAll('.cr-menu.open').forEach(x=>x.classList.remove('open')); });
+  document.addEventListener('click', function(){ document.querySelectorAll('.cr-menu.open,.pf-menu.open').forEach(x=>x.classList.remove('open')); });
 
   function candidateCardHTML(id){
     const p = facultyProfiles[id];
@@ -615,21 +615,32 @@ if(typeof window.bkStatusBadge !== 'function'){
     const av = p.avatar ? `<span class="cn-av" style="background-image:url('${jbEsc(p.avatar)}')"></span>` : `<span class="cn-av cn-av-ini">${jbEsc(ini)}</span>`;
     const st = statusBadge(id);
     const saved = savedCands().indexOf(id) > -1;
+    const SHIELD = '<span class="pf-ver" title="Verified profile"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 4.5-3.2 8-8 9-4.8-1-8-4.5-8-9V6z"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg></span>';
+    const avPf = p.avatar ? `<div class="pf-av" style="background-image:url('${jbEsc(p.avatar)}')"></div>` : `<div class="pf-av">${jbEsc(ini)}</div>`;
+    const flag = p.openToWork ? 'Open to opportunities' : '';
+    const sub = [roleLine, qual].filter(Boolean).join(' \u00b7 ');
+    const where = [p.college ? 'Studied at ' + p.college : '', loc].filter(Boolean).join(' \u00b7 ');
     return `
-      <div class="cn-card" onclick="openProfile('${id}')">
-        <div class="cn-top">${p.openToWork?'<span class="cn-pill">Open to opportunities</span>':''}${st || (exp ? `<span class="cn-exp">${jbEsc(exp)}</span>` : '')}</div>
-        <h3 class="cn-name">${jbEsc(p.name)}${p.verified?VERIFIED_TICK:''}</h3>
-        <div class="cn-inst">${av}<span>${jbEsc(roleLine)}</span></div>
-        <div class="cn-chips">${shown.map(t=>`<span class="cn-chip">${jbEsc(t)}</span>`).join('')}${more>0 ? `<span class="cn-chip more">+${more}</span>` : ''}</div>
-        <p class="cn-meta">${meta ? jbEsc(meta) : 'Profile details not added yet'}</p>
-        <div class="cn-line"></div>
-        <div class="cn-acts">
-          <button onclick="event.stopPropagation(); openProfile('${id}')">View profile</button>
-          ${candidateStatus[id]==='shortlisted'
-            ? `<button disabled>Shortlisted</button>`
-            : `<button onclick="event.stopPropagation(); inviteCandidate('${id}', event)">${candidateStatus[id]==='invited' ? 'Invited \u2713' : 'Invite'}</button>`}
-          <button onclick="messageCandidate('${id}', event)">Message</button>
-          <button class="${saved?'on':''}" onclick="saveCandidate('${id}', event)">${saved?'Saved':'Save'}</button>
+      <div class="pf-card" onclick="openProfile('${id}')">
+        <div class="pf-cover"><span class="pf-flag">${flag}</span></div>
+        ${avPf}
+        <div class="pf-body">
+          <h3 class="pf-name"><span>${jbEsc(p.name)}</span>${p.verified ? SHIELD : ''}</h3>
+          <div class="pf-sub">${jbEsc(sub)}</div>
+          <div class="pf-meta">${where ? jbEsc(where) : 'Profile details not added yet'}</div>
+          ${shown.length ? `<div class="pf-chips">${shown.map(t=>`<span class="pf-chip">${jbEsc(t)}</span>`).join('')}${more>0 ? `<span class="pf-chip">+${more}</span>` : ''}</div>` : ''}
+          <div class="pf-stats">${[exp ? exp + ' experience' : '', st ? '' : ''].filter(Boolean).join(' \u00b7 ')}${st ? st : ''}</div>
+          <div class="pf-acts">
+            <button class="pf-btn pri" onclick="event.stopPropagation(); openProfile('${id}')">View profile</button>
+            ${candidateStatus[id]==='shortlisted'
+              ? `<button class="pf-btn out" disabled>Shortlisted</button>`
+              : `<button class="pf-btn out" onclick="event.stopPropagation(); inviteCandidate('${id}', event)">${candidateStatus[id]==='invited' ? 'Invited \u2713' : 'Invite'}</button>`}
+            <button class="pf-more" aria-label="More" onclick="event.stopPropagation();var m=this.nextElementSibling,o=m.classList.contains('open');document.querySelectorAll('.pf-menu.open').forEach(function(x){x.classList.remove('open')});if(!o)m.classList.add('open')">&middot;&middot;&middot;</button>
+            <div class="pf-menu">
+              <button onclick="messageCandidate('${id}', event)">Message</button>
+              <button onclick="saveCandidate('${id}', event)">${saved?'Saved \u2713':'Save'}</button>
+            </div>
+          </div>
         </div>
       </div>`;
   }
