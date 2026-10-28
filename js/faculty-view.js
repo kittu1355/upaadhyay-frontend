@@ -196,10 +196,17 @@ function rsBlock(fp){
     return '<details class="fv-rs"><summary><span>' + RS_LABEL[c] + '</span><b>' + l.length + '</b></summary>' + l.map(function(r){ return rsItem(c, r); }).join('') + '</details>';
   }).join('');
 }
+function scholarRows(fp){
+  var g = fp.scholar || {}, link = safeUrl(g.url);
+  var m = [['Citations', g.citations], ['h-index', g.h], ['i10-index', g.i10], ['Publications', g.pubs]].filter(function(x){ return nonEmpty(x[1]); });
+  if(!link && !m.length) return '';
+  return (m.length ? '<div class="fv-scholar">' + m.map(function(x){ return '<div><b>' + esc(x[1]) + '</b><span>' + x[0] + '</span></div>'; }).join('') + '</div>' : '') +
+    (link ? '<div class="fp-pv-link">' + ic('link', 12) + '<span>' + ext(link, 'View Google Scholar profile') + '</span></div>' : '');
+}
 function linkRows(fp){
   var rows = arr(fp.links).filter(function(l){ return l && safeUrl(l.u); }).map(function(l){ return [l.t || l.u, l.u]; });
   var p = (fp.edu || {}).phd || {};
-  [['Research profile', p.url], ['ORCID', p.orcid], ['Google Scholar', p.scholar], ['ResearchGate', p.rg]].forEach(function(x){ if(safeUrl(x[1])) rows.push(x); });
+  [['Research profile', p.url], ['ORCID', p.orcid], ['Google Scholar', (fp.scholar || {}).url ? '' : p.scholar], ['ResearchGate', p.rg]].forEach(function(x){ if(safeUrl(x[1])) rows.push(x); });
   arr(fp.editions).forEach(function(x){ if(x && x.name && safeUrl(x.url)) rows.push([x.name, x.url]); });
   return rows.map(function(r){ return '<div class="fp-pv-link">' + ic('link', 12) + '<span>' + ext(r[1], r[0]) + '</span></div>'; }).join('');
 }
@@ -265,6 +272,7 @@ function html(fp, o){
     box('Teaching qualifications', 4, tqRows(fp), 'Add B.Ed., TET, NET or other teaching qualifications.', mode),
     box('Teaching experience', 6, tex, 'Add the classes, subjects and boards you have taught.', mode),
     box('Research', 7, rsBlock(fp), 'Add journal papers, patents, conference papers, books and chapters.', mode, true),
+    box('Google Scholar', 2, scholarRows(fp), 'Add your Google Scholar link and metrics in Professional Profile.', mode),
     box('Documents', 7, otherDocs.map(function(d){ return fileRow(d, mode); }).join(''), 'No documents uploaded yet.', mode),
     box('Links &amp; profiles', 8, linkRows(fp), 'Add Google Scholar, ORCID, portfolio or editions links.', mode),
     box('Teaching preferences', 9, prefs, 'Add preferred levels, subjects, job type and locations.', mode),
