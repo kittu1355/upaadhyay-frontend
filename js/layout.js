@@ -37,6 +37,16 @@ const NAV_CSS = `
 .fn-div{width:1px;height:24px;background:#d9d2ea}
 .fn-emp{font-size:13.5px;font-weight:500;color:#1f1637;text-decoration:none;transition:color .2s}
 .fn-emp:hover{color:#4b1f9e}
+/* auto-fit: nav items, gaps and the logged-in user block scale with the screen width instead of overflowing */
+.nav-inner{flex-wrap:nowrap;gap:clamp(10px,1.6vw,22px) !important}
+.fn-brand{flex-shrink:0}
+.fn-word{font-size:clamp(20px,1.9vw,24px)}
+.nav-links{min-width:0;gap:clamp(10px,1.5vw,22px) !important}
+.nav-links a{font-size:clamp(12.5px,1.05vw,13.5px) !important}
+.nav-user{margin-left:auto;flex-shrink:0;gap:clamp(6px,1vw,14px)}
+.nav.logged-in .nav-links{flex:1 1 auto}
+@media (max-width:1000px){.nav.logged-in #navRoleBadge{display:none !important}}
+@media (max-width:860px){.nav.logged-in .nav-logout{padding:6px 10px !important;font-size:12px !important}}
 @media (max-width:1180px){.fn-emp,.fn-div{display:none}.nav-inner{gap:20px !important}.nav-links{gap:18px !important}}
 @media (max-width:760px){.nav-inner{padding:10px 16px !important}.fn-word{font-size:22px}.fn-mark{height:34px}.fn-badge{display:none}.fn-btn{padding:8px 14px;font-size:13px}.fn-btn svg{display:none}}
 `;
