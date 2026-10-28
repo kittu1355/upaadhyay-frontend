@@ -21,7 +21,6 @@ const NAV_CSS = `
 .fn-mark{height:38px;width:auto;display:block}
 .fn-word{font-family:'Poppins',sans-serif;font-weight:800;font-size:24px;letter-spacing:-1.2px;color:#3a1580;line-height:1}
 .fn-word span{color:inherit}
-.fn-word .fn-dotcom{color:#ff7a1a;font-weight:700;letter-spacing:-.5px}
 .fn-badge{background:#ebe3ff;color:#4b1f9e;font-size:10px;font-weight:600;padding:2px 8px;border-radius:2px;align-self:center;margin-top:4px}
 .nav-links{justify-content:flex-start !important;gap:22px !important;flex:1}
 .nav-links a{white-space:nowrap;font-size:13.5px !important;font-weight:500 !important;color:#1f1637 !important;position:relative;padding:6px 0}
