@@ -15,3 +15,8 @@
 .fv-rs-item small{display:block;color:var(--ink-faint);margin-top:1px;word-break:break-word}
 .fv-rs-item a,.fp-pv-link a,.fp-pv-kv a{color:var(--blue-600,#2563EB);font-weight:600;text-decoration:none}
 @media(max-width:700px){.fv-viewer .fp-pv-grid{grid-template-columns:1fr}}
+
+.fv-scholar{display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:8px;margin-bottom:8px}
+.fv-scholar div{background:var(--canvas,#f7f5fd);border:1px solid var(--line,#e5e0f3);border-radius:2px;padding:8px 10px}
+.fv-scholar b{display:block;font-size:18px;color:var(--blue-700,#4b1f9e);line-height:1.2}
+.fv-scholar span{font-size:11.5px;color:var(--ink-soft,#6b6580)}
