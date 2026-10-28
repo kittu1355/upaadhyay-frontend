@@ -111,7 +111,7 @@
             <div class="in-note" id="jbEditBar" style="display:none;" role="status"></div>
 
             <div class="in-layout">
-              <aside class="in-side"><div class="in-steps" role="tablist" aria-orientation="vertical"><button type="button" class="in-step on" role="tab" aria-selected="true" onclick="jbJump(0)"><span class="in-step-n">1</span><span class="in-step-t">Job details</span></button><button type="button" class="in-step" role="tab" aria-selected="false" onclick="jbJump(1)"><span class="in-step-n">2</span><span class="in-step-t">Requirements</span></button><button type="button" class="in-step" role="tab" aria-selected="false" onclick="jbJump(2)"><span class="in-step-n">3</span><span class="in-step-t">Salary</span></button><button type="button" class="in-step" role="tab" aria-selected="false" onclick="jbJump(3)"><span class="in-step-n">4</span><span class="in-step-t">Job location</span></button><button type="button" class="in-step" role="tab" aria-selected="false" onclick="jbJump(4)"><span class="in-step-n">5</span><span class="in-step-t">Description</span></button><button type="button" class="in-step" role="tab" aria-selected="false" onclick="jbJump(5)"><span class="in-step-n">6</span><span class="in-step-t">Ask Questions</span></button></div>
+              <aside class="in-side"><div class="in-steps" role="tablist" aria-orientation="vertical"><button type="button" class="in-step on" role="tab" aria-selected="true" onclick="jbJump(0)"><span class="in-step-n">1</span><span class="in-step-t">Job details</span></button><button type="button" class="in-step" role="tab" aria-selected="false" onclick="jbJump(1)"><span class="in-step-n">2</span><span class="in-step-t">Requirements</span></button><button type="button" class="in-step" role="tab" aria-selected="false" onclick="jbJump(2)"><span class="in-step-n">3</span><span class="in-step-t">Salary</span></button><button type="button" class="in-step" role="tab" aria-selected="false" onclick="jbJump(3)"><span class="in-step-n">4</span><span class="in-step-t">Job location</span></button><button type="button" class="in-step" role="tab" aria-selected="false" onclick="jbJump(4)"><span class="in-step-n">5</span><span class="in-step-t">Description</span></button><button type="button" class="in-step" role="tab" aria-selected="false" onclick="jbJump(5)"><span class="in-step-n">6</span><span class="in-step-t">Ask Questions</span></button><button type="button" class="in-step" role="tab" aria-selected="false" onclick="jbJump(6)"><span class="in-step-n">7</span><span class="in-step-t">Preview</span></button></div>
                 <div class="in-side-foot"><div class="in-bar"><div id="jbBar" style="width:0%"></div></div><span id="jbPct">0% complete</span></div></aside>
               <div class="in-main">
             <div class="in-card jb-step on" data-s="0">
@@ -176,7 +176,12 @@
               <div class="in-note">Candidates will see these questions on the job page, with the time they get to answer each one.</div>
             </div>
 
-            <div class="in-actions"><span class="in-stepof" id="jbStepOf">Step 1 of 6</span>
+            <div class="in-card jb-step" data-s="6">
+              <h4>Preview</h4><p class="sub2">This is how candidates will see your job. Check everything, then post it.</p>
+              <div id="jbPreview"></div>
+            </div>
+
+            <div class="in-actions"><span class="in-stepof" id="jbStepOf">Step 1 of 7</span>
               <div class="r"><button type="button" class="btn btn-ghost btn-sm" id="jbBack" onclick="jbBack()" style="display:none">Back</button><button type="button" class="btn btn-primary btn-sm" id="jbNext" onclick="jbNext(event)">Next</button></div></div>
               </div>
             </div>
@@ -251,7 +256,7 @@
 <script>
 /* Post a job: same left-steps + right-card layout as the company profile. UI only; posting still runs through addJob(). */
 (function(){
-  var N=6, cur=0, max=0, F=document.getElementById('jobPostForm'); if(!F) return;
+  var N=7, cur=0, max=0, F=document.getElementById('jobPostForm'); if(!F) return;
   var $=function(id){return document.getElementById(id);}, val=function(id){return ($(id).value||'').trim();};
   var TODAY=new Date(Date.now()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,10); try{ $('jbDeadline').min=TODAY; }catch(e){}
   var REQ=['jbTitle','jbRole','jbCategory','jbDept','jbType','jbQualification','jbNotice','jbExpMin','jbSalMin','jbSalMax','jbCampus'];
@@ -269,16 +274,60 @@
       else if(Number(val('jbSalMax'))<Number(val('jbSalMin')||0)){ jbErr('salmax','Maximum cannot be lower than minimum'); f=f||'jbSalMax'; } return f; },
     function(){ return need([['campus','jbCampus','Select the campus for this job']]); },
     function(){ var d=val('jbDeadline'); if(d&&d<TODAY&&!window.__jbEditing){ jbErr('deadline','Choose today or a later date'); return 'jbDeadline'; } return null; },
-    function(){ var c=val('jbQaContact'); if(c&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(c)){ jbErr('qaContact','Enter a valid email address'); return 'jbQaContact'; } return null; }];
+    function(){ var c=val('jbQaContact'); if(c&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(c)){ jbErr('qaContact','Enter a valid email address'); return 'jbQaContact'; } return null; },
+    function(){ return null; }];
   function pct(){ var n=REQ.filter(function(id){ if($('jbSalNorms').checked&&(id==='jbSalMin'||id==='jbSalMax')) return true; return !!val(id); }).length; return Math.round(n/REQ.length*100); }
   function paint(){
     var p=pct(); $('jbBar').style.width=p+'%'; $('jbPct').textContent=p+'% complete';
     [].forEach.call(F.querySelectorAll('.jb-step'),function(c){ c.classList.toggle('on',+c.getAttribute('data-s')===cur); });
     [].forEach.call(F.querySelectorAll('.in-step'),function(b,i){ b.className='in-step'+(i===cur?' on':i<=max?' done':''); b.setAttribute('aria-selected',i===cur); });
     $('jbStepOf').textContent='Step '+(cur+1)+' of '+N; $('jbBack').style.display=cur>0?'':'none';
-    $('jbNext').textContent=cur===N-1?(window.__jbEditing?'Save changes':'+ Post job — free'):'Next';
+    $('jbNext').textContent=cur===N-1?(window.__jbEditing?'Save changes':'+ Post job — free'):cur===N-2?'Preview job':'Next';
   }
-  function go(i){ cur=i; max=Math.max(max,i); paint(); }
+
+  /* ---- Final preview: shows the job the way candidates will see it, before it is posted ---- */
+  function esc(x){ return String(x==null?'':x).replace(/[&<>"']/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+  function money(n){ return '₹'+Number(n).toLocaleString('en-IN'); }
+  function pick(id){ return (typeof jbPick==='function')?jbPick(id):val(id); }
+  function selText(id){ var el=$(id); if(!el||!el.value) return ''; var o=el.options&&el.options[el.selectedIndex]; return o?o.text:el.value; }
+  function dateText(d){ try{ return new Date(d+'T00:00:00').toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}); }catch(e){ return d; } }
+  function renderPreview(){
+    var box=$('jbPreview'); if(!box) return;
+    var title=val('jbTitle'), role=(val('jbRole')==='Other'&&val('jbRoleOther'))?val('jbRoleOther'):val('jbRole'), dept=val('jbDept'),
+        cat=pick('jbCategory'), type=pick('jbType'), qual=pick('jbQualification'), notice=pick('jbNotice'), vac=val('jbVac'),
+        expMin=val('jbExpMin'), expMax=val('jbExpMax'), skills=val('jbSkills'), desc=val('jbDesc'), dl=val('jbDeadline'),
+        norms=$('jbSalNorms').checked, neg=$('jbSalNeg').checked, per=val('jbSalPeriod')==='year'?'year':'month',
+        campus=selText('jbCampus'), loc=val('jbLocation'), sMin=val('jbSalMin'), sMax=val('jbSalMax'),
+        inst=(window.currentCompany&&currentCompany.name)||($('jbInst')&&$('jbInst').textContent.trim())||'Your institution';
+    var logo=(typeof companyLogoStyle==='function')?companyLogoStyle():'background:var(--blue-700);';
+    var salary=norms?'Pay as per UGC / AICTE norms':(Number(sMin)>0&&Number(sMax)>0?money(sMin)+' – '+money(sMax)+' / '+per+(neg?' (negotiable)':''):(neg?'Salary negotiable':''));
+    var exp=expMin!==''?(expMin+(expMax!==''?'–'+expMax:'+')+' yrs experience'):'';
+    var qs=(window.QA?QA.get('jbQaList'):[]), qaOn=$('jbQaOn')&&$('jbQaOn').checked, contact=val('jbQaContact');
+
+    var miss=[];
+    [['Job title',title,0],['Role / designation',role,0],['Category',cat,0],['Department / subject',dept,0],['Employment type',type,0],
+     ['Qualification',qual,1],['Notice period',notice,1],['Minimum experience',expMin,1],
+     ['Salary',(norms||(Number(sMin)>0&&Number(sMax)>0))?'ok':'',2],['Campus / branch',val('jbCampus'),3]].forEach(function(m){ if(!m[1]) miss.push(m); });
+
+    function sec(name,step,inner){ return '<div class="jbp-sec"><div class="jbp-sh"><h5>'+name+'</h5><button type="button" class="jbp-edit" onclick="jbJump('+step+')">Edit</button></div>'+inner+'</div>'; }
+    function chip(t){ return t?'<span class="jbp-chip">'+esc(t)+'</span>':''; }
+    function kv(k,v){ return v?'<div class="jbp-kv"><span>'+k+'</span><b>'+esc(v)+'</b></div>':''; }
+    var h='';
+    if(miss.length) h+='<div class="jbp-warn" role="alert"><b>Complete these before posting:</b><ul>'+miss.map(function(m){ return '<li>'+m[0]+' <button type="button" class="jbp-edit" onclick="jbJump('+m[2]+')">Fix</button></li>'; }).join('')+'</ul></div>';
+    h+='<div class="jbp-card"><div class="jbp-top"><div class="jbp-logo" style="'+logo+'"></div><div class="jbp-id"><div class="jbp-inst">'+esc(inst)+'</div><div class="jbp-title">'+(title?esc(title):'<i class="jbp-none">Job title not added</i>')+'</div>'+
+      '<div class="jbp-meta">'+esc([role,dept].filter(Boolean).join(' · '))+'</div></div><span class="jbp-live">Preview</span></div>'+
+      '<div class="jbp-price">'+(salary?esc(salary):'<i class="jbp-none">Salary not added</i>')+'</div>'+
+      '<div class="jbp-chips">'+chip(type)+chip(cat)+chip(exp)+chip(qual)+chip(notice&&('Notice: '+notice))+chip(vac&&Number(vac)>1?vac+' vacancies':'')+chip(campus)+chip(loc)+chip(dl&&('Apply before '+dateText(dl)))+'</div></div>';
+    h+=sec('Job details',0,kv('Title',title)+kv('Role',role)+kv('Category',cat)+kv('Department / subject',dept)+kv('Employment type',type)+kv('Vacancies',vac||'1'));
+    h+=sec('Requirements',1,kv('Qualification',qual)+kv('Experience',exp)+kv('Notice period',notice));
+    h+=sec('Salary',2,kv('Pay',salary)+(norms||!salary?'':kv('Paid',per==='year'?'Per year':'Per month')));
+    h+=sec('Job location',3,kv('Institution',inst)+kv('Campus / branch',campus)+kv('City / location',loc||''));
+    h+=sec('Description',4,(desc?'<p class="jbp-desc">'+esc(desc).replace(/\n/g,'<br>')+'</p>':'<p class="jbp-none">No description added.</p>')+
+      (skills?'<div class="jbp-chips">'+skills.split(',').map(function(x){ return chip(x.trim()); }).join('')+'</div>':'')+kv('Apply before',dl?dateText(dl):''));
+    h+=sec('Ask Questions',5,qaOn?(kv('Contact for questions',contact)+(qs.length?'<ol class="jbp-qs">'+qs.map(function(q){ return '<li>'+esc(q.q)+' <span>'+q.mins+' min</span></li>'; }).join('')+'</ol>':'<p class="jbp-none">No questions for candidates.</p>')):'<p class="jbp-none">Candidate questions are turned off.</p>');
+    box.innerHTML=h;
+  }
+  function go(i){ cur=i; max=Math.max(max,i); if(i===N-1) renderPreview(); paint(); if(i===N-1){ try{ F.scrollIntoView({block:'start'}); }catch(e){} } }
   function focusId(id){ var el=$(id); if(el){ try{ el.focus({preventScroll:true}); }catch(e){ el.focus(); } } }
   window.jbOtherToggle=function(id){ var sel=$(id), o=$(id+'Other'); if(!sel||!o) return; var on=sel.value==='Other'; o.style.display=on?'':'none'; if(on){ try{o.focus({preventScroll:true});}catch(e){o.focus();} } else o.value=''; };
   window.jbRoleOtherToggle=function(){ var o=$('jbRoleOther'), on=$('jbRole').value==='Other'; o.style.display=on?'':'none'; if(on){ try{o.focus({preventScroll:true});}catch(e){o.focus();} } else o.value=''; };
@@ -305,7 +354,27 @@
 <script src="../js/faculty.js"></script>
 <script src="../js/settings.js?v=4"></script>
 <script src="../js/sidebar.js?v=13"></script>
-<script src="../js/inr-input.js?v=1"></script><script src="../js/layout.js?v=2"></script><script src="../js/faculty-view.js?v=1"></script><script src="../js/backend.js?v=9"></script>
+<style>
+.jbp-warn{background:#fff6e5;border:1px solid #f3c77a;border-left:3px solid #e08a00;padding:10px 14px;margin:0 0 14px;font-size:13px;color:#6b4300}
+.jbp-warn ul{margin:6px 0 0;padding-left:18px}.jbp-warn li{margin:3px 0}
+.jbp-card{border:1px solid var(--line);border-radius:var(--radius);padding:18px;margin-bottom:14px;background:var(--canvas,#f8f7fd)}
+.jbp-top{display:flex;gap:14px;align-items:center}
+.jbp-logo{width:54px;height:54px;border-radius:3px;flex-shrink:0;background-size:cover;background-position:center}
+.jbp-id{flex:1;min-width:0}.jbp-inst{font-size:12.5px;font-weight:700;color:var(--ink-soft)}
+.jbp-title{font-size:18px;font-weight:700;color:var(--ink);margin:2px 0}.jbp-meta{font-size:13px;color:var(--blue-700)}
+.jbp-live{background:#ebe3ff;color:#4b1f9e;font-size:11px;font-weight:700;padding:3px 9px;border-radius:2px;align-self:flex-start}
+.jbp-price{margin:12px 0 8px;font-size:16px;font-weight:700;color:#15803d}
+.jbp-chips{display:flex;flex-wrap:wrap;gap:6px}.jbp-chip{background:#fff;border:1px solid var(--line);border-radius:2px;padding:3px 9px;font-size:12px;color:var(--ink-soft)}
+.jbp-sec{border:1px solid var(--line);border-radius:var(--radius);padding:12px 16px;margin-bottom:10px;background:#fff}
+.jbp-sh{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}.jbp-sh h5{margin:0;font-size:13.5px;color:var(--ink)}
+.jbp-edit{background:none;border:0;color:var(--blue-600,#2563EB);font-weight:600;font-size:12.5px;cursor:pointer;padding:0 2px}
+.jbp-kv{display:flex;gap:12px;font-size:13.5px;padding:4px 0}.jbp-kv span{width:170px;flex-shrink:0;color:var(--ink-soft)}.jbp-kv b{font-weight:600;color:var(--ink);word-break:break-word}
+.jbp-desc{margin:0 0 8px;font-size:13.5px;color:var(--ink-soft);line-height:1.55}
+.jbp-none{color:var(--ink-faint,#8b92a1);font-size:13px;font-style:italic;margin:0}
+.jbp-qs{margin:6px 0 0;padding-left:20px;font-size:13.5px}.jbp-qs span{color:var(--ink-faint,#8b92a1);font-size:12px;margin-left:6px}
+@media(max-width:600px){.jbp-kv{flex-direction:column;gap:0}.jbp-kv span{width:auto}}
+</style>
+<script src="../js/inr-input.js?v=1"></script><script src="../js/skills-input.js?v=1"></script><script src="../js/layout.js?v=2"></script><script src="../js/faculty-view.js?v=1"></script><script src="../js/backend.js?v=9"></script>
 <script>
 if('scrollRestoration' in history) history.scrollRestoration = 'manual';   /* reload no longer jumps the page */
 mountNav(); mountChrome();
