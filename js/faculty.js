@@ -591,7 +591,7 @@
               <option ${e.empType==='Consultant'?'selected':''}>Consultant</option>
             </select>
           </div>
-          <div class="pf-field"><label>Salary / CTC</label><input type="text" value="${pfEsc(e.ctc)}" oninput="pfUpdateArrItem('employmentHistory',${i},'ctc',this.value)"></div>
+          <div class="pf-field"><label>Salary / CTC</label><input type="text" data-inr="text" value="${pfEsc(e.ctc)}" oninput="pfUpdateArrItem('employmentHistory',${i},'ctc',this.value)"></div>
         </div>
         <div class="dash-form-row">
           <div class="pf-field"><label>From date</label><input type="date" value="${pfEsc(e.from)}" oninput="pfUpdateArrItem('employmentHistory',${i},'from',this.value)"></div>
