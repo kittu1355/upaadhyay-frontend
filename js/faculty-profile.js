@@ -58,7 +58,7 @@ const pill=(c,i,t)=>`<span class="fp-pill ${c}">${ic(i,11)}${t}</span>`;
 const cap=t=>t.charAt(0).toUpperCase()+t.slice(1);
 const TAG={req:['t-req','Required'],rec:['t-rec','Recommended'],opt:['t-opt','Optional']};
 const blank=()=>({open:0,done:{},savedAt:'',title:'',first:'',middle:'',last:'',dob:'',gender:'',headline:'',email:'',phone:'',phone2:'',pin:'',state:'',district:'',city:'',area:'',addr:'',vis:'Employers Only',
- desig:'',levels:[],subjects:[],high:'',edu:{ssc:{},hsc:{},ug:{},pg:{},phd:{},mphil:{},dip:{},oth:{}},tq:[],jobs:[],taught:[],taughtSubs:[],boards:[],medium:[],expLevel:'',links:[],files:{},resumes:[],resumeSel:'',resumePub:'',cvs:[],cvSel:'',cvPub:'',editions:[],research:{journal:[],patent:[],conf:[],book:[],chapter:[],other:[]},
+ desig:'',levels:[],subjects:[],high:'',edu:{ssc:{},hsc:{},ug:{},pg:{},phd:{},mphil:{},dip:{},oth:{}},tq:[],jobs:[],taught:[],taughtSubs:[],boards:[],medium:[],expLevel:'',links:[],scholar:{url:'',citations:'',h:'',i10:'',pubs:''},files:{},resumes:[],resumeSel:'',resumePub:'',cvs:[],cvSel:'',cvPub:'',editions:[],research:{journal:[],patent:[],conf:[],book:[],chapter:[],other:[]},
  prefLevels:[],prefSubs:[],prefJob:[],prefWork:'',prefLoc:[],reloc:'',salary:'',ver:{edu:'none',exp:'none',id:'none'}});
 let S=blank(),SAVED='',ST={saving:false,busy:{}},_uid=0;
 const RULES={photo:{ext:['jpg','jpeg','png','webp'],mb:2,label:'JPG, PNG or WEBP · Max 2 MB'},resume:{ext:['pdf','doc','docx'],mb:5,label:'PDF, DOC or DOCX · Max 5 MB'},doc:{ext:['pdf','jpg','jpeg','png'],mb:5,label:'PDF, JPG or PNG · Max 5 MB'}};
@@ -107,7 +107,13 @@ const R={
  <div class="fp-note fp-note-i">${ic('lock',14)}<span>We never collect Aadhaar, PAN, bank details, passwords, OTPs or financial information in your faculty profile.</span></div>`,
 2:()=>`<h3>Professional Profile</h3><p class="fp-sub">Helps institutions match you with the right roles.</p><div class="fp-grid">
  ${F('Current designation','req',SEL('desig',OPT.desig,{v:'req'}))}${F('Teaching / target level','req',MS('levels','levels',undefined,{req:1}),{hint:'Drives which qualification fields are shown.'})}
- ${F('Subjects / specialization','req',MS('subjects','subjects','Search subjects…',{req:1}),{full:1})}</div>`,
+ ${F('Subjects / specialization','req',MS('subjects','subjects','Search subjects…',{req:1}),{full:1})}</div>
+ <div class="fp-card fp-scholar" style="margin-top:14px"><h4>${ic('link',14)} Google Scholar ${tag('rec','Recommended for research-oriented roles')}</h4>
+ <p class="fp-hint" style="margin:0 0 10px">Link your Google Scholar profile and add your metrics. They appear in the Research section of your profile for institutions.</p>
+ <div class="fp-grid">${F('Google Scholar profile URL','opt',I('scholar.url',{v:'scholar',ph:'https://scholar.google.com/citations?user=…'}),{full:1})}
+ ${F('Total citations','opt',I('scholar.citations',{v:'num',ph:'e.g. 1250'}))}${F('h-index','opt',I('scholar.h',{v:'num',ph:'e.g. 18'}))}
+ ${F('i10-index','opt',I('scholar.i10',{v:'num',ph:'e.g. 25'}))}${F('Publications listed on Scholar','opt',I('scholar.pubs',{v:'num',ph:'e.g. 40'}))}</div>
+ ${S.scholar&&/^https?:\/\//i.test(S.scholar.url||'')?`<div class="fp-row" style="margin-top:10px"><span><a href="${esc(S.scholar.url)}" target="_blank" rel="noopener">Open my Google Scholar profile ↗</a></span></div>`:''}</div>`,
 3:()=>{const need=EDU[S.high]||[];return `<h3>Education & Qualifications</h3><p class="fp-sub">Choose your highest qualification — only the relevant sections appear.</p>
  ${F('Highest qualification','req',SEL('high',OPT.high,{v:'req',re:'edu'}))}
  <div style="margin-top:14px" id="fpEdu">${need.length?need.map(eduBlock).join(''):`<div class="fp-empty">Select your highest qualification to continue.</div>`}</div>`},
@@ -207,6 +213,8 @@ function check(el){const r=el.dataset.v,v=el.value.trim();let m='';
  else if(r==='phone'&&!/^\+?\d[\d\s-]{7,18}$/.test(v))m=v?'Please enter a valid phone number.':'This field is required.';
  else if(r==='year'&&v&&!/^(19|20)\d{2}$/.test(v))m='Enter a valid 4-digit year.';
  else if(r==='pin'&&!/^\d{6}$/.test(v))m=v?'Enter a valid 6-digit PIN code.':'This field is required.';
+ else if(r==='num'&&v&&!/^\d{1,7}$/.test(v))m='Enter a whole number.';
+ else if(r==='scholar'&&v&&!/^https?:\/\/([\w-]+\.)*scholar\.google\.[a-z.]{2,}\/\S*$/i.test(v))m='Enter your Google Scholar link (scholar.google.com/…).';
  else if(r==='url'&&v&&!/^https?:\/\/[^\s.]+\.[^\s]{2,}$/i.test(v))m='Please enter a valid website URL.';
  el.classList.toggle('bad',!!m);el.setAttribute('aria-invalid',m?'true':'false');const e=el.closest('.fp-f')&&el.closest('.fp-f').querySelector('[data-e]');if(e)e.textContent=m;return!m}
 function checkSec(){let ok=true,first=null;$$(`.fp-sec.open [data-v]`).forEach(e=>{if(e.disabled)return;if(!check(e)){ok=false;first=first||e}});if(first)first.focus();return ok}
