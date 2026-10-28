@@ -128,6 +128,26 @@
 <div id="siteNav"></div>
 <main class="nw" id="app"></main>
 <div id="siteChrome"></div>
+<style>
+.jbp-warn{background:#fff6e5;border:1px solid #f3c77a;border-left:3px solid #e08a00;padding:10px 14px;margin:0 0 14px;font-size:13px;color:#6b4300}
+.jbp-warn ul{margin:6px 0 0;padding-left:18px}.jbp-warn li{margin:3px 0}
+.jbp-card{border:1px solid var(--line);border-radius:var(--radius);padding:18px;margin-bottom:14px;background:var(--canvas,#f8f7fd)}
+.jbp-top{display:flex;gap:14px;align-items:center}
+.jbp-logo{width:54px;height:54px;border-radius:3px;flex-shrink:0;background-size:cover;background-position:center}
+.jbp-id{flex:1;min-width:0}.jbp-inst{font-size:12.5px;font-weight:700;color:var(--ink-soft)}
+.jbp-title{font-size:18px;font-weight:700;color:var(--ink);margin:2px 0}.jbp-meta{font-size:13px;color:var(--blue-700)}
+.jbp-live{background:#ebe3ff;color:#4b1f9e;font-size:11px;font-weight:700;padding:3px 9px;border-radius:2px;align-self:flex-start}
+.jbp-price{margin:12px 0 8px;font-size:16px;font-weight:700;color:#15803d}
+.jbp-chips{display:flex;flex-wrap:wrap;gap:6px}.jbp-chip{background:#fff;border:1px solid var(--line);border-radius:2px;padding:3px 9px;font-size:12px;color:var(--ink-soft)}
+.jbp-sec{border:1px solid var(--line);border-radius:var(--radius);padding:12px 16px;margin-bottom:10px;background:#fff}
+.jbp-sh{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}.jbp-sh h5{margin:0;font-size:13.5px;color:var(--ink)}
+.jbp-edit{background:none;border:0;color:var(--blue-600,#2563EB);font-weight:600;font-size:12.5px;cursor:pointer;padding:0 2px}
+.jbp-kv{display:flex;gap:12px;font-size:13.5px;padding:4px 0}.jbp-kv span{width:170px;flex-shrink:0;color:var(--ink-soft)}.jbp-kv b{font-weight:600;color:var(--ink);word-break:break-word}
+.jbp-desc{margin:0 0 8px;font-size:13.5px;color:var(--ink-soft);line-height:1.55}
+.jbp-none{color:var(--ink-faint,#8b92a1);font-size:13px;font-style:italic;margin:0}
+.jbp-qs{margin:6px 0 0;padding-left:20px;font-size:13.5px}.jbp-qs span{color:var(--ink-faint,#8b92a1);font-size:12px;margin-left:6px}
+@media(max-width:600px){.jbp-kv{flex-direction:column;gap:0}.jbp-kv span{width:auto}}
+</style>
 <script src="../js/api.js"></script>
 <script src="../js/live-update.js?v=1"></script>
 <script src="../js/store.js"></script>
@@ -138,7 +158,7 @@
 <script src="../js/faculty.js"></script>
 <script src="../js/settings.js?v=4"></script>
 <script src="../js/sidebar.js?v=10"></script>
-<script src="../js/inr-input.js?v=1"></script><script src="../js/layout.js?v=2"></script><script src="../js/faculty-view.js?v=1"></script><script src="../js/backend.js?v=9"></script>
+<script src="../js/inr-input.js?v=1"></script><script src="../js/skills-input.js?v=1"></script><script src="../js/layout.js?v=2"></script><script src="../js/faculty-view.js?v=1"></script><script src="../js/backend.js?v=9"></script>
 <script>
 mountNav(''); mountChrome({noFooter:true});
 /* ---------- mock data (UI demo only, no backend) ---------- */
@@ -347,8 +367,8 @@ const pjLogo=j=>j.img?`<div class="lg pj-lg" style="background:#fff;border:1px s
 const jobCard=j=>{const sk=String(j.skills||'').split(',').map(x=>x.trim()).filter(Boolean),per=({month:'mo',year:'yr',hour:'hr'})[j.period]||j.period,sal=j.salMin||j.salMax?(j.salMin&&j.salMax&&j.salMin!=j.salMax?`₹${inr(j.salMin)} – ${inr(j.salMax)}`:`₹${inr(j.salMin||j.salMax)}`):'Negotiable';
 return `<div class="pj-card" id="pj${j.id}"><div class="pj-top"><span class="pj-pill ${pjCls(j.type)}">${esc(j.type||'Full-time')}</span><span class="pj-sal">${sal} <small>/ ${esc(per)}</small></span></div><h3 class="pj-title">${esc(j.title)}</h3><div style="display:flex;justify-content:center"><div class="pj-inst">${pjLogo(j)}<span>${esc(j.branchName)}</span>${j.demo?'<em class="pj-demo" style="font-style:normal">DEMO</em>':''}${j.status&&j.status!='published'?'<em class="pj-demo" style="font-style:normal">'+esc(String(j.status).toUpperCase())+'</em>':''}</div></div>${sk.length?`<div class="pj-chips">${sk.slice(0,3).map(x=>`<span class="pj-chip">${esc(x)}</span>`).join('')}${sk.length>3?`<span class="pj-chip more">+${sk.length-3}</span>`:''}</div>`:''}<p class="pj-desc">${esc(j.desc||'')}</p><div class="pj-meta">${esc(j.loc||'')}${j.expMin?' · Exp '+esc(j.expMin)+'+ yrs':''}</div><div class="pj-more">${[j.role&&'Role: '+esc(j.role),j.dept&&'Dept: '+esc(j.dept),j.qual&&'Qualification: '+esc(j.qual),j.vac&&'Vacancies: '+esc(j.vac),sk.length&&'Skills: '+sk.map(esc).join(', ')].filter(Boolean).join('<br>')}</div><div class="pj-line"></div><button class="pj-btn" onclick="document.getElementById('pj${j.id}').classList.toggle('open')">View Job</button></div>`};
 /* ---------- Post a Job: stepped form, same layout as the main employer dashboard ---------- */
-const JSTEPS=['Job details','Requirements','Salary','Job location','Description','Ask Questions'];
-const JSUB=['What is the role and where does it sit in your institution?','Qualification, experience and how soon the candidate can join.','Clear pay details get more applications.','This job is posted for your campus. Main institution and branch are added automatically.','Tell candidates what the role involves.','Let candidates ask about this role, and add up to 5 questions with a time to answer.'];
+const JSTEPS=['Job details','Requirements','Salary','Job location','Description','Ask Questions','Preview'];
+const JSUB=['What is the role and where does it sit in your institution?','Qualification, experience and how soon the candidate can join.','Clear pay details get more applications.','This job is posted for your campus. Main institution and branch are added automatically.','Tell candidates what the role involves.','Let candidates ask about this role, and add up to 5 questions with a time to answer.','This is how candidates will see your job. Check everything, then post it.'];
 const JF=[
  [['title','Job title',1,'text','e.g. Assistant Professor, Computer Science','full'],['role','Role / designation',1,['Professor','Associate Professor','Assistant Professor','Lecturer','Head of Department'],'Select role'],['cat','Category',1,['Schools','Intermediate','Higher Education'],'Select category'],['dept','Department / subject',1,'text','e.g. Mathematics'],['type','Employment type',1,['Full-time','Part-time','Contract','Visiting faculty'],'Select type'],['vac','Number of vacancies',0,'number','1']],
  [['qual','Qualification needed',1,['UG','PG','PhD','PG + NET / SET','PhD + NET / SET'],'Select qualification'],['notice','Notice period accepted',1,['Immediate joiner','Up to 15 days','Up to 30 days','Up to 60 days'],'Select notice period'],['expMin','Minimum experience (years)',1,'number','0 for freshers'],['expMax','Maximum experience (years)',0,'number','Leave empty for no limit']],
@@ -362,9 +382,29 @@ function jbField(f){const[k,l,req,t,ph,x]=f,v=jbV(k),er=JB.err[k];let inp;
  else if(t=='area')inp=`<textarea id="jb_${k}" rows="3" placeholder="${esc(ph)}">${esc(v)}</textarea>`;
  else{inp=`<input id="jb_${k}" type="${t}" ${t=='number'?'min="0"':''} placeholder="${esc(ph)}" value="${esc(v)}" oninput="JB.err.${k}=''">`;if(x=='pre')inp=`<div class="in-pre"><span>₹</span>${inp}</div>`}
  return `<div class="in-f${x=='full'||t=='area'?' in-full':''}${er?' err':''}"><label>${l}<i>${req?'Required':'Optional'}</i></label>${inp}<div class="in-err" role="alert">${esc(er||'')}</div></div>`}
+function jbPreview(){const v=jbV,money=n=>'₹'+Number(n).toLocaleString('en-IN'),per=v('period')==='year'?'year':'month',norms=!!v('salNorms'),neg=!!v('salNeg');
+ const sal=norms?'Pay as per UGC / AICTE norms':(Number(v('salMin'))>0&&Number(v('salMax'))>0?`${money(v('salMin'))} – ${money(v('salMax'))} / ${per}${neg?' (negotiable)':''}`:(neg?'Salary negotiable':''));
+ const exp=v('expMin')!==''?v('expMin')+(v('expMax')!==''?'–'+v('expMax'):'+')+' yrs experience':'';
+ const sk=String(v('skills')||'').split(',').map(x=>x.trim()).filter(Boolean),loc=v('city')||SUB.c||'',qs=JB.qa||[];
+ const dl=v('deadline')?new Date(v('deadline')+'T00:00:00').toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}):'';
+ const miss=[];JF.forEach((a,si)=>a.forEach(f=>{if(f[2]&&!String(v(f[0])).trim())miss.push([f[1],si])}));
+ if(!norms&&!(Number(v('salMin'))>0&&Number(v('salMax'))>0)&&!miss.some(m=>m[1]==2))miss.push(['Salary',2]);
+ const chip=t=>t?`<span class="jbp-chip">${esc(t)}</span>`:'',kv=(k,x)=>x?`<div class="jbp-kv"><span>${k}</span><b>${esc(x)}</b></div>`:'';
+ const sec=(n,i,inner)=>`<div class="jbp-sec"><div class="jbp-sh"><h5>${n}</h5><button type="button" class="jbp-edit" onclick="jbGo(${i})">Edit</button></div>${inner}</div>`;
+ return (miss.length?`<div class="jbp-warn" role="alert"><b>Complete these before posting:</b><ul>${miss.map(m=>`<li>${esc(m[0])} <button type="button" class="jbp-edit" onclick="jbGo(${m[1]})">Fix</button></li>`).join('')}</ul></div>`:'')+
+ `<div class="jbp-card"><div class="jbp-top"><div class="jbp-logo" style="background:var(--blue-700);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800">${esc((SUB.n||'J').charAt(0).toUpperCase())}</div><div class="jbp-id"><div class="jbp-inst">${esc(SUB.n)} · ${esc(S.main.n)}</div><div class="jbp-title">${v('title')?esc(v('title')):'<i class="jbp-none">Job title not added</i>'}</div><div class="jbp-meta">${esc([v('role'),v('dept')].filter(Boolean).join(' · '))}</div></div><span class="jbp-live">Preview</span></div>
+ <div class="jbp-price">${sal?esc(sal):'<i class="jbp-none">Salary not added</i>'}</div>
+ <div class="jbp-chips">${chip(v('type'))}${chip(v('cat'))}${chip(exp)}${chip(v('qual'))}${chip(v('notice')&&'Notice: '+v('notice'))}${chip(Number(v('vac'))>1?v('vac')+' vacancies':'')}${chip(loc)}${chip(dl&&'Apply before '+dl)}</div></div>`+
+ sec('Job details',0,kv('Title',v('title'))+kv('Role',v('role'))+kv('Category',v('cat'))+kv('Department / subject',v('dept'))+kv('Employment type',v('type'))+kv('Vacancies',v('vac')||'1'))+
+ sec('Requirements',1,kv('Qualification',v('qual'))+kv('Experience',exp)+kv('Notice period',v('notice')))+
+ sec('Salary',2,kv('Pay',sal)+(norms||!sal?'':kv('Paid',per=='year'?'Per year':'Per month')))+
+ sec('Job location',3,kv('Institution',S.main.n)+kv('Campus / branch',SUB.n)+kv('City / location',loc))+
+ sec('Description',4,(v('desc')?`<p class="jbp-desc">${esc(v('desc')).replace(/\n/g,'<br>')}</p>`:'<p class="jbp-none">No description added.</p>')+(sk.length?`<div class="jbp-chips">${sk.map(chip).join('')}</div>`:'')+kv('Apply before',dl))+
+ sec('Ask Questions',5,JB.qaOn===false?'<p class="jbp-none">Candidate questions are turned off.</p>':kv('Contact for questions',JB.qaContact)+(qs.length?`<ol class="jbp-qs">${qs.map(q=>`<li>${esc(q.q)} <span>${q.mins} min</span></li>`).join('')}</ol>`:'<p class="jbp-none">No questions for candidates.</p>'))}
 function jbBody(){const s=JB.step;
  if(s==2)return `<div class="in-row3">${JF[2].map(jbField).join('')}</div><label class="in-chk"><input type="checkbox" id="jb_salNeg" ${JB.d.salNeg?'checked':''}> Salary is negotiable based on experience</label><label class="in-chk"><input type="checkbox" id="jb_salNorms" ${JB.d.salNorms?'checked':''}> Pay as per UGC / AICTE norms</label>`;
  if(s==3)return `<div class="in-grid"><div class="in-f"><label>Institution</label><div style="font-weight:700;color:var(--blue-900);padding:10px 0">${esc(S.main.n)} <span class="mut">· Code ${esc(S.main.code)}</span></div></div><div class="in-f"><label>Campus / branch</label><div style="font-weight:700;color:var(--blue-900);padding:10px 0">${esc(SUB.n)} ${B(0)}</div></div>${jbField(['city','City / location',0,'text',SUB.c||'Filled from your campus if left empty','full'])}</div>`;
+ if(s==6)return jbPreview();
  if(s==5)return `<div class="in-grid"><label class="in-chk in-full"><input type="checkbox" id="jb_qaOn" ${JB.qaOn===false?'':'checked'}> Allow candidates to ask questions about this role</label><div class="in-f in-full"><label>Contact for questions<i>Optional</i></label><input id="jb_qaContact" type="email" placeholder="e.g. hr@institution.edu" value="${esc(JB.qaContact||'')}"></div><div class="in-f in-full"><label>Questions for candidates<i>Optional · up to 5</i></label>${QA.html('jbQaList',JB.qa||[])}</div></div><div class="in-note">Candidates will see these questions on the job page, with the time they get to answer each one.</div>`
  return `<div class="in-grid">${JF[s].map(jbField).join('')}</div>`}
 function jbGrab(){if(JB.step==5){const o=document.getElementById('jb_qaOn'),c=document.getElementById('jb_qaContact');if(o)JB.qaOn=o.checked;if(c)JB.qaContact=c.value.trim();JB.qa=QA.get('jbQaList')}(JF[JB.step]||[]).forEach(f=>{const oi=document.getElementById('jb_'+f[0]+'_o');if(oi){JB.d[f[0]]=oi.value.trim();return}const e=document.getElementById('jb_'+f[0]);if(e)JB.d[f[0]]=e.value.trim()});if(JB.step==2)['salNeg','salNorms'].forEach(k=>{const e=document.getElementById('jb_'+k);if(e)JB.d[k]=e.checked})}
@@ -383,7 +423,7 @@ function vPost(){const s=JB.step,last=s==JSTEPS.length-1;
  return `<div class="in-wrap"><div class="in-head"><h3>Post a job</h3><p>Fill in the role details so the right candidates can find and apply. Fields marked Required must be completed.</p></div>
  <div class="in-layout">${inSide(JSTEPS,s,JB.max,jbPct(),'jbGo')}
  <div class="in-main"><div class="in-card"><h4>${JSTEPS[s]}</h4><p class="sub2">${JSUB[s]}</p>${jbBody()}</div>
- <div class="in-actions"><span class="in-stepof">Step ${s+1} of ${JSTEPS.length}</span><div class="r">${s>0?'<button class="btn btn-ghost btn-sm" onclick="jbBack()">Back</button>':''}<button class="btn btn-primary btn-sm" onclick="jbNext()">${last?'Post job — free':'Next'}</button></div></div></div></div></div>`}
+ <div class="in-actions"><span class="in-stepof">Step ${s+1} of ${JSTEPS.length}</span><div class="r">${s>0?'<button class="btn btn-ghost btn-sm" onclick="jbBack()">Back</button>':''}<button class="btn btn-primary btn-sm" onclick="jbNext()">${last?'Post job — free':s==JSTEPS.length-2?'Preview job':'Next'}</button></div></div></div></div></div>`}
 async function postJob(){const v=jbV;
  for(let s=0;s<JSTEPS.length;s++){if(jbCheck(s).length){JB.step=s;JB.max=Math.max(JB.max,s);render();scrollTo(0,0);return}}
  if(nwOn()){try{const sj=await nwSave(v);nwQaStore(sj&&(sj.id||(sj.data&&sj.data.id)));await nwSync();JB={step:0,max:0,d:{period:'month'},err:{},o:{},qa:[],qaOn:true,qaContact:''};S.sd='jobs';render();scrollTo(0,0);return}catch(e){alert((e&&e.message)||'Could not save the job. Please try again.');return}}
