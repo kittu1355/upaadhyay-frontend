@@ -29,41 +29,89 @@ if(!id&&/^\d+$/.test(cat)){id=cat;cat=''}
 function list(){var all=cat==='all'||!SP_CATS[cat],t=all?['All Jobs','Explore verified faculty opportunities from institutions across India.']:SP_CATS[cat];document.title=t[0]+' Jobs — Upaadhyay';
  m.innerHTML='<header class="sp-hero sm"><div class="wrap"><h1>'+t[0]+(all?'':' Jobs')+'</h1><p>'+(all?t[1]:'Explore verified '+t[0]+' opportunities from institutions across India. '+t[1])+'</p></div></header><section class="sp-sec"><div class="wrap"><div class="sp-filters"><input id="s" placeholder="Search title or institution" oninput="draw()"><select id="l" onchange="draw()"><option value="">Location</option>'+SP_CITY.map(function(c){return'<option>'+c+'</option>'}).join('')+'</select><select id="x" onchange="draw()"><option value="">Experience</option><option value="3">3+ yrs</option><option value="6">6+ yrs</option></select><select id="u" onchange="draw()"><option value="">Subject</option>'+['Computer Science','Physics','Commerce','Chemistry','Mathematics','Biotechnology'].map(function(c){return'<option>'+c+'</option>'}).join('')+'</select><select id="i" onchange="draw()"><option value="">Institution</option>'+SP_INST.map(function(c){return'<option>'+c+'</option>'}).join('')+'</select><select id="y" onchange="draw()"><option value="">Job type</option><option>Full-time</option><option>Contract</option></select></div><p class="sp-sub" id="n"></p><div class="sp-jobs" id="g"></div></div></section>';draw()}
 function draw(){var g=function(k){return document.getElementById(k).value},s=g('s').toLowerCase();var r=SP_JOBS.filter(function(j){return(cat==='all'||!SP_CATS[cat]||j.cat===cat)&&(!s||(j.title+j.inst).toLowerCase().indexOf(s)>-1)&&(!g('l')||j.loc===g('l'))&&(!g('x')||j.exp>=+g('x'))&&(!g('u')||j.subj===g('u'))&&(!g('i')||j.inst===g('i'))&&(!g('y')||j.type===g('y'))});document.getElementById('n').textContent=r.length+' jobs';document.getElementById('g').innerHTML=r.map(spJobCard).join('')||'<p>No jobs match these filters.</p>'}
+/* ---------- helpers for the detail page ---------- */
+function jdApplyBtn(sid,title,applied,cls,label){return'<button type="button" class="jb-btn pri '+(cls||'')+'" data-apply-job="'+sid+'" data-title="'+E(title)+'"'+(applied?' disabled':'')+' onclick="applyToJob(\''+sid+'\',this.dataset.title)">'+(applied?'Applied ✓':label)+'</button>'}
+function jdDate(d){if(!d)return'';var t=new Date(d);if(isNaN(t))return'';return t.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})}
+function jdTile(ic,k,v){return v?'<div class="jd-tile"><span class="jd-tic">'+ic+'</span><div><small>'+k+'</small><b>'+E(v)+'</b></div></div>':''}
+var JD_CHEV='<svg class="jd-chev" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>';
+
 function detail(){
  var j=SP_JOBS.filter(function(x){return x.id==id})[0];if(!j){cat='all';return list()}
  document.title=j.title+' — Upaadhyay';
- var r=j.raw||{},sk=(r.skills&&r.skills.length?r.skills:[]),sid=String(j.id).replace(/'/g,''),
+ var r=j.raw||{},rw=r.raw||{},meta=rw.meta||{},sid=String(j.id).replace(/'/g,''),
+  sk=(r.skills&&r.skills.length?r.skills:[]),
   tl=String(j.type||'').toLowerCase(),pc=tl.indexOf('part')>-1||tl.indexOf('visit')>-1?'part':tl.indexOf('contract')>-1?'con':'',
   saved=jbIsSaved(sid),applied=jbIsApplied(sid),
-  exp=jbExpText({minExp:Number(j.exp)||0,raw:r.raw||{}}),
-  vac=(r.raw&&r.raw.vacancy_count)||'',dl=r.daysLeft;
- var desc=j.desc?E(j.desc):E(j.inst)+' is hiring a '+E(j.title)+'.';
- var rows=[['Role',r.role],['Department',r.dept||j.subj],['Qualification',j.qual&&j.qual!=='—'?j.qual:''],['Employment type',j.type],['Category',r.cat],['Work mode',r.mode]].filter(function(x){return x[1]});
+  exp=jbExpText({minExp:Number(j.exp)||0,raw:rw}),
+  vac=rw.vacancy_count||'',dl=r.daysLeft,dlDate=jdDate(rw.application_deadline),
+  fullLoc=r.location||j.loc||'India',campus=meta.campus||'',notice=meta.notice||'',
+  descRaw=String(j.desc||''),isLong=descRaw.length>1100,
+  desc=descRaw?E(descRaw):E(j.inst)+' is hiring a '+E(j.title)+'.';
+
+ /* everything the employer filled in, shown as label / value rows */
+ var rows=[['Role / designation',r.role],['Department / subject',r.dept||j.subj],['Qualification',j.qual&&j.qual!=='—'?j.qual:''],
+  ['Employment type',j.type],['Category',r.cat],['Notice period accepted',notice],
+  ['Vacancies',vac],['Campus / branch',campus],['Work mode',r.mode]
+ ].filter(function(x){return x[1]&&String(x[1]).trim()});
+
+ /* employer's "Ask Questions" (up to 5) — from the API, or this browser's saved copy */
+ var qa=r.qa||qaGet('upaadhyay_jobqa_'+sid,null)||{},qOn=qa.on!==false,
+  qs=(qa.questions||[]).filter(function(x){return x&&String(x.q||'').trim()}).slice(0,5),
+  contact=qa.contact||'';
+ var faq=(qa.faq||'').split('\n').map(function(l){var p=l.split('|');return{q:(p[0]||'').trim(),a:p.slice(1).join('|').trim()}}).filter(function(x){return x.q});
+
  var sim=SP_JOBS.filter(function(x){return x.id!=j.id&&(x.inst===j.inst||x.cat===j.cat)}).slice(0,5);
  if(!sim.length)sim=SP_JOBS.filter(function(x){return x.id!=j.id}).slice(0,5);
- var simH=sim.length?sim.map(function(x){var q=x.raw||{};return'<a class="jd-sim" href="job-view.html?id='+encodeURIComponent(x.id)+'"><div><b>'+E(x.title)+'</b><small>'+JB_IC.bag+E(jbExpText({minExp:Number(x.exp)||0,raw:q.raw||{}}))+'</small><small>'+JB_IC.pin+E(x.loc||'India')+'</small><small style="color:var(--ink-faint)">'+jbPostedText(q.posted).replace('Posted ','Posted ')+'</small></div><div class="jd-sl">'+bjLogoHtml({logo:q.logo,name:x.inst,color:q.color,initials:q.initials},34)+'</div></a>'}).join(''):'<p class="jd-empty">No other openings right now.</p>';
- m.innerHTML='<div class="jd-page"><div class="jd-wrap"><p class="jd-crumb"><a href="jobs.html">← Back to all jobs</a></p><div class="jd-grid"><div class="jd-main">'+
-  '<section class="jd-card"><div class="jd-top"><div style="min-width:0"><h1>'+E(j.title)+'</h1><div class="jd-org"><span>'+E(j.inst)+'</span><span class="jb-type '+pc+'">'+E(j.type)+'</span></div></div><div class="jd-logo">'+bjLogoHtml({logo:r.logo,name:j.inst,color:r.color,initials:r.initials},68)+'</div></div>'+
-  '<div class="jd-facts"><div>'+JB_IC.bag+'<span>'+E(exp)+'</span><i class="sep"></i>'+JB_IC.rupee+'<span>'+E(j.sal||'Not disclosed')+'</span></div><div>'+JB_IC.pin+'<span>'+E(j.loc||'India')+'</span></div>'+(dl!=null&&dl!==undefined?'<div>'+JB_IC.cap+'<span>'+(dl<=0?'Closing today':'Apply within '+dl+' day'+(dl>1?'s':''))+'</span></div>':'')+'</div>'+
+ var simH=sim.length?sim.map(function(x){var q=x.raw||{};return'<a class="jd-sim" href="job-view.html?id='+encodeURIComponent(x.id)+'"><div><b>'+E(x.title)+'</b><small>'+JB_IC.bag+E(jbExpText({minExp:Number(x.exp)||0,raw:q.raw||{}}))+'</small><small>'+JB_IC.pin+E(x.loc||'India')+'</small><small class="jd-when">'+E(jbPostedText(q.posted))+'</small></div><div class="jd-sl">'+bjLogoHtml({logo:q.logo,name:x.inst,color:q.color,initials:q.initials},34)+'</div></a>'}).join(''):'<p class="jd-empty">No other openings right now.</p>';
+
+ /* ---- top card ---- */
+ var top='<section class="jd-card jd-hero"><div class="jd-top"><div class="jd-id"><h1>'+E(j.title)+'</h1><div class="jd-org"><span>'+E(j.inst)+'</span><span class="jb-type '+pc+'">'+E(j.type)+'</span></div></div><div class="jd-logo">'+bjLogoHtml({logo:r.logo,name:j.inst,color:r.color,initials:r.initials},68)+'</div></div>'+
+  '<div class="jd-tiles">'+
+    jdTile(JB_IC.bag,'Experience',exp)+
+    jdTile(JB_IC.rupee,'Salary',j.sal||'Not disclosed')+
+    jdTile(JB_IC.pin,'Location',fullLoc+(campus?' · '+campus:''))+
+    jdTile(JB_IC.cap,'Apply before',dlDate?(dlDate+(dl!=null?(dl<=0?' (closing today)':' · '+dl+' day'+(dl>1?'s':'')+' left'):'')):(dl!=null?(dl<=0?'Closing today':'Within '+dl+' day'+(dl>1?'s':'')):''))+
+  '</div>'+
   '<div class="jd-stats"><span>'+E(jbPostedText(r.posted))+'</span>'+(vac?'<span>Openings: <b>'+E(vac)+'</b></span>':'')+'<span>Applicants: <b>'+(Number(r.applicants)||0)+'</b></span></div>'+
-  '<div class="jd-cta"><button class="jb-btn pri" data-apply-job="'+sid+'" data-title="'+E(j.title)+'" '+(applied?'disabled':'')+' onclick="applyToJob(\''+sid+'\',this.dataset.title)">'+(applied?'Applied ✓':'Apply now')+'</button><button class="jb-btn save '+(saved?'on':'')+'" data-save-job="'+sid+'" onclick="jbToggleSave(\''+sid+'\',this,event)">'+JB_IC.mark+'<span class="t">'+(saved?'Saved':'Save')+'</span></button><button class="jb-btn" onclick="navigator.clipboard&&navigator.clipboard.writeText(location.href);showGenericToast(\'Link copied\')">Share</button></div></section>'+
-  '<section class="jd-card" id="jdDesc"><h2>Job description</h2><div class="jd-desc'+(String(j.desc||'').length>420?' clip':'')+'" id="jdDescTxt">'+desc+'</div>'+(String(j.desc||'').length>420?'<button class="jd-readmore" onclick="var d=document.getElementById(\'jdDescTxt\');var o=d.classList.toggle(\'open\');this.textContent=o?\'Read less\':\'Read more\'">Read more</button>':'')+'</section>'+
+  '<div class="jd-cta">'+jdApplyBtn(sid,j.title,applied,'','Apply now')+
+   '<button type="button" class="jb-btn save '+(saved?'on':'')+'" data-save-job="'+sid+'" onclick="jbToggleSave(\''+sid+'\',this,event)">'+JB_IC.mark+'<span class="t">'+(saved?'Saved':'Save')+'</span></button>'+
+   '<button type="button" class="jb-btn" onclick="navigator.clipboard&&navigator.clipboard.writeText(location.href);showGenericToast(\'Link copied\')">Share</button>'+
+   (qOn?'<button type="button" class="jb-btn" onclick="jdGoAsk()">'+(qs.length?'View questions ('+qs.length+')':'Ask a question')+'</button>':'')+
+  '</div></section>';
+
+ /* ---- description / skills / details ---- */
+ var body=
+  '<section class="jd-card" id="jdDesc"><h2>Job description</h2><div class="jd-desc'+(isLong?' clip':'')+'" id="jdDescTxt">'+desc+'</div>'+(isLong?'<button type="button" class="jd-readmore" onclick="var d=document.getElementById(\'jdDescTxt\');var o=d.classList.toggle(\'open\');this.textContent=o?\'Read less\':\'Read more\'">Read more</button>':'')+'</section>'+
   (sk.length?'<section class="jd-card"><h2>Key skills</h2><div class="jd-chips">'+sk.map(function(x){return'<span class="jd-chip">'+E(x)+'</span>'}).join('')+'</div></section>':'')+
-  (rows.length?'<section class="jd-card"><h2>Role details</h2><div class="jd-rows">'+rows.map(function(x){return'<div><small>'+x[0]+'</small>'+E(x[1])+'</div>'}).join('')+'</div></section>':'')+
-  '<section class="jd-card"><h2>About '+E(j.inst)+'</h2><p class="jd-about">'+E(j.inst)+(j.loc?', '+E(j.loc):'')+'. Verified institution on Upaadhyay.</p></section>'+
-  '</div><aside class="jd-side"><section class="jd-card"><h3>'+(sim.length&&sim[0].inst===j.inst?E(j.inst)+' roles you might like':'Similar jobs')+'</h3>'+simH+'</section></aside></div></div></div>'}
-/* Ask Questions: shows the employer's answers and lets candidates send a question about this role. */
+  (rows.length?'<section class="jd-card"><h2>Role details</h2><div class="jd-rows">'+rows.map(function(x){return'<div><small>'+x[0]+'</small><b>'+E(x[1])+'</b></div>'}).join('')+'</div></section>':'');
+
+ /* ---- employer questions + ask box ---- */
+ var qaH='';
+ if(qOn){
+  qaH='<section class="jd-card jd-qa" id="jdQa">'+
+   (qs.length?
+     '<div class="jd-qa-h"><div><h2>Questions from the employer</h2><p class="jd-sub">'+qs.length+' question'+(qs.length>1?'s':'')+' to answer when you apply. Tap a question to open it.</p></div></div>'+
+     '<div class="jd-qlist">'+qs.map(function(x,i){
+       var m=+x.mins||1;
+       return'<div class="jd-q"><button type="button" class="jd-q-b" aria-expanded="false" onclick="jdToggleQ(this)"><span class="jd-q-n">'+(i+1)+'</span><span class="jd-q-t">'+E(x.q)+'</span><span class="jd-q-m">'+m+' min</span>'+JD_CHEV+'</button>'+
+        '<div class="jd-q-body" hidden><p>You will type your answer for this question when you apply. Suggested time: about '+m+' minute'+(m>1?'s':'')+'.</p>'+jdApplyBtn(sid,j.title,applied,'sm','Answer &amp; apply')+'</div></div>'
+     }).join('')+'</div>':'')+
+   (faq.length?'<div class="jd-faq">'+faq.map(function(x){return'<p class="jd-faq-q">'+E(x.q)+'</p><p class="jd-faq-a">'+(x.a?E(x.a):'<i>Answer coming soon.</i>')+'</p>'}).join('')+'</div>':'')+
+   '<div class="jd-ask'+(qs.length?' sep':'')+'"><h3>Have a question about this role?</h3>'+(contact?'<p class="jd-sub">You can also email <a href="mailto:'+E(contact)+'">'+E(contact)+'</a>.</p>':'<p class="jd-sub">Ask the employer about teaching load, joining date or anything else.</p>')+
+    '<div id="qaList"></div><textarea id="qaText" rows="3" maxlength="500" placeholder="Type your question about this role"></textarea><div id="qaErr" class="jd-err"></div><button class="jb-btn pri" type="button" onclick="qaSend(\''+sid+'\')">Send question</button></div></section>';
+ }
+
+ var about='<section class="jd-card"><h2>About '+E(j.inst)+'</h2><p class="jd-about">'+E(j.inst)+(fullLoc?', '+E(fullLoc):'')+'. Verified institution on Upaadhyay.</p></section>';
+
+ m.innerHTML='<div class="jd-page"><div class="jd-wrap"><p class="jd-crumb"><a href="jobs.html">← Back to all jobs</a></p><div class="jd-grid"><div class="jd-main">'+top+body+qaH+about+'</div><aside class="jd-side"><section class="jd-card"><h3>'+(sim.length&&sim[0].inst===j.inst?E(j.inst)+' roles you might like':'Similar jobs')+'</h3>'+simH+'</section></aside></div></div></div>';
+ if(qOn)qaDraw(sid);
+}
+function jdToggleQ(b){var o=b.getAttribute('aria-expanded')!=='true';b.setAttribute('aria-expanded',o);b.parentNode.classList.toggle('open',o);var body=b.nextElementSibling;if(body)body.hidden=!o}
+function jdGoAsk(){var el=document.getElementById('jdQa');if(!el)return;el.scrollIntoView({behavior:'smooth',block:'start'});var f=el.querySelector('.jd-q-b');if(f&&f.getAttribute('aria-expanded')!=='true')jdToggleQ(f)}
+/* Ask Questions: candidates can send a question about this role (kept in this browser until the API supports it). */
 function qaGet(k,d){try{return JSON.parse(localStorage.getItem(k)||'')||d}catch(e){return d}}
-function qaMount(jid){var host=document.getElementById('jdDesc')||document.querySelector('.sp-det .sp-card');if(!host)return;var cfg=qaGet('upaadhyay_jobqa_'+jid,{});if(cfg.on===false)return;
- var faq=(cfg.faq||'').split('\n').map(function(l){var p=l.split('|');return{q:(p[0]||'').trim(),a:p.slice(1).join('|').trim()}}).filter(function(x){return x.q});
- var box=document.createElement('div');box.id='qaBox';
- box.innerHTML='<h3>Ask questions about this role</h3>'+(cfg.contact?'<p>You can also email <a href="mailto:'+E(cfg.contact)+'">'+E(cfg.contact)+'</a>.</p>':'')+
-  (cfg.questions&&cfg.questions.length?'<div id="qaQs"><p style="margin:12px 0 4px"><b>Questions from the employer</b></p>'+cfg.questions.map(function(x,i){return'<p style="margin:6px 0">'+(i+1)+'. '+E(x.q)+' <small style="color:#6b7280">· '+E(String(x.mins))+' min to answer</small></p>'}).join('')+'</div>':'')+
-  (faq.length?'<div id="qaFaq">'+faq.map(function(x){return'<p style="margin:10px 0 2px"><b>'+E(x.q)+'</b></p><p style="margin:0">'+(x.a?E(x.a):'<i>Answer coming soon.</i>')+'</p>'}).join('')+'</div>':'')+
-  '<div id="qaList"></div><textarea id="qaText" rows="3" maxlength="500" placeholder="Type your question about this role (for example, teaching load or joining date)" style="width:100%;margin-top:12px;padding:10px;border:1px solid #cfd6e4;border-radius:8px;font:inherit"></textarea><div id="qaErr" style="color:#B42318;font-size:13px;min-height:18px"></div><button class="sp-btn" type="button" onclick="qaSend('+jid+')">Send question</button>';
- host.appendChild(box);qaDraw(jid)}
 function qaDraw(jid){var l=document.getElementById('qaList');if(!l)return;var qs=qaGet('upaadhyay_jobqs_'+jid,[]);
- l.innerHTML=qs.length?'<p style="margin:14px 0 4px"><b>Your questions</b></p>'+qs.map(function(x){return'<p style="margin:6px 0">'+E(x.q)+' <small style="color:#6b7280">· '+E(x.d)+' · awaiting reply</small></p>'}).join(''):''}
+ l.innerHTML=qs.length?'<div class="jd-mine"><b>Your questions</b>'+qs.map(function(x){return'<p>'+E(x.q)+' <small>· '+E(x.d)+' · awaiting reply</small></p>'}).join('')+'</div>':''}
 function qaSend(jid){var t=document.getElementById('qaText'),e=document.getElementById('qaErr'),v=(t.value||'').trim();
  if(v.length<5){e.textContent='Please type your question (at least 5 characters).';return}e.textContent='';
  var qs=qaGet('upaadhyay_jobqs_'+jid,[]);qs.push({q:v,d:new Date().toLocaleDateString('en-IN')});
