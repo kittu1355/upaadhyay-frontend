@@ -15,7 +15,7 @@
     // >>> MODIFIED START: always remove the old "Free colleges & courses" sidebar, even if an older jobs.html is deployed <<<
     document.querySelectorAll('.bj-side').forEach(el => el.remove());
     const _lay = document.querySelector('.bj-layout');
-    if(_lay) _lay.style.gridTemplateColumns = '260px minmax(0,1fr)';
+    if(_lay) _lay.style.gridTemplateColumns = 'minmax(0,1fr)';
     // >>> MODIFIED END <<<
     // Category from the URL (?cat=Schools) wins; otherwise pre-check the seeker's own category.
     const catParam = getParam('cat');
