@@ -157,7 +157,7 @@
     function jobs(){ hideSet(); if(onPage && showEmbed((window.PAGES && PAGES.jobs ? PAGES.jobs : '../pages/jobs.html') + '?embed=1')) return; goTo('jobs'); }
     return { active:onPage ? (state.set ? 'set' : state.emb ? 'jobs' : 'profile') : '', edit:mine,
       list:[ { k:'profile', t:'My profile', i:'user', go:mine },
-        { k:'jobs', t:'Browse jobs', i:'search', go:jobs, sub:true },
+        { k:'jobs', t:'Browse jobs', i:'search', go:jobs },
         { k:'notif', t:'Notifications', i:'bell', go:function(){ var b = document.querySelector('.nav-bell'); if(b) b.click(); } },
         { k:'set', t:'Settings', i:'cog', go:function(){ openSet(); }, sub:true },
         { k:'out', t:'Log out', i:'out', go:function(){ logoutUser(); }, out:1 } ] };
