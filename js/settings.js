@@ -3,8 +3,8 @@
    Needs profile-card.js (UpCard). Load it before sidebar.js.
 
    Where things are saved
-   - Notification / privacy / preference choices: localStorage (upadyay_settings_v1), one bucket per role.
-     When a backend exists, swap save() for an API call — nothing else changes.
+   - Notification / privacy / preference choices: saved on the account (profile_data.settings for faculty,
+     profile_data.app.settings for institutions) through backend.js; localStorage (upadyay_settings_v1) is only a cache.
    - Change password / delete account: call the Laravel endpoints in ENDPOINTS below. If the server
      does not have that route yet the user is told it is not available (nothing is faked). */
 (function(){
@@ -59,9 +59,9 @@
   })();
 
   /* ---------------- storage ---------------- */
-  function load(){ try{ return JSON.parse(localStorage.getItem(KEY)) || {}; }catch(e){ return {}; } }
+  function load(){ var o = {}; try{ o = JSON.parse(localStorage.getItem(KEY)) || {}; }catch(e){} var srv = window.bkSettings || {}; Object.keys(srv).forEach(function(r){ o[r] = srv[r]; }); return o; }   /* the account's saved settings (server) win over the browser copy */
   function get(role, k){ var b = load()[role]; return b && b[k] !== undefined ? b[k] : (DEFAULTS[role] || {})[k]; }
-  function set(role, k, v){ var a = load(); a[role] = a[role] || {}; a[role][k] = v; try{ localStorage.setItem(KEY, JSON.stringify(a)); }catch(e){} }
+  function set(role, k, v){ var a = load(); a[role] = a[role] || {}; a[role][k] = v; try{ localStorage.setItem(KEY, JSON.stringify(a)); }catch(e){} if(window.bkSaveSettings) window.bkSaveSettings(role, a[role]); }
   function role(){ var r = UpCard.role(); return NAMES[r] ? r : 'seeker'; }
   function toast(m){ if(typeof showGenericToast === 'function') showGenericToast(m); else if(window.api && api.toast) api.toast(m); }
 
