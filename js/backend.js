@@ -149,7 +149,6 @@
   async function jobQuestions(id){
     let qa = null;
     try{ qa = mapJob(await api.get('/jobs/' + id, { noAuthRedirect: true })).qa; }catch(e){}
-    if(!qa){ try{ qa = JSON.parse(localStorage.getItem('upaadhyay_jobqa_' + id) || 'null'); }catch(e){} } /* same-browser fallback until the API returns meta.qa */
     return ((qa && qa.questions) || []).filter(function(x){ return x && String(x.q || '').trim(); }).slice(0, 5);
   }
   function askQuestions(qs, title){
@@ -268,6 +267,7 @@
     const u = await api.get('/candidate/profile', { silent403: true });
     const cp = (u && (u.candidate_profile || u.candidateProfile)) || {}, pd = cp.profile_data || {};
     Object.assign(currentUser, pd);
+    if(pd.settings) window.bkSettings = Object.assign(window.bkSettings || {}, { seeker: pd.settings });
     if(u.name) currentUser.name = u.name;
     if(u.email) currentUser.email = u.email;
     if(u.phone) currentUser.phone = u.phone;
@@ -317,6 +317,8 @@
     if(c.phone) currentCompany.phone = c.phone;
     if(c.logo) currentCompany.logo = fileUrl(c.logo); /* server is the source of truth */
     currentCompany.verification = c.verification_status || '';
+    currentCompany.verificationNote = c.verification_note || '';
+    if(pd.app && pd.app.settings) window.bkSettings = Object.assign(window.bkSettings || {}, { company: pd.app.settings });
     const uid = String((api.user && api.user.id) || c.user_id || '');
     let owner = null; try{ owner = localStorage.getItem('upadyay_inst_owner'); }catch(e){}
     if(uid && owner && owner !== uid){ /* another institution used this browser: never carry its form over */
@@ -341,7 +343,7 @@
                    website: normUrl(C.website) || (C.website ? undefined : null), description: C.desc ? String(C.desc).slice(0, 5000) : null,
                    phone: C.phone ? String(C.phone).slice(0, 20) : null };
     if(/^\S+@\S+\.\S+$/.test(C.email || '')) body.email = C.email; else if(!C.email) body.email = null;
-    body.profile_data = stripHeavy({ app: { contactName: C.contactName, designation: C.designation, saved: C.saved, logo: C.logo }, inst: instState() });
+    body.profile_data = stripHeavy({ app: { contactName: C.contactName, designation: C.designation, saved: C.saved, logo: C.logo, savedCands: C.savedCands || [], settings: C.settings || {} }, inst: instState() });
     Object.keys(body).forEach(function(k){ if(body[k] === undefined) delete body[k]; });
     return body;
   }
@@ -392,6 +394,13 @@
   };
   document.addEventListener('visibilitychange', function(){ if(document.visibilityState === 'hidden') flushPush(); });
   window.addEventListener('pagehide', flushPush);
+
+  /* Settings (notifications, privacy, preferences) are stored on the account, not in the browser. */
+  window.bkSaveSettings = function(role, bucket){
+    window.bkSettings = window.bkSettings || {}; window.bkSettings[role] = bucket;
+    if(role === 'company'){ currentCompany.settings = bucket; } else if(role === 'seeker'){ currentUser.settings = bucket; } else return;
+    saveState();
+  };
 
   /* Every existing saveState() call now also syncs to the backend (debounced, only if something changed). */
   saveState = function(){ _origSaveState(); schedulePush(); };
