@@ -85,13 +85,15 @@ var INDIA={
 window.UP_LOC={countries:COUNTRIES,india:INDIA};
 })();
 
-/* institution.js — UI-only institution profile, verification and campus flow.
-   No backend, no real OTP or document checks. State is kept in localStorage (upadyay_inst_v1). */
+/* institution.js — institution profile, verification and campus flow.
+   The form lives in localStorage (upadyay_inst_v1) and backend.js mirrors it to PUT /company/profile (profile_data.inst).
+   Verification status comes from the server (admin approve/reject); sub-branch requests use /company/branches. */
 (function(){
 'use strict';
 const KEY='upadyay_inst_v1', $=id=>document.getElementById(id);
-const DEV=(function(){ try{ return /[?&]dev=1\b/.test(location.search)||localStorage.getItem('up_dev')==='1'; }catch(e){ return false; } })();   /* demo helpers only show with ?dev=1 */
-const emOk=()=>approved(), aemOk=()=>approved();   /* an email counts as verified only after the admin approves the institution */
+const emOk=()=>approved(), aemOk=()=>approved();
+const rej=()=>{ try{ return String(currentCompany.verification||'').toLowerCase()==='rejected'; }catch(e){ return false; } };
+const chg=()=>I.vs==='changes'||rej();   /* admin rejected it on the server */   /* an email counts as verified only after the admin approves the institution */
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const ck=s=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="vertical-align:-2px"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>`;
 const PIN_IC='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px"><path d="M12 21s7-6.2 7-11a7 7 0 10-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>';
@@ -372,13 +374,6 @@ function repVCard(){
 function authMail(){
   if(aemOk()) return note(`<b>${ck(13)} Authority email verified</b><br>${esc(I.d.aemail)}`,'in-ok');
   return note('<b>Admin check.</b> Our team confirms the authority email during review. No code is needed.');
-  const e=I.aem, d=I.d;
-  if(e==='ok') return note(`<b>${ck(13)} Authority email verified</b><br>${esc(d.aemail)}`,'in-ok');
-  if(e==='sent') return note(`<b>Check the authority inbox</b><br>We sent a verification code to ${esc(d.aemail)}`)
-   +`<div class="in-otp" id="aotp">${[0,1,2,3,4,5].map(i=>`<input maxlength="1" inputmode="numeric" aria-label="Digit ${i+1}" oninput="IN.otp(this,${i})" onkeydown="IN.otpKey(event,${i})">`).join('')}</div><div class="in-err" id="aotpErr" style="display:none"></div>
-   <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px"><button class="btn btn-ghost btn-sm" onclick="IN.aresend()">Resend code</button><button class="btn btn-primary btn-sm" onclick="IN.averify()">Verify email</button><span class="in-demo" style="margin:0">Demo: any 6 digits will work.</span></div>`;
-  return `<p style="font-size:13px;color:var(--ink-soft);margin:0 0 8px">Verify the authority using their official institutional email.</p>`
-   +(e==='sending'?'<button class="btn btn-primary btn-sm" disabled><span class="in-load" style="border-top-color:#fff"></span>Sending code…</button>':'<button class="btn btn-primary btn-sm" onclick="IN.asend()">Send Verification Code</button>');
 }
 function authVCard(){
   const d=I.d, p=aPub(), has=!!d.aemail, v=authVerified(), eo=authEmailOk(), dk=okDoc('auth');
@@ -398,7 +393,7 @@ function docsCard(){
 }
 
 /* ---------- verification status ---------- */
-function vState(){ if(approved()) return 'verified'; if(I.vs==='changes'||missing().length) return 'info'; return 'pending'; }
+function vState(){ if(approved()) return 'verified'; if(chg()||missing().length) return 'info'; return 'pending'; }
 function vRows(){
   const m=!missing().length, r=repVerified(), a=authVerified();
   return [
@@ -417,7 +412,7 @@ function vCard(){
   return `<div class="in-card"><div class="inv-stat-h"><h4>Institution Verification</h4>${vBadge()}</div>${vList(vRows())}<ul class="in-list"><li>${dot(L[0],L[1])}<b>${L[2]}</b></li></ul>${missPanel()}</div>`;
 }
 function vBanner(){
-  const v=vState()==='verified', m=missing().length, ch=I.vs==='changes';
+  const v=vState()==='verified', m=missing().length, ch=chg();
   const sub=v?'This institution has been reviewed and verified.':ch?'Additional information required. Open the Verification tab to update your documents.':m?`Additional information required: ${m} ${m===1?'document is':'documents are'} missing.`:!authVerified()?'Institution authority verification is pending.':!repVerified()?'Representative verification is pending.':'Your institution is awaiting admin review.';
   return `<div class="inv-ban ${v?'ok':'wait'}">${v?ck(16):CLKs}<div><b>${v?'Verified Institution':'Verification Pending'}</b><span>${sub}</span></div>${!v?'<button class="btn btn-ghost btn-sm" onclick="IN.sec(\'verify\')">Add information</button>':''}</div>`;
 }
@@ -431,7 +426,7 @@ function profileBody(){
   const d=I.d, pub=isPub(d.email);
   const addr=[d.address,d.area,d.city,d.state,d.pin].filter(Boolean).map(esc).join(', ');
   const ems=d.email?esc(d.email)+(emOk()?(pub?' <span class="in-tag y">Public email</span>':' <span class="in-tag g">Verified</span>'):''):'';
-  const web=d.website?lnk(d.website)+(I.web?' <span class="in-tag g">Confirmed</span>':''):'';
+  const web=d.website?lnk(d.website):'';
   const ed=n=>`<button class="btn btn-ghost btn-sm" onclick="IN.edit(${n})">Edit</button>`;
   const camps=[{name:d.name||'Main campus',img:d.logo,loc:locStr(d),t:'Main campus'}].concat(I.branches.map(b=>({name:b.name,img:b.img,loc:locStr(b),t:b.type}))).map(b=>`<div class="in-camp"><div class="lft">${thumb(b)}<div><b>${esc(b.name)}</b><span>${esc(b.loc)||'Location not added'}${b.t?' · '+esc(b.t):''}</span></div></div></div>`).join('');
   const about=(d.about1||d.about2)?(d.about1?`<p style="margin:0 0 6px;font-weight:600;font-size:13.5px">${esc(d.about1)}</p>`:'')+(d.about2?`<p style="margin:0;font-size:13px;color:var(--ink-soft);line-height:1.6">${esc(d.about2)}</p>`:''):'<p style="margin:0;font-size:13px;color:var(--ink-faint)">No description added yet.</p>';
@@ -450,7 +445,7 @@ function pct(){
 }
 function vBadge(){
   if(vState()==='verified') return `<span class="in-vbadge">${ck(12)} Verified Institution</span>`;
-  if(I.vs==='changes') return '<span class="in-vbadge r">Changes required</span>';
+  if(chg()) return '<span class="in-vbadge r">Changes required</span>';
   return `<span class="in-vbadge p">${CLKs} Verification Pending</span>`;
 }
 const locStr=o=>[o.city,o.state].filter(Boolean).join(', ');
@@ -472,7 +467,6 @@ function wiz(){
       ${[s0,s1,s2,s3,s5][s]()}
       <div class="in-actions"><span class="in-stepof">Step ${s+1} of ${STEPS.length}</span>
       <div class="r">${s>0?'<button class="btn btn-ghost btn-sm" onclick="IN.back()">Back</button>':''}<button class="btn btn-primary btn-sm" id="nextBtn" onclick="IN.next()">${last?(I.sub?'Save changes and resubmit':'Submit institution profile'):'Next'}</button></div></div>
-      ${DEV?'<div class="in-demo">Demo helper: <button onclick="IN.sample()">Fill with sample data</button><button onclick="IN.reset()">Start over</button></div>':''}
     </div>
   </div></div>`;
 }
@@ -493,21 +487,15 @@ function s2(){
   + card('Official email','Our admin team checks this email during review.',emailInner());
 }
 function emailInner(){
-  const e=emOk()?'ok':'idle', d=I.d; if(e!=='ok') return `<div class="in-grid">${fld(EMAILF,'d')}</div>`+note('<b>Admin check.</b> Our team confirms this official email during review. You do not need to enter a code.');
-  if(e==='ok') return isPub(d.email)?note(`<b>${BANGs} Public email detected — additional verification required</b><br>${esc(d.email)}<br>This email is accepted. Upload the documents below to complete verification.`,'in-warn'):note(`<b>${ck(13)} Official email verified</b><br>${esc(d.email)}`,'in-ok');
-  if(e==='sent') return note(`<b>Check your email</b><br>We sent a verification code to ${esc(d.email)}`)+
-   `<div class="in-otp">${[0,1,2,3,4,5].map(i=>`<input maxlength="1" inputmode="numeric" aria-label="Digit ${i+1}" oninput="IN.otp(this,${i})" onkeydown="IN.otpKey(event,${i})">`).join('')}</div>
-   <div class="in-err" id="otpErr" style="display:none"></div>
-   <div class="in-actions"><span class="in-demo">Demo: any 6 digits will work.</span><div class="r"><button class="btn btn-ghost btn-sm" onclick="IN.resend()">Resend code</button><button class="btn btn-primary btn-sm" onclick="IN.verify()">Verify email</button></div></div>`;
-  return `<div class="in-grid">${fld(EMAILF,'d')}</div>
-   ${e==='sending'?'<button class="btn btn-primary btn-sm" disabled><span class="in-load" style="border-top-color:#fff"></span>Sending code…</button>':'<button class="btn btn-primary btn-sm" onclick="IN.send()">Send verification code</button>'}
-   <p style="font-size:13px;color:var(--ink-soft);margin:12px 0 0">Don't have an official institution email? <a href="#" onclick="IN.go(3);return false" style="color:var(--blue-700);font-weight:600">Choose another verification method</a></p>`;
+  const d=I.d;
+  if(!emOk()) return `<div class="in-grid">${fld(EMAILF,'d')}</div>`+note('<b>Admin check.</b> Our team confirms this official email during review. You do not need to enter a code.');
+  return isPub(d.email)?note(`<b>${BANGs} Public email detected — additional verification required</b><br>${esc(d.email)}<br>This email is accepted. Upload the documents below to complete verification.`,'in-warn'):note(`<b>${ck(13)} Official email verified</b><br>${esc(d.email)}`,'in-ok');
 }
 function s3(){
   return card('Verify your institution','Provide official information that helps us confirm that this institution exists and that you are authorized to represent it.',`<div class="in-methods">
   <div class="in-method rec"><h5>Official institution email <span class="in-tag g">Recommended</span>${emOk()?(isPub(I.d.email)?'<span class="in-tag y">Public email</span>':'<span class="in-tag g">Verified</span>'):''}</h5><p class="sub2">Verify using your institution's official email address.</p>${emailInner()}</div>
-  <div class="in-method"><h5>Official website${I.web?'<span class="in-tag g">Confirmed</span>':''}</h5><p class="sub2">Confirm the institution's official website.</p><div class="in-grid">${fld(WEBF,'d')}</div>
-   ${note('Your website should clearly represent the same institution name.')}<button class="btn btn-ghost btn-sm" onclick="IN.web()">Confirm website</button></div>
+  <div class="in-method"><h5>Official website</h5><p class="sub2">Our admin team checks the website during review.</p><div class="in-grid">${fld(WEBF,'d')}</div>
+   ${note('Your website should clearly represent the same institution name.')}</div>
 </div>`)
   + repVCard() + authVCard() + docsCard() + vCard()
   + card('Your connection with this institution','Are you authorized to create and manage this institution profile?',`
@@ -532,19 +520,18 @@ function s5(){
 }
 
 /* ---------- branches ---------- */
-/* ---------- sub-branch requests (demo data: localStorage 'nwSub' / 'nwProfile', written by the sub-branch pages) ---------- */
+/* ---------- sub-branch requests: GET /company/branches (list), GET /company/branches/{id} (full profile), PUT /company/branches/{id}/approve|reject ---------- */
 const approved=()=>{ try{ return typeof employerApproved==='function'&&employerApproved(); }catch(e){ return false; } };
-const lsj=k=>{ try{ return JSON.parse(localStorage.getItem(k)); }catch(e){ return null; } };
-function subReq(){
-  const d=lsj('nwSub'); if(!d||!d.st||d.st==='draft') return null;
-  const sub=d.sub||{}, pr=lsj('nwProfile')||{}, f=pr.d||{}, logos=lsj('nwLogos')||{};
-  const city=[f.city,f.state].filter(Boolean).join(', ')||sub.c||'';
-  return {st:d.st, name:f.name||sub.n||'Sub-branch', type:f.type||sub.t, city:city, addr:f.addr, pin:f.pin, year:f.year,
-    about:f.about||sub.d, by:f.rname||sub.by, des:f.rdes, em:f.rem||sub.em, ph:f.rph||sub.ph, date:d.date||sub.date,
-    emOk:!!(pr.ver&&pr.ver.em), doc:(pr.ver&&pr.ver.doc)||'', logo:logos[sub.n]||logos[f.name]||'', reason:d.reason||'', decided:d.decidedAt||'', mainName:d.mainName||''};
+const BRQ={rows:[],code:'',url:'',loaded:false,busy:false,full:{}};
+async function brLoad(force){
+  if(BRQ.busy||(BRQ.loaded&&!force)||!window.api||!api.hasToken()||!approved()) return;
+  BRQ.busy=true;
+  try{ const d=await api.get('/company/branches',{silent403:true}); BRQ.rows=(d&&d.branches)||[]; BRQ.code=(d&&d.institution_code)||''; BRQ.url=(d&&d.share_url)||''; BRQ.loaded=true; BRQ.busy=false; render(); }
+  catch(e){ BRQ.loaded=true; BRQ.busy=false; }   /* offline / 403: do not retry in a loop */
 }
-function pendingReqs(){ const r=subReq(); return r&&r.st==='pending'?1:0; }
-const reqPill=st=>st==='approved'?`<span class="in-vbadge">${ck(12)} Approved</span>`:st==='rejected'?'<span class="in-vbadge r">Rejected</span>':`<span class="in-vbadge p">${CLKs} Pending review</span>`;
+function subReqs(){ return BRQ.rows.map(r=>({id:r.id,st:r.status==='approved'&&r.admin_status!=='approved'?'approved_wait':r.status,name:r.name||'Sub-branch',type:'Sub-branch',city:[r.city,r.state].filter(Boolean).join(', '),logo:r.logo||'',date:r.submitted_at?String(r.submitted_at).slice(0,10):'',reason:r.note||'',jobs:r.jobs_count})); }
+function pendingReqs(){ return BRQ.rows.filter(r=>r.status==='pending').length; }
+const reqPill=st=>st==='approved_wait'?`<span class="in-vbadge p">${CLKs} Waiting for admin</span>`:st==='approved'?`<span class="in-vbadge">${ck(12)} Approved</span>`:st==='rejected'?'<span class="in-vbadge r">Rejected</span>':`<span class="in-vbadge p">${CLKs} Pending review</span>`;
 const reqThumb=r=>`<div class="in-thumb" style="width:52px;height:52px;overflow:hidden">${r.logo?`<img src="${r.logo}" alt="" style="width:100%;height:100%;object-fit:cover">`:esc((r.name||'').slice(0,2).toUpperCase())}</div>`;
 const PFMORE=m=>`<button class="pf-more" aria-label="More" onclick="event.stopPropagation();var m=this.nextElementSibling,o=m.classList.contains('open');document.querySelectorAll('.pf-menu.open').forEach(function(x){x.classList.remove('open')});if(!o)m.classList.add('open')">&middot;&middot;&middot;</button><div class="pf-menu">${m}</div>`;
 const pfAv=(img,name)=>img?`<div class="pf-av" style="background-image:url('${img}')"></div>`:`<div class="pf-av">${esc(String(name||'?').trim().slice(0,2).toUpperCase())}</div>`;
@@ -553,14 +540,16 @@ function pfCard({name,img,sub,meta,badge,acts,click}){
 }
 function branchMgr(){
   if(!approved()) return card('Branches','',note('<b>Locked until admin approval.</b><br>Once an admin approves your institution you can add campuses, view branches and review requests from sub-branches here.','in-warn'));
-  const d=I.d, n=I.branches.length+1, r=subReq();
-  const reqCard=card('Sub-branch requests','Sub-branches that selected your institution appear here. Review what they submitted, verify it, then approve or reject.',
-    r?`<div class="pf-grid">${pfCard({name:r.name,img:r.logo,sub:[r.type,'Sub-branch'].filter(Boolean)[0],meta:[r.city||'Location not added',r.date?'Submitted '+r.date:''].filter(Boolean).join(' \u00b7 '),badge:reqPill(r.st),click:'IN.reqView()',
-      acts:`<button class="pf-btn pri" onclick="event.stopPropagation();IN.reqView()">View details</button>`+(r.st==='pending'?`<button class="pf-btn out" onclick="event.stopPropagation();IN.reqAsk('approved')">Approve</button>`+PFMORE(`<button class="bad" onclick="IN.reqAsk('rejected')">Reject</button>`):'')})}</div>`
-    :'<div class="empty-s" style="padding:14px 0;color:var(--ink-soft);font-size:14px"><b>No sub-branch requests yet.</b><br>New requests from sub-branches will appear here.</div>');
-  const connected=(r&&r.st==='approved')?pfCard({name:r.name,img:r.logo,sub:'Sub-branch',meta:(r.city||'Location not added'),badge:'<span class="in-vbadge">'+ck(12)+' Connected</span>',click:'IN.reqView()',acts:'<button class="pf-btn pri" onclick="event.stopPropagation();IN.reqView()">View</button>'}):'';
+  const d=I.d, n=I.branches.length+1, R=subReqs();
+  const reqCard=card('Sub-branch requests','Sub-branches that entered your institution code appear here once they submit. Review what they submitted, then approve or reject.',
+    (BRQ.code?`<p style="font-size:13px;margin:0 0 12px">Your institution code: <b>${esc(BRQ.code)}</b>${BRQ.url?` · <a class="inv-link" href="${esc(BRQ.url)}" target="_blank" rel="noopener">Share link</a>`:''}</p>`:'')
+    +(!BRQ.loaded?'<div style="padding:14px 0;color:var(--ink-soft);font-size:14px"><span class="in-load"></span>Loading requests…</div>'
+    :R.length?`<div class="pf-grid">${R.map(r=>pfCard({name:r.name,img:r.logo,sub:'Sub-branch',meta:[r.city||'Location not added',r.date?'Submitted '+r.date:''].filter(Boolean).join(' \u00b7 '),badge:reqPill(r.st),click:`IN.reqView(${r.id})`,
+      acts:`<button class="pf-btn pri" onclick="event.stopPropagation();IN.reqView(${r.id})">View details</button>`+(r.st==='pending'?`<button class="pf-btn out" onclick="event.stopPropagation();IN.reqAsk(${r.id},'approved')">Approve</button>`+PFMORE(`<button class="bad" onclick="IN.reqAsk(${r.id},'rejected')">Reject</button>`):'')})).join('')}</div>`
+    :'<div class="empty-s" style="padding:14px 0;color:var(--ink-soft);font-size:14px"><b>No sub-branch requests yet.</b><br>New requests from sub-branches will appear here.</div>'));
+  const live=R.filter(r=>r.st==='approved'), connected=live.map(r=>pfCard({name:r.name,img:r.logo,sub:'Sub-branch',meta:(r.city||'Location not added'),badge:'<span class="in-vbadge">'+ck(12)+' Connected</span>',click:`IN.reqView(${r.id})`,acts:`<button class="pf-btn pri" onclick="event.stopPropagation();IN.reqView(${r.id})">View</button>`})).join('');
   return reqCard+card('Branches &amp; campuses','Your campuses and approved sub-branches.',
-   `<p style="font-size:13px;font-weight:600;color:var(--ink-soft);margin:0 0 10px">${n} ${n===1?'campus':'campuses'}${connected?' · 1 sub-branch':''}</p>
+   `<p style="font-size:13px;font-weight:600;color:var(--ink-soft);margin:0 0 10px">${n} ${n===1?'campus':'campuses'}${live.length?' · '+live.length+' sub-branch'+(live.length===1?'':'es'):''}</p>
    <div class="pf-grid">${pfCard({name:d.name||'Main campus',img:d.logo,sub:'Main campus',meta:locStr(d)||'Location not added',badge:'<span class="in-vbadge">'+ck(12)+' Main campus</span>',click:'IN.edit(0)',acts:'<button class="pf-btn pri" onclick="event.stopPropagation();IN.edit(0)">Edit</button>'})}
    ${I.branches.map((b,i)=>pfCard({name:b.name,img:b.img,sub:b.type||'Branch',meta:locStr(b),click:`IN.bView(${i})`,acts:`<button class="pf-btn pri" onclick="event.stopPropagation();IN.bView(${i})">View</button><button class="pf-btn out" onclick="event.stopPropagation();IN.bEdit(${i})">Edit</button>`})).join('')}
    ${connected}</div>
@@ -590,8 +579,8 @@ function statusBody(){
    <div class="in-vcard-txt"><p class="in-vcard-name">${esc(d.name||'Your institution')}</p>${sub?`<p class="in-vcard-sub">${sub}</p>`:''}${vBadge()}</div>
    <button class="btn btn-ghost btn-sm in-vcard-edit" onclick="IN.edit(0)">${EDI}Edit</button></div>`;
   }
-  if(I.vs==='changes') return `<div class="in-status"><div class="big" style="background:#B3261E">${BANG}</div><h3 style="margin:0 0 6px">Additional information required</h3><p style="color:var(--ink-soft);margin:0">We need some additional information before we can complete your institution verification.</p></div>
-   ${note('<b>Reason</b><br>'+(I.reason?esc(I.reason):'Open your notifications to see what the admin asked for.'),'in-bad')}
+  if(chg()) return `<div class="in-status"><div class="big" style="background:#B3261E">${BANG}</div><h3 style="margin:0 0 6px">Additional information required</h3><p style="color:var(--ink-soft);margin:0">We need some additional information before we can complete your institution verification.</p></div>
+   ${note('<b>Reason</b><br>'+(esc(I.reason||((typeof currentCompany!=='undefined'&&currentCompany.verificationNote)||''))||'Open your notifications to see what the admin asked for.'),'in-bad')}
    ${missPanel()}
    <div class="in-actions" style="justify-content:flex-start"><button class="btn btn-primary btn-sm" onclick="IN.edit(0)">Update information</button><button class="btn btn-ghost btn-sm" onclick="IN.edit(3)">Replace document</button></div>
    <p class="sub2" style="margin-top:12px">Your profile information has not been deleted. You can update the required details and resubmit.</p>`;
@@ -609,9 +598,8 @@ function verifyFlow(){
   return body;
 }
 
-const demoBar=()=>!DEV?'':`<div class="in-demo">Demo: preview a state <button onclick="IN.vs('pending')">Pending</button><button onclick="IN.vs('verified')">Verified</button><button onclick="IN.vs('changes')">Changes required</button></div>`;
 function statusPage(){
-  return `<div class="in-wrap" data-sec="verify"><div class="in-head"><h3>Institution verification</h3></div><div class="in-card in-sq">${statusBody()}<div class="in-actions" style="justify-content:stretch"><button class="btn btn-primary btn-sm" onclick="IN.dash()">Go to dashboard</button></div></div>${demoBar()}</div>`;
+  return `<div class="in-wrap" data-sec="verify"><div class="in-head"><h3>Institution verification</h3></div><div class="in-card in-sq">${statusBody()}<div class="in-actions" style="justify-content:stretch"><button class="btn btn-primary btn-sm" onclick="IN.dash()">Go to dashboard</button></div></div></div>`;
 }
 const rows=p=>`<div class="in-grid">${p.map(x=>`<div class="in-f"><label>${x[0]}</label><div style="font-size:14px">${esc(x[1])||'—'}</div></div>`).join('')}</div>`;
 const LOCK_IC='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-1px;margin-left:5px"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>';
@@ -619,7 +607,7 @@ function dashSecs(){ return [['profile','Institution profile'],['branches','Bran
 function toLayout(){ const L=document.querySelector('#instRoot .in-layout'); if(L&&L.scrollIntoView) L.scrollIntoView({block:'start'}); }
 function dash(){
   const d=I.d, p=pct(), sc=I.sec;
-  if(sc==='verify') return `<div class="in-wrap in-dash" data-sec="verify"><div class="in-head"><h3>Institution verification</h3></div><div class="in-card in-sq">${statusBody()}</div>${demoBar()}</div>`;
+  if(sc==='verify') return `<div class="in-wrap in-dash" data-sec="verify"><div class="in-head"><h3>Institution verification</h3></div><div class="in-card in-sq">${statusBody()}</div></div>`;
   if(sc==='branches') return `<div class="in-wrap in-dash" data-sec="branches"><div class="in-head"><h3>Sub-branches</h3></div>${branchMgr()}</div>`;
   const SEC=dashSecs(), si=Math.max(0,SEC.findIndex(x=>x[0]===sc));
   const side=SEC.map((x,i)=>`<button class="in-step${i===si?' on':i<si?' done':''}" onclick="IN.sec('${x[0]}')"><span class="in-step-n">${i+1}</span><span class="in-step-t">${x[1]}</span></button>`
@@ -629,7 +617,7 @@ function dash(){
   let body='';
   if(sc==='profile') body=profileBody();
   if(sc==='branches') body=branchMgr();
-  if(sc==='verify') body=verifyFlow()+demoBar();
+  if(sc==='verify') body=verifyFlow();
   if(sc==='rep') body=card('Person Registering / Institution Representative','The person responsible for managing this institution profile.',rows([['Name',d.rname],['Designation',d.rdes],['Registration role',I.regRole],['Department',d.rdep],['Employee ID',d.eid],['Work email',d.remail+(emOk()?' (verified)':'')],['Work phone',d.rphone],['Connection',I.auth==='behalf'?'On behalf: '+I.role:'Authorized to represent']])+`<button class="btn btn-ghost btn-sm" onclick="IN.edit(2)">Edit details</button>`)+authDashCard();
   if(sc==='jobs'){ const n=typeof postedJobs!=='undefined'?Object.keys(postedJobs).length:0;
     body=card('Posted jobs',n?`${n} ${n===1?'job':'jobs'} posted from this institution.`:'',n?'<button class="btn btn-primary btn-sm" onclick="IN.tab(\'myjobs\')">View posted jobs</button> <button class="btn btn-ghost btn-sm" onclick="IN.tab(\'post\')">Post another job</button>':'<div class="empty-state"><h4>No jobs posted yet</h4><p>Post your first faculty opening and choose which campus it belongs to.</p></div><button class="btn btn-primary btn-sm" onclick="IN.tab(\'post\')">Post a job</button>'); }
@@ -656,7 +644,7 @@ function instHeader(){
   try{ if(typeof updateNavForLogin==='function') updateNavForLogin(); if(document.getElementById('miniPanel')&&typeof refreshMiniProfile==='function') refreshMiniProfile(); }catch(e){}
 }
 window.instHeader=instHeader;
-function render(){ const r=$('instRoot'); if(!r) return; const y=window.scrollY; r.style.minHeight=r.offsetHeight+'px'; r.innerHTML=I.view==='wizard'?wiz():I.view==='status'?statusPage():dash(); instHeader(); window.scrollTo(0,y); r.style.minHeight=''; }
+function render(){ const r=$('instRoot'); if(!r) return; if(!BRQ.loaded&&!BRQ.busy&&I.view!=='wizard') brLoad(); const y=window.scrollY; r.style.minHeight=r.offsetHeight+'px'; r.innerHTML=I.view==='wizard'?wiz():I.view==='status'?statusPage():dash(); instHeader(); window.scrollTo(0,y); r.style.minHeight=''; }
 function setHeader(){
   try{
     const d=I.d; Object.assign(currentCompany,{name:d.name,type:d.type,city:d.city||locStr(d),website:d.website,desc:d.about2||d.about1||'',contactName:d.rname,designation:d.rdes,email:d.remail||d.email,phone:d.rphone||d.phone,logo:d.logo||'',saved:true}); saveState();
@@ -721,14 +709,6 @@ window.IN={
   setLogo(url){ if(url&&String(url).indexOf('data:')===0){ pushLogo(url); return; } I.d.logo=url||''; save(); render(); },
   rmLogo(){ const prev={logo:I.d.logo,id:I.d.logoFileId}; I.d.logo=''; delete I.d.logoFileId; save(); render();
     if(window.bkRemoveLogo) bkRemoveLogo().catch(e=>{ I.d.logo=prev.logo; if(prev.id) I.d.logoFileId=prev.id; save(); render(); toast('Could not remove logo: '+((e&&e.message)||'error')); }); },
-  send(){ const m=chk(EMAILF,I.d.email); mark('d',EMAILF,m); if(m) return; I.em='sending'; render(); setTimeout(()=>{ I.em='sent'; save(); render(); },900); },
-  resend(){ toast('A new code was sent to '+I.d.email); },
-  otp(el,i){ el.value=el.value.replace(/\D/g,''); if(el.value&&el.nextElementSibling) el.nextElementSibling.focus(); },
-  otpKey(ev,i){ if(ev.key==='Backspace'&&!ev.target.value&&ev.target.previousElementSibling) ev.target.previousElementSibling.focus(); },
-  verify(){ const c=[...document.querySelectorAll('.in-otp input')].map(x=>x.value).join(''), e=$('otpErr');
-    if(!/^\d{6}$/.test(c)){ e.textContent='Enter the 6-digit code we sent to your email.'; e.style.display='block'; return; }
-    I.em='ok'; save(); render(); toast('Official email verified'); },
-  web(){ const m=chk(WEBF,I.d.website); mark('d',WEBF,m); if(m) return; I.web=true; save(); render(); toast('Website confirmed'); },
   regRole(v){ I.regRole=v; save(); render(); },
   pick(k,e){ const f=e.target.files[0]; e.target.value=''; if(f) upload(k,f); },
   drop(k,e){ const f=e.dataTransfer&&e.dataTransfer.files[0]; if(f) upload(k,f); },
@@ -737,15 +717,9 @@ window.IN={
     if(k[0]==='x') I.extra=I.extra.filter(x=>x.id!==k); else delete I.docs[k]; delete FILES[k]; delete ERR[k]; save(); render(); },
   xopen(v){ XOPEN=!!v; XTO=''; delete ERR['new']; render(); },
   xt(v){ XT=v; if(v!=='Other') XTO=''; render(); if(v==='Other'){ const el=document.querySelector('[data-xt-other]'); if(el) el.focus(); } }, xto(v){ XTO=v; delete ERR['new']; },
-  asend(){ const m=chk({req:1,v:'email'},I.d.aemail); if(m){ toast(m); return; } I.aem='sending'; render(); setTimeout(()=>{ I.aem='sent'; save(); render(); },900); },
-  aresend(){ toast('A new code was sent to '+I.d.aemail); },
-  averify(){ const c=[...document.querySelectorAll('#aotp input')].map(x=>x.value).join(''), e=$('aotpErr');
-    if(!/^\d{6}$/.test(c)){ e.textContent='Enter the 6-digit code sent to the authority email.'; e.style.display='block'; return; }
-    I.aem='ok'; save(); render(); toast('Authority email verified'); },
   auth(v){ I.auth=v; save(); render(); }, role(v){ const was=I.role==='Other'||(I.role&&!ROLES.includes(I.role)); I.role=v; save(); if(v==='Other'||was){ render(); const el=document.querySelector('[data-role-other]'); if(el) el.focus(); } }, roleTxt(v){ I.role=v.trim()||'Other'; save(); }, c1(v){ I.c1=v; save(); }, c2(v){ I.c2=v; save(); },
-  vs(v){ if(!DEV) return; I.vs=v; save(); render(); },
   dash(){ I.view='dash'; save(); render(); top(); },
-  sec(k){ I.sec=k; if(k==='verify') VS=0; if(I.view==='status'&&k!=='verify'){ I.view='dash'; save(); } render(); },
+  sec(k){ I.sec=k; if(k==='branches') brLoad(true); if(k==='verify') VS=0; if(I.view==='status'&&k!=='verify'){ I.view='dash'; save(); } render(); },
   snext(){ const S=dashSecs(), i=S.findIndex(x=>x[0]===I.sec); if(I.sec==='verify'&&VS<VSTEPS.length-1) VS++; else if(i<S.length-1){ I.sec=S[i+1][0]; if(I.sec==='verify') VS=0; } render(); toLayout(); },
   sback(){ const S=dashSecs(), i=S.findIndex(x=>x[0]===I.sec); if(I.sec==='verify'&&VS>0) VS--; else if(i>0){ I.sec=S[i-1][0]; if(I.sec==='verify') VS=VSTEPS.length-1; } render(); toLayout(); },
   vstep(i){ VS=i; render(); },
@@ -762,25 +736,31 @@ window.IN={
   bSave(){ if(!valid(FB,'b')) return; if(BRi<0) I.branches.push(BR); else I.branches[BRi]=BR; save();
     if(BRorig&&BRorig!==BR.imgId&&window.bkDeleteFile) bkDeleteFile(BRorig).catch(()=>{});   /* the photo this one replaced */
     BRnew=null; BRorig=''; closeM(); render(); toast('Branch saved'); },
-  reqView(){ const r=subReq(); if(!r) return;
-    const chk=(ok,t)=>`<li>${ok?ck(13):CLKs} ${t}</li>`;
-    modal(`<div style="display:flex;gap:14px;align-items:center;margin-bottom:14px">${reqThumb(r)}<div><h4 style="margin:0;font-size:18px">${esc(r.name)}</h4><span style="font-size:13px;color:var(--ink-soft)">${esc(r.type)}${r.city?' · '+esc(r.city):''}</span></div><div style="margin-left:auto">${reqPill(r.st)}</div></div>
-      ${rows([['Institution name',r.name],['Type',r.type],['Established',r.year],['Location',r.city],['PIN code',r.pin],['Address',r.addr],['Submitted by',r.by],['Designation',r.des],['Official email',r.em],['Phone',r.ph],['Request date',r.date],['Selected main institution',r.mainName]])}
-      <p style="font-size:13.5px;color:var(--ink-soft);margin:6px 0 0"><b>About:</b> ${esc(r.about)||'—'}</p>
+  async reqView(id){
+    let r=BRQ.full[id];
+    if(!r){ toast('Loading request…'); try{ r=BRQ.full[id]=await api.get('/company/branches/'+id); }catch(e){ toast('Could not load the request: '+((e&&e.message)||'error')); return; } }
+    const pr=r.profile||{}, inst=pr.inst||{}, f=inst.d||{}, ap=pr.app||{}, st=r.status==='approved'&&r.admin_status!=='approved'?'approved_wait':r.status;
+    const docs=Object.keys(inst.docs||{}).map(k=>inst.docs[k]).filter(x=>x&&x.st==='ok').concat((inst.extra||[]).filter(x=>x&&x.st==='ok')).map(x=>x.name).filter(Boolean);
+    const emV=inst.em==='ok', city=[r.city,r.state].filter(Boolean).join(', ');
+    const ck2=(ok,t)=>`<li>${ok?ck(13):CLKs} ${t}</li>`;
+    modal(`<div style="display:flex;gap:14px;align-items:center;margin-bottom:14px">${reqThumb({name:r.name,logo:r.logo||''})}<div><h4 style="margin:0;font-size:18px">${esc(r.name)}</h4><span style="font-size:13px;color:var(--ink-soft)">${esc(f.type||r.type)}${city?' · '+esc(city):''}</span></div><div style="margin-left:auto">${reqPill(st)}</div></div>
+      ${rows([['Institution name',r.name],['Type',f.type||r.type],['Established',f.year],['Location',city],['PIN code',f.pin],['Address',f.address||r.address],['Submitted by',f.rname||ap.contactName||(r.representative||{}).name],['Designation',f.rdes||ap.designation],['Official email',f.remail||r.email],['Phone',f.rphone||r.phone],['Request date',r.submitted_at?String(r.submitted_at).slice(0,10):''],['Website',f.website||r.website]])}
+      <p style="font-size:13.5px;color:var(--ink-soft);margin:6px 0 0"><b>About:</b> ${esc(f.about2||f.about1||r.description)||'—'}</p>
       <h5 style="margin:12px 0 6px;font-size:14px">Verification checklist</h5>
-      <ul class="in-list">${chk(r.emOk,r.emOk?'Official email verified by OTP':'Official email not verified yet')}${chk(!!r.doc,r.doc?'Verification document uploaded: '+esc(r.doc):'No verification document uploaded')}${chk(!!(r.name&&r.by&&r.em&&r.ph),'Required details filled in')}</ul>
-      ${r.st==='rejected'&&r.reason?`<p style="font-size:13.5px;color:#B3261E"><b>Rejection reason:</b> ${esc(r.reason)}</p>`:''}
-      <div class="in-actions"><span></span><div class="r"><button class="btn btn-ghost btn-sm" onclick="IN.closeM()">Close</button>${r.st==='pending'?'<button class="btn btn-ghost btn-sm" onclick="IN.reqAsk(\'rejected\')">Reject</button><button class="btn btn-primary btn-sm" onclick="IN.reqAsk(\'approved\')">Approve &amp; connect</button>':''}</div></div>`); },
-  reqAsk(st){ const r=subReq(); if(!r) return; const ok=st==='approved';
+      <ul class="in-list">${ck2(emV,emV?'Official email verified by admin':'Official email not verified yet')}${ck2(docs.length>0,docs.length?'Verification documents uploaded: '+esc(docs.join(', ')):'No verification document uploaded')}${ck2(!!(r.name&&(f.rname||ap.contactName)&&(f.remail||r.email)&&(f.rphone||r.phone)),'Required details filled in')}${ck2(r.admin_status==='approved',r.admin_status==='approved'?'Approved by admin':'Admin review pending')}</ul>
+      ${r.status==='rejected'&&r.note?`<p style="font-size:13.5px;color:#B3261E"><b>Rejection reason:</b> ${esc(r.note)}</p>`:''}
+      <div class="in-actions"><span></span><div class="r"><button class="btn btn-ghost btn-sm" onclick="IN.closeM()">Close</button>${r.status==='pending'?`<button class="btn btn-ghost btn-sm" onclick="IN.reqAsk(${id},'rejected')">Reject</button><button class="btn btn-primary btn-sm" onclick="IN.reqAsk(${id},'approved')">Approve &amp; connect</button>`:''}</div></div>`); },
+  reqAsk(id,st){ const r=BRQ.rows.find(x=>x.id===id); if(!r) return; const ok=st==='approved';
     modal(`<h4 style="margin:0 0 8px;font-size:18px">${ok?'Approve':'Reject'} ${esc(r.name)}?</h4>
-      <p style="color:var(--ink-soft);font-size:14px">${ok?'This sub-branch will be connected to your institution and its dashboard will unlock.':'The sub-branch will be told the request was rejected. Please give a reason.'}</p>
+      <p style="color:var(--ink-soft);font-size:14px">${ok?'This sub-branch will be connected to your institution. It goes live once the admin approves it too.':'The sub-branch will be told the request was rejected. Please give a reason.'}</p>
       ${ok?'':'<div class="in-f"><label>Reason for rejection<i>Required</i></label><textarea id="reqReason" rows="3" placeholder="e.g. Verification document is unclear"></textarea><div class="in-err" id="reqReasonErr" style="display:none">Enter a reason.</div></div>'}
-      <div class="in-actions"><span></span><div class="r"><button class="btn btn-ghost btn-sm" onclick="IN.closeM()">Cancel</button><button class="btn btn-primary btn-sm" onclick="IN.reqDecide('${st}')">${ok?'Approve &amp; connect':'Reject request'}</button></div></div>`); },
-  reqDecide(st){ const d=lsj('nwSub'); if(!d) return; let reason='';
+      <div class="in-actions"><span></span><div class="r"><button class="btn btn-ghost btn-sm" onclick="IN.closeM()">Cancel</button><button class="btn btn-primary btn-sm" id="reqGo" onclick="IN.reqDecide(${id},'${st}')">${ok?'Approve &amp; connect':'Reject request'}</button></div></div>`); },
+  async reqDecide(id,st){ let reason='';
     if(st==='rejected'){ reason=(($('reqReason')||{}).value||'').trim(); if(!reason){ const e=$('reqReasonErr'); if(e) e.style.display='block'; return; } }
-    d.st=st; d.reason=reason; d.decidedAt=new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}); d.decidedBy=I.d.name||'';
-    try{ localStorage.setItem('nwSub',JSON.stringify(d)); }catch(e){ toast('Could not save the decision.'); return; }
-    closeM(); render(); toast(st==='approved'?'Sub-branch approved and connected':'Request rejected'); },
+    const go=$('reqGo'); if(go) go.disabled=true;
+    try{ await api.put('/company/branches/'+id+'/'+(st==='approved'?'approve':'reject'), st==='approved'?{}:{reason:reason}); }
+    catch(e){ if(go) go.disabled=false; toast('Could not save the decision: '+((e&&e.message)||'error')); return; }
+    delete BRQ.full[id]; closeM(); await brLoad(true); toast(st==='approved'?'Sub-branch approved':'Request rejected'); },
   bView(i){ const b=I.branches[i];
     modal(`<div style="display:flex;gap:14px;align-items:center;margin-bottom:14px">${thumb(b)}<div><h4 style="margin:0;font-size:18px">${esc(b.name)}</h4><span style="font-size:13px;color:var(--ink-soft)">${esc(locStr(b))}</span></div></div>${b.img?`<img src="${b.img}" alt="Campus" style="width:100%;max-height:180px;object-fit:cover;margin-bottom:12px">`:''}${rows([['Type',b.type],['Code',b.code],['Contact person',b.cname],['Designation',b.cdes],['Email',b.email],['Phone',b.phone],['Location',locStr(b)],['Address',b.address]])}<p style="font-size:13.5px;color:var(--ink-soft)">${esc(b.desc)}</p>
     <div class="in-actions"><button class="btn btn-ghost btn-sm" style="color:#B3261E;border-color:#B3261E" onclick="IN.bDel(${i})">Remove</button><div class="r"><button class="btn btn-ghost btn-sm" onclick="IN.closeM()">Close</button><button class="btn btn-primary btn-sm" onclick="IN.bEdit(${i})">Edit</button></div></div>`); },
@@ -788,11 +768,7 @@ window.IN={
     <div class="in-actions"><span></span><div class="r"><button class="btn btn-ghost btn-sm" onclick="IN.closeM()">Cancel</button><button class="btn btn-primary btn-sm" style="background:#B3261E" onclick="IN.bDelOk(${i})">Remove campus</button></div></div>`); },
   bDelOk(i){ const b=I.branches[i], n=b.name; I.branches.splice(i,1); save();
     if(b.imgId&&window.bkDeleteFile) bkDeleteFile(b.imgId).catch(()=>{});                     /* its photo goes from storage too */
-    closeM(); render(); toast(n+' removed'); },
-  sample(){
-    Object.assign(I.d,{name:'Upaadhyay University',type:'University',short:'Upaadhyay Univ.',website:'https://www.upaadhyay.edu.in',email:'placement@upaadhyay.edu.in',phone:'9876543210',year:'1998',reg:'TS/UNI/1998/0142',affil:'UGC recognised',accred:'NAAC A, AICTE approved',about1:'A multidisciplinary university in Hyderabad.',about2:'Upaadhyay University offers undergraduate, postgraduate and doctoral programmes across engineering, sciences and management.',country:'India',pin:'500072',state:'Telangana',district:'Hyderabad',city:'Hyderabad',area:'Kukatpally',address:'Plot 12, University Road, Kukatpally',rname:'K Kittu',rdes:'Placement Officer',rdep:'Placement / Training & Placement',remail:'placement@upaadhyay.edu.in',rphone:'9876543210'});
-    I.em='ok'; I.web=true; I.d.eid='UU-2041'; I.regRole='Placement'; Object.assign(I.d,{aname:'Dr R Krishna Rao',adesig:'Principal',aemail:'principal@upaadhyay.edu.in',aphone:'9876500001'}); I.aem='ok'; I.docs={reg:{name:'registration-certificate.pdf',size:'1.2 MB',st:'ok'},rep:{name:'staff-id-card.png',size:'480 KB',st:'ok'},auth:{name:'authorization-letter.pdf',size:'320 KB',st:'ok'},aprf:{name:'principal-appointment.pdf',size:'610 KB',st:'ok'}}; I.auth='self'; I.c1=true; I.max=5; save(); render(); toast('Sample data loaded'); },
-  reset(){ if(!confirm('Clear everything in this institution profile form?')) return; localStorage.removeItem(KEY); I=load(); I.d={country:'India'}; welcome=false; render(); }
+    closeM(); render(); toast(n+' removed'); }
 };
 
 /* ---------- hooks used by the dashboard page and job posting ---------- */
