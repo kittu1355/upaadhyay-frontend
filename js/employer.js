@@ -101,69 +101,6 @@ if(typeof window.bkStatusBadge !== 'function'){
     }
   };
 
-  // ---------- Demo institutions + their posted jobs (for admin dashboard) ----------
-  const institutionsData = {
-    kluniversity:{ name:'KL University', type:'university', city:'Vijayawada, Andhra Pradesh', contact:'Radha Krishna', designation:'HR Head', email:'hr@kluniversity.in', phone:'+91 98480 12345', website:'www.kluniversity.in', joined:'Jan 2024',
-      jobs:[
-        { title:'Associate Professor — Physics', category:'University faculty', qualification:'PhD', location:'Vijayawada', applicants:14, status:'live', posted:'5 days ago' },
-        { title:'Assistant Professor — Computer Science', category:'University faculty', qualification:'PhD', location:'Vijayawada', applicants:22, status:'live', posted:'1 week ago' },
-        { title:'Professor — Mechanical Engineering', category:'University faculty', qualification:'PhD', location:'Vijayawada', applicants:9, status:'live', posted:'2 weeks ago' },
-        { title:'Assistant Professor — Mathematics', category:'University faculty', qualification:'PhD', location:'Vijayawada', applicants:17, status:'closed', posted:'1 month ago' },
-        { title:'Lab Coordinator — Electronics', category:'University faculty', qualification:'PG', location:'Vijayawada', applicants:6, status:'live', posted:'3 days ago' },
-        { title:'Associate Professor — Biotechnology', category:'University faculty', qualification:'PhD', location:'Vijayawada', applicants:11, status:'closed', posted:'6 weeks ago' }
-      ] },
-    osmania:{ name:'Osmania University', type:'university', city:'Hyderabad, Telangana', contact:'Dr. Meena Rao', designation:'Registrar', email:'registrar@osmania.ac.in', phone:'+91 90000 11122', website:'www.osmania.ac.in', joined:'Mar 2024',
-      jobs:[
-        { title:'Professor — English Literature', category:'University faculty', qualification:'PhD', location:'Hyderabad', applicants:8, status:'live', posted:'4 days ago' },
-        { title:'Assistant Professor — History', category:'University faculty', qualification:'PhD', location:'Hyderabad', applicants:12, status:'live', posted:'1 week ago' },
-        { title:'Associate Professor — Political Science', category:'University faculty', qualification:'PhD', location:'Hyderabad', applicants:5, status:'closed', posted:'1 month ago' }
-      ] },
-    narayana:{ name:'Narayana Junior College', type:'college', city:'Chennai, Tamil Nadu', contact:'S. Venkatesh', designation:'Principal', email:'principal@narayanajc.in', phone:'+91 98765 43210', website:'www.narayanagroup.com', joined:'Feb 2024',
-      jobs:[
-        { title:'Senior Lecturer — Commerce', category:'Junior college', qualification:'PG', location:'Chennai', applicants:19, status:'live', posted:'2 days ago' },
-        { title:'Lecturer — Mathematics (MPC)', category:'Junior college', qualification:'PG', location:'Chennai', applicants:27, status:'live', posted:'5 days ago' },
-        { title:'Lecturer — Botany (BiPC)', category:'Junior college', qualification:'PG', location:'Chennai', applicants:15, status:'live', posted:'1 week ago' },
-        { title:'Lecturer — Physics (MPC)', category:'Junior college', qualification:'PG', location:'Chennai', applicants:10, status:'closed', posted:'3 weeks ago' }
-      ] },
-    srichaitanya:{ name:'Sri Chaitanya College', type:'college', city:'Vijayawada, Andhra Pradesh', contact:'K. Suresh', designation:'HR Manager', email:'hr@srichaitanya.in', phone:'+91 91234 56789', website:'www.srichaitanya.in', joined:'Apr 2024',
-      jobs:[
-        { title:'Lecturer — Chemistry (MPC)', category:'Junior college', qualification:'PG', location:'Vijayawada', applicants:13, status:'live', posted:'6 days ago' },
-        { title:'Lecturer — Zoology (BiPC)', category:'Junior college', qualification:'PG', location:'Vijayawada', applicants:8, status:'live', posted:'2 weeks ago' }
-      ] },
-    vitvellore:{ name:'VIT Vellore', type:'university', city:'Vellore, Tamil Nadu', contact:'Dr. Anand Krishnan', designation:'Dean, Faculty Affairs', email:'dean.fa@vit.ac.in', phone:'+91 90876 54321', website:'www.vit.ac.in', joined:'Dec 2023',
-      jobs:[
-        { title:'Assistant Professor — Cybersecurity', category:'University faculty', qualification:'PhD', location:'Vellore', applicants:24, status:'live', posted:'3 days ago' },
-        { title:'Associate Professor — Data Science', category:'University faculty', qualification:'PhD', location:'Vellore', applicants:31, status:'live', posted:'1 week ago' },
-        { title:'Professor — VLSI Design', category:'University faculty', qualification:'PhD', location:'Vellore', applicants:7, status:'live', posted:'2 weeks ago' },
-        { title:'Assistant Professor — AI/ML', category:'University faculty', qualification:'PhD', location:'Vellore', applicants:29, status:'closed', posted:'5 weeks ago' },
-        { title:'Lab Instructor — Robotics', category:'University faculty', qualification:'PG', location:'Vellore', applicants:16, status:'live', posted:'4 days ago' }
-      ] },
-    dpsHyderabad:{ name:'Delhi Public School', type:'school', city:'Hyderabad, Telangana', contact:'Ritu Sharma', designation:'HR Head', email:'hr@dpshyd.edu.in', phone:'+91 99887 76655', website:'www.dpshyderabad.com', joined:'May 2024',
-      jobs:[
-        { title:'PGT — Mathematics', category:'School faculty', qualification:'PG', location:'Hyderabad', applicants:21, status:'live', posted:'1 week ago' },
-        { title:'TGT — Social Studies', category:'School faculty', qualification:'UG', location:'Hyderabad', applicants:18, status:'live', posted:'2 weeks ago' }
-      ] },
-    ctraining:{ name:'Computer Training Ltd', type:'college', city:'Rochester, NY, United States', contact:'Peter Smith', designation:'Director', email:'peter@ctrainingltd.com', phone:'585-908-7123', website:'www.ctrainingltd.com', joined:'Jun 2024',
-      jobs:[
-        { title:'Instructor — Networking Fundamentals', category:'Vocational training', qualification:'PG', location:'Rochester, NY', applicants:6, status:'live', posted:'5 days ago' }
-      ] },
-    coimbatoreArts:{ name:'Coimbatore Arts College', type:'college', city:'Coimbatore, Tamil Nadu', contact:'Dr. Latha Iyer', designation:'Principal', email:'principal@coimbatoreartscollege.edu.in', phone:'+91 94444 33221', website:'www.coimbatoreartscollege.edu.in', joined:'Jul 2024',
-      jobs:[
-        { title:'Assistant Professor — Fine Arts', category:'College faculty', qualification:'PG', location:'Coimbatore', applicants:9, status:'live', posted:'1 week ago' }
-      ] },
-    keralaCentral:{ name:'Kerala Central School', type:'school', city:'Kochi, Kerala', contact:'Thomas Jacob', designation:'HR Head', email:'hr@keralacentral.edu.in', phone:'+91 98470 22110', website:'www.keralacentralschool.in', joined:'Aug 2024',
-      jobs:[
-        { title:'PGT — English', category:'School faculty', qualification:'PG', location:'Kochi', applicants:12, status:'live', posted:'3 days ago' },
-        { title:'PRT — Primary Teacher', category:'School faculty', qualification:'UG', location:'Kochi', applicants:20, status:'live', posted:'6 days ago' },
-        { title:'TGT — Science', category:'School faculty', qualification:'PG', location:'Kochi', applicants:14, status:'closed', posted:'1 month ago' }
-      ] },
-    delhiCommerce:{ name:'Delhi School of Commerce', type:'school', city:'New Delhi, Delhi', contact:'Anjali Bhatia', designation:'Principal', email:'principal@delhicommerce.edu.in', phone:'+91 98100 44556', website:'www.delhicommerce.edu.in', joined:'Sep 2024',
-      jobs:[
-        { title:'PGT — Commerce', category:'School faculty', qualification:'PG', location:'New Delhi', applicants:16, status:'live', posted:'4 days ago' },
-        { title:'TGT — Economics', category:'School faculty', qualification:'PG', location:'New Delhi', applicants:11, status:'live', posted:'1 week ago' }
-      ] }
-  };
-
   // ---------- Extra demo candidates (auto-generated, 17 more → 20 total) ----------
   (function(){
     const COLLEGE_POOL = [
@@ -535,12 +472,12 @@ if(typeof window.bkStatusBadge !== 'function'){
     return ini.slice(0,5);
   }
 
-  /* Saved candidates (employer's shortlist-for-later), kept in this browser */
-  function savedCands(){ try{ return JSON.parse(localStorage.getItem('upaadhyay_saved_cands')||'[]'); }catch(e){ return []; } }
+  /* Saved candidates (employer's shortlist-for-later), stored on the institution account (profile_data.app.savedCands) */
+  function savedCands(){ return Array.isArray(currentCompany.savedCands) ? currentCompany.savedCands : []; }
   function saveCandidate(id, ev){
     if(ev) ev.stopPropagation();
     let l = savedCands(); l = l.indexOf(id)>-1 ? l.filter(x=>x!==id) : l.concat(id);
-    try{ localStorage.setItem('upaadhyay_saved_cands', JSON.stringify(l)); }catch(e){}
+    currentCompany.savedCands = l; saveState();
     renderCandidates(false);
   }
   function downloadCandidateCV(id, ev){
@@ -723,15 +660,9 @@ if(typeof window.bkStatusBadge !== 'function'){
   }
 
 
-  /* "Ask Questions" step: keep each job's Q&A settings so the job page can show them (kept in this browser until the API supports it). */
-  function jbSaveQa(id){
-    if(!id) return;
-    const g = function(i){ const el = document.getElementById(i); return el ? (el.value || '').trim() : ''; };
-    const on = document.getElementById('jbQaOn');
-    try{ localStorage.setItem('upaadhyay_jobqa_' + id, JSON.stringify({ on: on ? !!on.checked : true, contact: g('jbQaContact'), faq: g('jbQaFaq'), questions: (window.QA ? QA.get('jbQaList') : []) })); }catch(e){}
-  }
+  /* "Ask Questions" step: the Q&A is sent with the job (meta.qa) and stored in the database; nothing is kept in the browser. */
   function jbLoadQa(id, qa){
-    let q = qa || {}; if(!qa){ try{ q = JSON.parse(localStorage.getItem('upaadhyay_jobqa_' + id) || '{}'); }catch(e){} }
+    const q = qa || {};
     const on = document.getElementById('jbQaOn'), c = document.getElementById('jbQaContact'), f = document.getElementById('jbQaFaq');
     if(on) on.checked = q.on !== false; if(c) c.value = q.contact || ''; if(f) f.value = q.faq || '';
     if(window.QA) QA.set('jbQaList', q.questions || []);
@@ -789,12 +720,11 @@ if(typeof window.bkStatusBadge !== 'function'){
     const jobPayload = {
       title, role, dept, type, category, qualification, notice,
       vacancies: v('jbVac'), expMin, expMax, salMin: salNorms ? '' : salMin, salMax: salNorms ? '' : salMax, salPeriod, salNeg, salNorms,
-      qa: { on: chk('jbQaOn'), contact: v('jbQaContact'), faq: '', questions: (window.QA ? QA.get('jbQaList') : []) },
+      qa: { on: chk('jbQaOn'), contact: v('jbQaContact'), faq: v('jbQaFaq'), questions: (window.QA ? QA.get('jbQaList') : []) },
       campus, campusLoc, location, desc: v('jbDesc'), skills: v('jbSkills'), deadline: v('jbDeadline')
     };
     const editing = (editingJobId && jobsData[editingJobId]) ? jobsData[editingJobId] : null;
     return (editing ? bkUpdateJob(editing.id, jobPayload) : bkPostJob(jobPayload)).then(function(res){
-    jbSaveQa((res && res.id) || (editing && editing.id));
     if(editing) endEditJob();
 
     // reset the form and confirm
