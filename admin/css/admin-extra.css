@@ -75,3 +75,7 @@ body{font-size:12.5px}
 .xd-kv b{max-width:70%;overflow-wrap:anywhere}
 .xd-item div{overflow-wrap:anywhere}
 .rv-doc .ic{font-weight:800}
+
+/* Variables used by the shared faculty viewer (css/faculty-view.css, faculty-profile.css) inside the admin drawer */
+.xd{--blue-50:#EEF3FF;--blue-500:#3B6FE0;--blue-600:#2A5BD0;--blue-700:#1E48AE;--canvas:#F5F7FB;--ink-soft:#4B5565;--ink-faint:#8A93A3;--amber:#B7791F}
+.xd .fp-pv-wrap,.xd .fp-pv{max-width:100%}
