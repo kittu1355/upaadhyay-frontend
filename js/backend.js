@@ -517,7 +517,7 @@
       salPeriod: m.salary_period || 'month', salNeg: !!m.salary_negotiable, salNorms: !!m.salary_as_per_norms,
       campus: m.campus || '', campusLoc: m.campus_loc || '', location: j.location, desc: j.description,
       skills: (j.skills || []).map(function(s){ return s.name; }).join(', '),
-      deadline: j.application_deadline ? String(j.application_deadline).slice(0, 10) : '', applicantIds: [], applicantCount: j.applications_count || 0, qa: m.qa || null
+      deadline: j.application_deadline ? String(j.application_deadline).slice(0, 10) : '', postedAt: j.published_at || j.created_at || j.createdAt || '', applicantIds: [], applicantCount: j.applications_count || 0, qa: m.qa || null
     };
   }
   function mapCandidate(u){
