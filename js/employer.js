@@ -305,6 +305,11 @@ if(typeof window.bkStatusBadge !== 'function'){
   function pjMarkSeen(id){
     try{ const j = jobsData[id]; if(j) localStorage.setItem(pjSeenKey(id), String(Math.max((j.applicantIds || []).length, Number(j.applicantCount) || 0))); }catch(e){}
   }
+  function pjDate(v){
+    if(!v) return '';
+    const d = new Date(v); if(isNaN(d)) return '';
+    return d.toLocaleDateString('en-IN', {day:'numeric', month:'short', year:'numeric'});
+  }
   function pjCloseMenus(){ document.querySelectorAll('.pj-menu.open').forEach(m=>m.classList.remove('open')); }
   function pjToggleMenu(btn){
     const m = btn.parentNode.querySelector('.pj-menu'); const was = m.classList.contains('open');
@@ -369,6 +374,7 @@ if(typeof window.bkStatusBadge !== 'function'){
         <div class="pj-dept">${jbEsc(job.dept || job.category || '\u00a0')}</div>
         <div class="pj-loc">${jbEsc(locType || '\u00a0')}</div>
         <div class="pj-price">${jbEsc(jobPriceText(job))}</div>
+        <div class="pj-dates"><span>Posted: <b>${jbEsc(pjDate(job.postedAt) || '\u2014')}</b></span><span>Expires: <b>${jbEsc(pjDate(job.deadline) || 'No deadline')}</b></span></div>
         <div class="pj-count"><b>${count}</b><span>${count===1?'Applicant':'Applicants'}</span>${isNew ? '<em class="pj-new">New</em>' : ''}</div>
         <button class="pj-view" onclick="event.stopPropagation(); openApplicantsView('${id}')">View Applicants</button>
       </div>`;
