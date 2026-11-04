@@ -182,7 +182,7 @@ function bindActions(c, a){
 
   if(ap) ap.addEventListener('click', async function(){
     const warn = a.ready ? '' : '<p style="margin:10px 0 0;padding:10px 12px;background:var(--amber-bg);color:#6B4A0E;border-radius:4px;"><b>Checklist not complete:</b> ' + a.items.filter(function(i){ return !i.ok; }).map(function(i){ return esc(i.label); }).join(', ') + '.</p>';
-    const r = await askDialog({ title:'Approve and unlock ' + name + '?', body:'<p style="margin:6px 0 0">Post a job, Posted jobs and Browse candidates will unlock on their account right away, and they will be notified.</p>' + warn, confirmLabel:'Approve & unlock' });
+    const r = await askDialog({ title:'Approve and unlock ' + name + '?', body:'<p style="margin:6px 0 0">Post a job, Posted jobs and Browse candidates will unlock on their account right away, and they will be notified.</p>' + warn, confirmLabel: a.ready ? 'Approve & unlock' : 'Approve anyway' });
     if(r.ok) run(ap, '/approve', {}, name + ' approved. Their account is unlocked.');
   });
   if(rj) rj.addEventListener('click', async function(){
