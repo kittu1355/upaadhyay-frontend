@@ -307,7 +307,7 @@ if(typeof window.bkStatusBadge !== 'function'){
   }
   function pjDate(v){
     if(!v) return '';
-    const d = new Date(v); if(isNaN(d)) return '';
+    const d = new Date(String(v).replace(' ', 'T')); if(isNaN(d)) return '';
     return d.toLocaleDateString('en-IN', {day:'numeric', month:'short', year:'numeric'});
   }
   function pjCloseMenus(){ document.querySelectorAll('.pj-menu.open').forEach(m=>m.classList.remove('open')); }
@@ -371,11 +371,15 @@ if(typeof window.bkStatusBadge !== 'function'){
         </div>
         <div class="pj-college">${jbEsc(inst)}</div>
         <div class="pj-role">${jbEsc(job.title || job.role)}</div>
-        <div class="pj-dept">${jbEsc(job.dept || job.category || '\u00a0')}</div>
-        <div class="pj-loc">${jbEsc(locType || '\u00a0')}</div>
         <div class="pj-price">${jbEsc(jobPriceText(job))}</div>
-        <div class="pj-dates"><span>Posted: <b>${jbEsc(pjDate(job.postedAt) || '\u2014')}</b></span><span>Expires: <b>${jbEsc(pjDate(job.deadline) || 'No deadline')}</b></span></div>
-        <div class="pj-count"><b>${count}</b><span>${count===1?'Applicant':'Applicants'}</span>${isNew ? '<em class="pj-new">New</em>' : ''}</div>
+        <div class="pj-grid2">
+          <div class="pj-cell"><label>Department</label><span>${jbEsc(job.dept || job.category || '\u2014')}</span></div>
+          <div class="pj-cell"><label>Type</label><span>${jbEsc(job.type || '\u2014')}</span></div>
+          <div class="pj-cell"><label>Location</label><span>${jbEsc(job.location || job.campusLoc || '\u2014')}</span></div>
+          <div class="pj-cell pj-appl"><label>${count===1?'Applicant':'Applicants'}</label><span><b>${count}</b>${isNew ? '<em class="pj-new">New</em>' : ''}</span></div>
+          <div class="pj-cell"><label>Posted</label><span>${jbEsc(pjDate(job.postedAt) || '\u2014')}</span></div>
+          <div class="pj-cell"><label>Expires</label><span>${jbEsc(pjDate(job.deadline) || 'No deadline')}</span></div>
+        </div>
         <button class="pj-view" onclick="event.stopPropagation(); openApplicantsView('${id}')">View Applicants</button>
       </div>`;
     }catch(err){ console.error('Posted job card failed', id, err); return '<div class="job-card" style="color:#B3261E">Card error: '+jbEsc(err && err.message)+'</div>'; } }).join('');
