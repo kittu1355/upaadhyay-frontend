@@ -196,7 +196,7 @@ if(typeof window.bkStatusBadge !== 'function'){
       return;
     }
     slideProfileId = id;
-    document.title = `${p.name} — Upadyay`;
+    document.title = `${p.name} — Upaadhyay.com`;
     const cpBanner = document.getElementById('cpBanner');
     if(cpBanner) cpBanner.style.background = bannerGradient(p.name);
     document.getElementById('cpAvatar').style.backgroundImage = `url('${p.avatar}')`;
