@@ -270,3 +270,17 @@
 #fpRoot{position:sticky;top:12px;z-index:5}
 #fpRoot .fp-hero{padding:16px 22px;margin-bottom:12px}
 }
+
+
+/* --- fit to screen: no blue hero card, form + menu fill the visible height (desktop) --- */
+@media(min-width:900px){
+#dashInnerWide:has(#fpRoot){padding-top:16px;padding-bottom:16px}
+#fpRoot{position:static;height:calc(100vh / var(--ui-zoom,1) - var(--nav-h,65px) - 32px);min-height:480px}
+#fpRoot>#fpHero:empty{display:none}
+#fpRoot>#fpHero .fp-banner{margin-bottom:10px}
+#fpRoot .fp-nav{padding:6px}
+#fpRoot .fp-nav button{padding:7px 10px}
+}
+
+/* footer always sits after the content, full width, at the very end of the page */
+body.up-has-side #siteChrome{position:relative;z-index:1;clear:both;display:block}
