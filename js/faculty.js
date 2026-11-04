@@ -794,7 +794,7 @@
         note.textContent = 'You signed up with your phone number — add your email so institutions can reach you both ways.';
         note.style.display = 'block';
       } else if(!U.phone && U.email){
-        note.textContent = 'You signed up with email — add your mobile number so institutions and Upadyay can reach you faster.';
+        note.textContent = 'You signed up with email — add your mobile number so institutions and Upaadhyay.com can reach you faster.';
         note.style.display = 'block';
       } else {
         note.style.display = 'none';
