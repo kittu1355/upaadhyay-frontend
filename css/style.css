@@ -1439,17 +1439,31 @@ html, body.page{height:auto !important; min-height:100%; overflow-y:auto !import
 .jl-view{display:block; margin:0 auto; background:none; border:0; font:700 12.5px inherit; font-family:inherit; letter-spacing:.04em; color:var(--blue-700); text-transform:uppercase; cursor:pointer; padding:4px 8px;}
 .jl-view:hover{text-decoration:underline;}
 
-/* ---- Posted jobs tab: same card as Post tab, a little bigger ---- */
-#myJobsList{grid-template-columns:repeat(auto-fill,330px); gap:18px;}
-#myJobsList .pj-card{position:relative; display:flex !important; flex-direction:column; align-items:center; text-align:center; gap:3px;
-  width:330px; min-height:250px; box-sizing:border-box; border-radius:3px !important; padding:18px 20px 12px !important; overflow:hidden; cursor:pointer;}
-.pj-badge{position:absolute; top:10px; right:10px;}
-#myJobsList .pj-logo{width:56px; height:56px; border-radius:3px !important; margin:0 0 8px !important; flex-shrink:0;}
-.pj-college{font-size:16px; font-weight:700; color:var(--ink); max-width:100%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
-.pj-role{font-size:14px; font-weight:600; color:var(--blue-700); max-width:100%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
-.pj-price{font-size:13.5px; color:var(--ink-soft); max-width:100%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
-#myJobsList .pj-count{font-size:12.5px; color:var(--ink-soft); margin-top:2px;}
-.pj-line{height:1px; background:#DDE4F0; width:100%; margin:auto 0 4px;}
-.pj-view{display:block; margin:0 auto; background:none; border:0; font:700 13px inherit; font-family:inherit; letter-spacing:.04em; color:var(--blue-700); text-transform:uppercase; cursor:pointer; padding:4px 8px;}
-.pj-view:hover{text-decoration:underline;}
-#myJobsList .pj-actions{justify-content:center; gap:6px; margin-top:4px; padding:0; border:0;}
+/* ---- Posted jobs tab: compact 220x220 square cards ---- */
+#myJobsList{grid-template-columns:repeat(auto-fill,220px); gap:14px; max-width:none;}
+#myJobsList .pj-card{position:relative; display:flex !important; flex-direction:column; align-items:stretch; text-align:left; gap:2px;
+  width:220px; height:220px; aspect-ratio:1/1; box-sizing:border-box; border-radius:12px !important; padding:8px !important; cursor:pointer; overflow:visible;
+  background:#fff; border:1px solid #DDE4F0; box-shadow:0 1px 3px rgba(16,36,84,.08), 0 4px 12px rgba(16,36,84,.08);}
+#myJobsList .pj-card:hover{border-color:var(--blue-500); transform:translateY(-2px);}
+.pj-top{position:relative; display:flex; align-items:center; gap:6px; height:30px; flex:none;}
+#myJobsList .pj-logo{width:30px; height:30px; border-radius:6px !important; margin:0 !important; flex-shrink:0; background-size:cover; background-position:center;}
+.pj-badge{position:static; margin-right:auto; display:inline-flex;}
+.pj-badge .badge-live, .pj-badge .badge{font-size:10px; padding:2px 7px; line-height:1.4;}
+.pj-dots{flex:none; width:26px; height:26px; border:0; background:none; border-radius:6px; color:var(--ink-soft); cursor:pointer; display:inline-flex; align-items:center; justify-content:center;}
+.pj-dots:hover{background:#EEF2FB; color:var(--ink);}
+.pj-menu{display:none; position:absolute; top:28px; right:0; min-width:140px; background:#fff; border:1px solid #DDE4F0; border-radius:8px; padding:4px; box-shadow:0 10px 24px rgba(16,36,84,.18); z-index:10;}
+.pj-menu.open{display:block;}
+.pj-menu button{display:flex; align-items:center; gap:8px; width:100%; background:none; border:0; text-align:left; font:600 12px inherit; font-family:inherit; color:var(--ink); padding:7px 8px; border-radius:6px; cursor:pointer;}
+.pj-menu button:hover{background:#EEF2FB;}
+.pj-menu button.bad{color:#B3261E;}
+.pj-menu button.bad:hover{background:#FDECEA;}
+.pj-college, .pj-role, .pj-dept, .pj-loc, .pj-price{max-width:100%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+.pj-college{font-size:12px; font-weight:500; color:var(--ink-soft); margin-top:4px;}
+.pj-role{font-size:15px; font-weight:600; color:var(--ink); line-height:1.25; text-transform:capitalize;}
+.pj-dept, .pj-loc{font-size:11px; color:var(--ink-faint); line-height:1.35;}
+.pj-price{font-size:13px; font-weight:600; color:var(--blue-700); margin-top:2px;}
+#myJobsList .pj-count{display:flex; align-items:baseline; gap:5px; margin-top:auto; font-size:11px; color:var(--ink-soft);}
+#myJobsList .pj-count b{font-size:20px; font-weight:700; line-height:1.1; color:var(--ink);}
+.pj-new{font-style:normal; font-size:10px; font-weight:700; color:#fff; background:#1E8E5A; padding:1px 7px; border-radius:999px; align-self:center; margin-left:2px;}
+.pj-view{display:block; width:100%; height:32px; flex:none; margin-top:6px; background:var(--blue-700); border:0; border-radius:8px; font:600 12.5px inherit; font-family:inherit; color:#fff; cursor:pointer; padding:0;}
+.pj-view:hover{background:#2563EB; text-decoration:none;}
