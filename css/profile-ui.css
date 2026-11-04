@@ -32,22 +32,28 @@
 .pf-card .in-vbadge{font-size:11.5px}
 
 
-/* --- black & white cards, 5px corners on the card and every control inside it --- */
-.pf-card{background:#000;border:1px solid #000;border-radius:5px;box-shadow:0 2px 10px rgba(0,0,0,.18)}
-.pf-card:hover{transform:translateY(-2px);box-shadow:0 8px 22px rgba(0,0,0,.28)}
-.pf-cover{background:#fff;height:80px}
-.pf-flag{background:#000;color:#fff;border-radius:5px}
-.pf-av{border:3px solid #000;background-color:#fff;color:#000}
-.pf-name,.pf-sub{color:#fff}
-.pf-meta,.pf-stats{color:#bdbdbd}
-.pf-chip{border:1px solid #fff;color:#fff;border-radius:5px}
-.pf-btn{border:1.5px solid #fff;border-radius:5px}
-.pf-btn.pri{background:#fff;color:#000}
-.pf-btn.pri:hover{background:#e6e6e6}
+/* --- colour cards: dark body, brand purple-to-blue cover, coloured accents, 5px corners everywhere --- */
+.pf-card{background:#12132a;border:1px solid #2b2d55;border-radius:5px;box-shadow:0 4px 16px rgba(58,21,128,.22)}
+.pf-card:hover{transform:translateY(-2px);box-shadow:0 10px 26px rgba(58,21,128,.38);border-color:#4b4fa8}
+.pf-cover{height:84px;background:linear-gradient(120deg,#3a1580 0%,#1652C7 60%,#3fa3ff 100%)}
+.pf-flag{background:#1E8E5A;color:#fff;border-radius:5px}
+.pf-av{border:3px solid #12132a;background-color:#e9e4ff;color:#3a1580}
+.pf-name{color:#fff}
+.pf-ver{color:#4ade80}
+.pf-sub{color:#e6e9ff}
+.pf-meta{color:#9aa0c8}
+.pf-chips .pf-chip{border-radius:5px;border:1px solid #3fa3ff;background:rgba(63,163,255,.12);color:#cfe6ff}
+.pf-chips .pf-chip:nth-child(4n+2){border-color:#a78bfa;background:rgba(167,139,250,.14);color:#e4dcff}
+.pf-chips .pf-chip:nth-child(4n+3){border-color:#34d399;background:rgba(52,211,153,.12);color:#c8f7e2}
+.pf-chips .pf-chip:nth-child(4n+4){border-color:#fbbf24;background:rgba(251,191,36,.12);color:#ffe9b0}
+.pf-stats{color:#ffb454;font-weight:600}
+.pf-btn{border:1.5px solid #3fa3ff;border-radius:5px}
+.pf-btn.pri{background:#3fa3ff;color:#06121f}
+.pf-btn.pri:hover{background:#63b4ff}
 .pf-btn.out{background:transparent;color:#fff}
-.pf-btn.out:hover{background:rgba(255,255,255,.14)}
-.pf-more{border:1.5px solid #fff;border-radius:5px;color:#fff}
-.pf-more:hover{background:rgba(255,255,255,.14)}
-.pf-menu{background:#000;border:1px solid #fff;border-radius:5px}
+.pf-btn.out:hover{background:rgba(63,163,255,.16)}
+.pf-more{border:1.5px solid #3fa3ff;border-radius:5px;color:#fff}
+.pf-more:hover{background:rgba(63,163,255,.16)}
+.pf-menu{background:#1a1b3a;border:1px solid #3a3d78;border-radius:5px}
 .pf-menu button{border-radius:5px}
-.pf-menu button:hover{background:#262626}
+.pf-menu button:hover{background:#2a2c5c}
