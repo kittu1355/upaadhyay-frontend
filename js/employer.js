@@ -295,12 +295,33 @@ if(typeof window.bkStatusBadge !== 'function'){
 
   // "New" badge: applicants have arrived since the employer last opened this job's applicants
   function pjSeenKey(id){ return 'upaadhyay_pj_seen_' + id; }
-  function pjHasNew(id, count){
+  function pjNewCount(id, count){
     try{
       const v = localStorage.getItem(pjSeenKey(id));
-      if(v === null){ localStorage.setItem(pjSeenKey(id), String(count)); return false; }
-      return count > Number(v);
-    }catch(e){ return false; }
+      if(v === null){ localStorage.setItem(pjSeenKey(id), String(count)); return 0; }
+      return Math.max(0, count - Number(v));
+    }catch(err){ return 0; }
+  }
+  function pjAgo(v){
+    if(!v) return '';
+    const d = new Date(String(v).replace(' ', 'T')); if(isNaN(d)) return '';
+    const days = Math.floor((Date.now() - d.getTime()) / 86400000);
+    if(days <= 0) return 'today';
+    if(days === 1) return 'yesterday';
+    if(days < 7) return days + ' days ago';
+    if(days < 30){ const w = Math.floor(days / 7); return w + (w === 1 ? ' week ago' : ' weeks ago'); }
+    if(days < 365){ const m = Math.floor(days / 30); return m + (m === 1 ? ' month ago' : ' months ago'); }
+    return pjDate(v);
+  }
+  function pjShort(n){
+    n = Number(n) || 0;
+    if(n >= 100000){ const l = Math.floor(n / 10000) / 10; return '\u20b9' + l + 'L'; }
+    if(n >= 1000) return '\u20b9' + Math.floor(n / 1000) + 'K';
+    return '\u20b9' + n;
+  }
+  function pjSalary(job){
+    if(job.salMin) return pjShort(job.salMin) + '\u2013' + pjShort(job.salMax) + ' / ' + (job.salPeriod === 'year' ? 'year' : 'month');
+    return jobPriceText(job);
   }
   function pjMarkSeen(id){
     try{ const j = jobsData[id]; if(j) localStorage.setItem(pjSeenKey(id), String(Math.max((j.applicantIds || []).length, Number(j.applicantCount) || 0))); }catch(e){}
@@ -346,22 +367,26 @@ if(typeof window.bkStatusBadge !== 'function'){
       const meta = [job.category, job.qualification, job.location].filter(Boolean).join(' \u00b7 ') || 'Posted just now';
       const extra = jobExtra(job);
       const inst = (currentCompany && currentCompany.name) || 'Your institution';
-      const locType = [job.location || job.campusLoc, job.type].filter(Boolean).join(' \u00b7 ');
-      const isNew = pjHasNew(id, count);
+      const newN = pjNewCount(id, count);
+      const place = job.location || job.campusLoc || '';
       const toggle = job.status === 'published' ? ['Close Job', 'closed', 'pause'] : [job.status === 'draft' ? 'Publish Job' : 'Reopen Job', 'published', 'play'];
       const ic = {
         edit: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4 12.5-12.5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
         pause: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><rect x="6" y="5" width="4" height="14" rx="1" stroke="currentColor" stroke-width="2"/><rect x="14" y="5" width="4" height="14" rx="1" stroke="currentColor" stroke-width="2"/></svg>',
         play: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M7 4l13 8-13 8V4z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>',
-        trash: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M3 6h18M8 6V4h8v2m-1 0v14H9V6M10 10v6M14 10v6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+        trash: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M3 6h18M8 6V4h8v2m-1 0v14H9V6M10 10v6M14 10v6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+        cap: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M2 9l10-5 10 5-10 5L2 9z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M6 11.5V16c0 1.4 2.7 3 6 3s6-1.6 6-3v-4.5M22 9v6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+        pin: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 21s7-6.2 7-11a7 7 0 10-14 0c0 4.8 7 11 7 11z" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="10" r="2.5" stroke="currentColor" stroke-width="2"/></svg>',
+        cal: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="16" rx="2" stroke="currentColor" stroke-width="2"/><path d="M3 10h18M8 3v4M16 3v4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>'
       };
+      const hasLogo = !!(currentCompany && currentCompany.logo);
       return `
       <div class="job-card pj-card" onclick="openApplicantsView('${id}')">
         <div class="pj-top">
-          <div class="job-logo pj-logo" style="${companyLogoStyle()}"></div>
+          <div class="job-logo pj-logo ${hasLogo ? '' : 'pj-logo-ph'}" style="${hasLogo ? companyLogoStyle() : ''}">${hasLogo ? '' : ic.cap}</div>
           <span class="pj-badge">${typeof bkStatusBadge==='function' ? bkStatusBadge(job) : ''}</span>
           <button class="pj-dots" aria-label="Job actions" onclick="event.stopPropagation(); pjToggleMenu(this)">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>
           </button>
           <div class="pj-menu" onclick="event.stopPropagation()">
             <button onclick="pjCloseMenus(); editJob('${id}')">${ic.edit}Edit Job</button>
@@ -371,16 +396,18 @@ if(typeof window.bkStatusBadge !== 'function'){
         </div>
         <div class="pj-college">${jbEsc(inst)}</div>
         <div class="pj-role">${jbEsc(job.title || job.role)}</div>
-        <div class="pj-price">${jbEsc(jobPriceText(job))}</div>
-        <div class="pj-grid2">
-          <div class="pj-cell"><label>Department</label><span>${jbEsc(job.dept || job.category || '\u2014')}</span></div>
-          <div class="pj-cell"><label>Type</label><span>${jbEsc(job.type || '\u2014')}</span></div>
-          <div class="pj-cell"><label>Location</label><span>${jbEsc(job.location || job.campusLoc || '\u2014')}</span></div>
-          <div class="pj-cell pj-appl"><label>${count===1?'Applicant':'Applicants'}</label><span><b>${count}</b>${isNew ? '<em class="pj-new">New</em>' : ''}</span></div>
-          <div class="pj-cell"><label>Posted</label><span>${jbEsc(pjDate(job.postedAt) || '\u2014')}</span></div>
-          <div class="pj-cell"><label>Expires</label><span>${jbEsc(pjDate(job.deadline) || 'No deadline')}</span></div>
+        <div class="pj-dept">${jbEsc(job.dept || job.category || '')}</div>
+        <div class="pj-loc">${ic.pin}<span>${jbEsc([place, job.type].filter(Boolean).join(' \u00b7 ') || '\u2014')}</span></div>
+        <div class="pj-price">${jbEsc(pjSalary(job))}</div>
+        <div class="pj-stat">
+          <div class="pj-num"><b>${count}</b><span>${count===1?'Applicant':'Applicants'}</span></div>
+          ${newN ? '<em class="pj-new">' + newN + ' New</em>' : ''}
         </div>
-        <button class="pj-view" onclick="event.stopPropagation(); openApplicantsView('${id}')">View Applicants</button>
+        <div class="pj-dates">
+          <span>${ic.cal}Posted ${jbEsc(pjAgo(job.postedAt) || '\u2014')}</span>
+          <span>Expires ${jbEsc(pjDate(job.deadline) || 'No deadline')}</span>
+        </div>
+        <button class="pj-view" onclick="event.stopPropagation(); openApplicantsView('${id}')">View Applicants \u2192</button>
       </div>`;
     }catch(err){ console.error('Posted job card failed', id, err); return '<div class="job-card" style="color:#B3261E">Card error: '+jbEsc(err && err.message)+'</div>'; } }).join('');
   }
