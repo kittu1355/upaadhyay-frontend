@@ -1439,35 +1439,39 @@ html, body.page{height:auto !important; min-height:100%; overflow-y:auto !import
 .jl-view{display:block; margin:0 auto; background:none; border:0; font:700 12.5px inherit; font-family:inherit; letter-spacing:.04em; color:var(--blue-700); text-transform:uppercase; cursor:pointer; padding:4px 8px;}
 .jl-view:hover{text-decoration:underline;}
 
-/* ---- Posted jobs tab: compact 250x250 square cards ---- */
-#myJobsList{grid-template-columns:repeat(auto-fill,250px); gap:16px; max-width:none;}
-#myJobsList .pj-card{position:relative; display:flex !important; flex-direction:column; align-items:stretch; text-align:left; gap:2px;
-  width:250px; height:250px; aspect-ratio:1/1; box-sizing:border-box; border-radius:12px !important; padding:8px !important; cursor:pointer; overflow:visible;
-  background:#fff; border:1px solid #DDE4F0; box-shadow:0 1px 3px rgba(16,36,84,.08), 0 4px 12px rgba(16,36,84,.08);}
+/* ---- Posted jobs tab: profile-style job cards ---- */
+#myJobsList{grid-template-columns:repeat(auto-fill,270px); gap:18px; max-width:none;}
+#myJobsList .pj-card{position:relative; display:flex !important; flex-direction:column; align-items:stretch; text-align:left; gap:0;
+  width:270px; height:auto; min-height:0; box-sizing:border-box; border-radius:16px !important; padding:14px !important; cursor:pointer; overflow:visible;
+  background:#fff; border:1px solid #DDE4F0; box-shadow:0 1px 3px rgba(16,36,84,.08), 0 8px 22px rgba(16,36,84,.10);}
 #myJobsList .pj-card:hover{border-color:var(--blue-500); transform:translateY(-2px);}
-.pj-top{position:relative; display:flex; align-items:center; gap:6px; height:30px; flex:none;}
-#myJobsList .pj-logo{width:30px; height:30px; border-radius:6px !important; margin:0 !important; flex-shrink:0; background-size:cover; background-position:center;}
-.pj-badge{position:static; margin-right:auto; display:inline-flex;}
-.pj-badge .badge-live, .pj-badge .badge{font-size:10px; padding:2px 7px; line-height:1.4;}
-.pj-dots{flex:none; width:26px; height:26px; border:0; background:none; border-radius:6px; color:var(--ink-soft); cursor:pointer; display:inline-flex; align-items:center; justify-content:center;}
+.pj-top{position:relative; display:flex; align-items:center; gap:8px; height:46px; flex:none; margin-bottom:8px;}
+#myJobsList .pj-logo{width:46px; height:46px; border-radius:12px !important; margin:0 !important; flex-shrink:0; background-size:cover; background-position:center;}
+#myJobsList .pj-logo-ph{background:#EEF3FF !important; color:var(--blue-700); display:flex; align-items:center; justify-content:center; border:1px solid #DDE7FB;}
+.pj-badge{position:static; margin-left:auto; display:inline-flex;}
+.pj-badge .badge-live, .pj-badge .badge{font-size:12px; padding:4px 12px; border-radius:999px; line-height:1.3;}
+.pj-dots{flex:none; width:28px; height:32px; border:0; background:none; border-radius:8px; color:var(--ink-soft); cursor:pointer; display:inline-flex; align-items:center; justify-content:center;}
 .pj-dots:hover{background:#EEF2FB; color:var(--ink);}
-.pj-menu{display:none; position:absolute; top:28px; right:0; min-width:140px; background:#fff; border:1px solid #DDE4F0; border-radius:8px; padding:4px; box-shadow:0 10px 24px rgba(16,36,84,.18); z-index:10;}
+.pj-menu{display:none; position:absolute; top:40px; right:0; min-width:150px; background:#fff; border:1px solid #DDE4F0; border-radius:10px; padding:5px; box-shadow:0 10px 24px rgba(16,36,84,.18); z-index:10;}
 .pj-menu.open{display:block;}
-.pj-menu button{display:flex; align-items:center; gap:8px; width:100%; background:none; border:0; text-align:left; font:600 12px inherit; font-family:inherit; color:var(--ink); padding:7px 8px; border-radius:6px; cursor:pointer;}
+.pj-menu button{display:flex; align-items:center; gap:8px; width:100%; background:none; border:0; text-align:left; font:600 12.5px inherit; font-family:inherit; color:var(--ink); padding:8px 9px; border-radius:7px; cursor:pointer;}
 .pj-menu button:hover{background:#EEF2FB;}
 .pj-menu button.bad{color:#B3261E;}
 .pj-menu button.bad:hover{background:#FDECEA;}
-.pj-college, .pj-role, .pj-price{max-width:100%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
-.pj-college{font-size:12px; font-weight:500; color:var(--ink-soft); margin-top:4px;}
-.pj-role{font-size:15px; font-weight:600; color:var(--ink); line-height:1.25; text-transform:capitalize;}
-.pj-price{font-size:13px; font-weight:600; color:var(--blue-700); margin-top:1px;}
-/* two equal columns: every row has a left and a right cell */
-#myJobsList .pj-grid2{display:grid; grid-template-columns:1fr 1fr; gap:5px; margin-top:6px; flex:1; min-height:0; align-content:stretch;}
-.pj-cell{display:flex; flex-direction:column; justify-content:center; min-width:0; background:#F4F7FD; border:1px solid #E6ECF7; border-radius:6px; padding:3px 7px;}
-.pj-cell label{font-size:9.5px; font-weight:600; letter-spacing:.04em; text-transform:uppercase; color:var(--ink-faint); line-height:1.2; margin:0;}
-.pj-cell span{font-size:11px; font-weight:600; color:var(--ink); line-height:1.3; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:block;}
-.pj-appl span{display:flex; align-items:center; gap:5px; overflow:visible;}
-.pj-appl b{font-size:20px; font-weight:700; line-height:1.1; color:var(--ink);}
-.pj-new{font-style:normal; font-size:10px; font-weight:700; color:#fff; background:#1E8E5A; padding:1px 7px; border-radius:999px;}
-.pj-view{display:block; width:100%; height:32px; flex:none; margin-top:6px; background:var(--blue-700); border:0; border-radius:8px; font:600 12.5px inherit; font-family:inherit; color:#fff; cursor:pointer; padding:0;}
+.pj-college, .pj-role, .pj-dept, .pj-price{max-width:100%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+.pj-college{font-size:16px; font-weight:700; color:var(--ink); line-height:1.3;}
+.pj-role{font-size:19px; font-weight:600; color:var(--ink); line-height:1.3; margin-top:6px; text-transform:capitalize;}
+.pj-dept{font-size:13px; color:var(--blue-700); margin-top:4px; min-height:17px;}
+.pj-loc{display:flex; align-items:center; gap:6px; font-size:13px; color:var(--ink-soft); margin-top:8px; min-width:0;}
+.pj-loc svg{flex:none;}
+.pj-loc span{white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+.pj-price{font-size:16px; font-weight:700; color:var(--ink); margin-top:10px;}
+.pj-stat{display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:12px; padding-top:12px; border-top:1px solid #E3E9F4;}
+.pj-num{display:flex; flex-direction:column; line-height:1.15;}
+.pj-num b{font-size:30px; font-weight:500; color:var(--blue-700);}
+.pj-num span{font-size:13px; color:var(--ink-soft); margin-top:2px;}
+.pj-new{font-style:normal; font-size:13px; font-weight:700; color:var(--blue-700); background:#E8F0FF; padding:5px 12px; border-radius:999px;}
+.pj-dates{display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:12px; font-size:11.5px; color:var(--ink-faint);}
+.pj-dates span{display:inline-flex; align-items:center; gap:5px; white-space:nowrap;}
+.pj-view{display:block; width:100%; height:42px; flex:none; margin-top:12px; background:var(--blue-700); border:0; border-radius:10px; font:600 14.5px inherit; font-family:inherit; color:#fff; cursor:pointer; padding:0;}
 .pj-view:hover{background:#2563EB; text-decoration:none;}
