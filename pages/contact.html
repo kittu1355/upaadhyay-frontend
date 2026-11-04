@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Contact Us | Upaadhyay</title>
-<meta name="description" content="Contact the Upaadhyay team with questions about faculty hiring, jobs or your account.">
+<title>Contact Us | Upaadhyay.com</title>
+<meta name="description" content="Contact the Upaadhyay.com team with questions about faculty hiring, jobs or your account.">
 <meta name="robots" content="index,follow,max-image-preview:large">
 <link rel="canonical" href="https://upaadhyay.com/pages/contact.html">
 <meta property="og:type" content="website">
-<meta property="og:site_name" content="Upaadhyay">
-<meta property="og:title" content="Contact Us | Upaadhyay">
-<meta property="og:description" content="Contact the Upaadhyay team with questions about faculty hiring, jobs or your account.">
+<meta property="og:site_name" content="Upaadhyay.com">
+<meta property="og:title" content="Contact Us | Upaadhyay.com">
+<meta property="og:description" content="Contact the Upaadhyay.com team with questions about faculty hiring, jobs or your account.">
 <meta property="og:url" content="https://upaadhyay.com/pages/contact.html">
 <meta property="og:image" content="https://upaadhyay.com/assets/og-image.png">
 <meta property="og:locale" content="en_IN">
@@ -41,7 +41,7 @@ function sendContact(){
  var n=cfName.value.trim(),e=cfEmail.value.trim(),m=cfMsg.value.trim();
  if(!n||!/^\S+@\S+\.\S+$/.test(e)||m.length<10){showGenericToast('Please enter your name, a valid email and a message.');return;}
  var body=m+'\n\n— '+n+' ('+e+')\nRole: '+cfRole.value;
- window.location.href='mailto:'+SUPPORT_EMAIL+'?subject='+encodeURIComponent('['+cfTopic.value+'] Upaadhyay enquiry')+'&body='+encodeURIComponent(body);
+ window.location.href='mailto:'+SUPPORT_EMAIL+'?subject='+encodeURIComponent('['+cfTopic.value+'] Upaadhyay.com enquiry')+'&body='+encodeURIComponent(body);
  showGenericToast('Opening your email app…');
 }</script><script src="../js/track.js" defer></script>
 </body></html>
