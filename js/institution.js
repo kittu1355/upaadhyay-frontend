@@ -645,7 +645,16 @@ function instHeader(){
 }
 window.instHeader=instHeader;
 let PEEK='';
-function peekPage(k){ if(k==='branches') return `<div class="in-wrap in-dash" data-sec="branches"><div class="in-head"><h3>Sub-branches</h3></div>${card('Sub-branches','',note('<b>Locked until admin approval.</b><br>Submit your institution profile first. Once an admin approves it, you can add campuses and review requests from sub-branches here.','in-warn')+'<div style="margin-top:14px"><button class="btn btn-primary btn-sm" onclick="IN.resume()">Back to registration</button></div>')}</div>`; return ''; }
+function peekVerify(){
+  const d=I.d, ap=vState()==='verified', web=!!(d.website&&String(d.website).trim());
+  const rows=[[emOk()?'ok':'wait','Official institution email '+(emOk()?'verified':'not verified yet')],
+    [web?'ok':'wait','Official website '+(web?'provided':'not provided yet')]].concat(vRows(),[[ap?'ok':'wait',ap?'Admin approved':'Admin approval: not submitted yet']]);
+  return `<div class="in-wrap in-dash" data-sec="verify"><div class="in-head"><h3>Institution verification</h3></div><div class="in-card in-sq">
+   <div class="in-status"><div class="big" style="background:${ap?'#1E8E5A':'#C77700'}">${ap?ck(26):CLK}</div><h3 style="margin:0 0 6px">${ap?'Admin approved':'Not submitted yet'}</h3><p style="color:var(--ink-soft);margin:0">${ap?'Your institution has been reviewed and verified.':'Here is what you have provided so far. Update anything, then submit your profile for admin review.'}</p></div>
+   <ul class="in-list">${rows.map(x=>`<li>${dot(x[0],rowIc(x[0]))}${x[1]}</li>`).join('')}</ul>${missPanel()}
+   <div class="in-actions" style="justify-content:flex-start"><button class="btn btn-primary btn-sm" onclick="IN.openVerify()">Update verification details</button><button class="btn btn-ghost btn-sm" onclick="IN.resume()">Back to registration</button></div></div></div>`;
+}
+function peekPage(k){ if(k==='verify') return peekVerify(); if(k==='branches'&&approved()) return `<div class="in-wrap in-dash" data-sec="branches"><div class="in-head"><h3>Sub-branches</h3></div>${branchMgr()}<div style="margin-top:14px"><button class="btn btn-ghost btn-sm" onclick="IN.resume()">Back to profile editing</button></div></div>`; if(k==='branches') return `<div class="in-wrap in-dash" data-sec="branches"><div class="in-head"><h3>Sub-branches</h3></div>${card('Sub-branches','',note('<b>Locked until admin approval.</b><br>Submit your institution profile first. Once an admin approves it, you can add campuses and review requests from sub-branches here.','in-warn')+'<div style="margin-top:14px"><button class="btn btn-primary btn-sm" onclick="IN.resume()">Back to registration</button></div>')}</div>`; return ''; }
 function render(){ const r=$('instRoot'); if(!r) return; if(!BRQ.loaded&&!BRQ.busy&&I.view!=='wizard') brLoad(); const y=window.scrollY; r.style.minHeight=r.offsetHeight+'px'; r.innerHTML=(PEEK&&I.view==='wizard')?peekPage(PEEK):I.view==='wizard'?wiz():I.view==='status'?statusPage():dash(); instHeader(); window.scrollTo(0,y); r.style.minHeight=''; }
 function setHeader(){
   try{
@@ -726,7 +735,7 @@ window.IN={
   dash(){ PEEK=''; I.view='dash'; save(); render(); top(); },
   resume(){ PEEK=''; render(); },
   openVerify(){ PEEK=''; I.step=3; I.max=Math.max(I.max,3); welcome=false; save(); render(); },
-  peek(k){ PEEK=k; render(); },
+  peek(k){ PEEK=k; if(k==='branches'&&approved()) brLoad(true); render(); },
   sec(k){ PEEK=''; I.sec=k; if(k==='branches') brLoad(true); if(k==='verify') VS=0; if(I.view==='status'&&k!=='verify'){ I.view='dash'; save(); } render(); },
   snext(){ const S=dashSecs(), i=S.findIndex(x=>x[0]===I.sec); if(I.sec==='verify'&&VS<VSTEPS.length-1) VS++; else if(i<S.length-1){ I.sec=S[i+1][0]; if(I.sec==='verify') VS=0; } render(); toLayout(); },
   sback(){ const S=dashSecs(), i=S.findIndex(x=>x[0]===I.sec); if(I.sec==='verify'&&VS>0) VS--; else if(i>0){ I.sec=S[i-1][0]; if(I.sec==='verify') VS=VSTEPS.length-1; } render(); toLayout(); },
