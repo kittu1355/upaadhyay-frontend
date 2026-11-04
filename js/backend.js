@@ -151,45 +151,77 @@
     try{ qa = mapJob(await api.get('/jobs/' + id, { noAuthRedirect: true })).qa; }catch(e){}
     return ((qa && qa.questions) || []).filter(function(x){ return x && String(x.q || '').trim(); }).slice(0, 5);
   }
+  /* One question at a time, each with its own countdown (the minutes the employer chose) and a Next button.
+     When the time runs out the answer typed so far is saved and the next question opens by itself. */
   function askQuestions(qs, title){
     return new Promise(function(resolve){
-      if(!document.getElementById('qaApStyle')){
-        const st = document.createElement('style'); st.id = 'qaApStyle';
+      if(!document.getElementById('qaApStyle2')){
+        const st = document.createElement('style'); st.id = 'qaApStyle2';
         st.textContent = '.qa-ap{position:fixed;inset:0;z-index:2000;background:rgba(11,29,58,.5);display:flex;align-items:center;justify-content:center;padding:16px}'
-          + '.qa-ap-card{background:#fff;width:100%;max-width:560px;max-height:90vh;overflow:auto;padding:22px;border-radius:8px;box-shadow:0 20px 50px rgba(11,29,58,.3);font-family:inherit}'
-          + '.qa-ap-card h3{margin:0 0 4px;font-size:18px}.qa-ap-sub{margin:0 0 14px;font-size:13px;color:#5b6577}'
-          + '.qa-ap-item{margin-bottom:14px}.qa-ap-item label{display:block;font-size:14px;font-weight:600;margin-bottom:6px}.qa-ap-item label small{font-weight:500;color:#8a93a6;margin-left:4px}'
-          + '.qa-ap-item textarea{width:100%;box-sizing:border-box;min-height:84px;padding:10px 12px;border:1px solid #cfd6e4;border-radius:6px;font:inherit;font-size:14px;resize:vertical}'
-          + '.qa-ap-item textarea.bad{border-color:#B42318;outline:1px solid #B42318}.qa-ap-err{min-height:16px;margin-top:3px;font-size:12.5px;color:#B42318}'
-          + '.qa-ap-foot{display:flex;justify-content:flex-end;gap:10px;margin-top:6px}.qa-ap-foot button{padding:10px 18px;border-radius:6px;font:inherit;font-weight:600;cursor:pointer;border:1px solid #cfd6e4;background:#fff}'
+          + '.qa-ap-card{background:#fff;width:100%;max-width:560px;max-height:92vh;overflow:auto;padding:22px;border-radius:6px;box-shadow:0 20px 50px rgba(11,29,58,.3);font-family:inherit}'
+          + '.qa-ap-top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}'
+          + '.qa-ap-step{font-size:13px;font-weight:600;color:#5b6577}'
+          + '.qa-ap-timer{display:inline-flex;align-items:center;gap:6px;font-size:15px;font-weight:700;color:#1d4fd7;background:#EAF1FF;padding:5px 12px;border-radius:999px;font-variant-numeric:tabular-nums}'
+          + '.qa-ap-timer.low{color:#B42318;background:#FDECEA}'
+          + '.qa-ap-bar{height:5px;background:#E6ECF7;border-radius:999px;overflow:hidden;margin-bottom:16px}'
+          + '.qa-ap-bar i{display:block;height:100%;width:100%;background:#1d4fd7;transition:width 1s linear,background .3s}'
+          + '.qa-ap-bar i.low{background:#B42318}'
+          + '.qa-ap-sub{margin:0 0 6px;font-size:12.5px;color:#8a93a6}'
+          + '.qa-ap-q{margin:0 0 12px;font-size:17px;font-weight:700;line-height:1.35;color:#111827}'
+          + '.qa-ap-card textarea{width:100%;box-sizing:border-box;min-height:120px;padding:10px 12px;border:1px solid #cfd6e4;border-radius:4px;font:inherit;font-size:14px;resize:vertical}'
+          + '.qa-ap-card textarea.bad{border-color:#B42318;outline:1px solid #B42318}.qa-ap-err{min-height:18px;margin-top:3px;font-size:12.5px;color:#B42318}'
+          + '.qa-ap-foot{display:flex;justify-content:space-between;gap:10px;margin-top:6px}.qa-ap-foot button{padding:10px 20px;border-radius:4px;font:inherit;font-weight:600;cursor:pointer;border:1px solid #cfd6e4;background:#fff}'
           + '.qa-ap-foot .qa-ap-go{background:#1d4fd7;border-color:#1d4fd7;color:#fff}';
         document.head.appendChild(st);
       }
       const box = document.createElement('div'); box.className = 'qa-ap';
-      box.innerHTML = '<div class="qa-ap-card" role="dialog" aria-modal="true" aria-labelledby="qaApT"><h3 id="qaApT">Answer these questions to apply</h3>'
-        + '<p class="qa-ap-sub">' + (title ? esc(title) + ' · ' : '') + qs.length + ' question' + (qs.length > 1 ? 's' : '') + ' from the employer. All answers are required.</p>'
-        + qs.map(function(x, i){ return '<div class="qa-ap-item"><label for="qaAp' + i + '">' + (i + 1) + '. ' + esc(x.q) + '<small>· about ' + (+x.mins || 1) + ' min</small></label>'
-            + '<textarea id="qaAp' + i + '" maxlength="1000" rows="3" placeholder="Type your answer"></textarea><div class="qa-ap-err"></div></div>'; }).join('')
-        + '<div class="qa-ap-foot"><button type="button" class="qa-ap-cancel">Cancel</button><button type="button" class="qa-ap-go">Submit application</button></div></div>';
+      box.innerHTML = '<div class="qa-ap-card" role="dialog" aria-modal="true" aria-labelledby="qaApQ">'
+        + '<div class="qa-ap-top"><span class="qa-ap-step"></span><span class="qa-ap-timer"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="13" r="8" stroke="currentColor" stroke-width="2"/><path d="M12 9v4l2.5 2M9 3h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><b class="qa-ap-time">0:00</b></span></div>'
+        + '<div class="qa-ap-bar"><i></i></div>'
+        + '<p class="qa-ap-sub"></p><h3 class="qa-ap-q" id="qaApQ"></h3>'
+        + '<textarea maxlength="1000" placeholder="Type your answer"></textarea><div class="qa-ap-err"></div>'
+        + '<div class="qa-ap-foot"><button type="button" class="qa-ap-cancel">Cancel</button><button type="button" class="qa-ap-go">Next</button></div></div>';
       document.body.appendChild(box);
-      const tas = box.querySelectorAll('textarea');
-      function close(v){ document.removeEventListener('keydown', onKey); box.remove(); resolve(v); }
+      const $ = function(s){ return box.querySelector(s); };
+      const ta = $('textarea'), err = $('.qa-ap-err'), bar = $('.qa-ap-bar i'), timer = $('.qa-ap-timer'), clock = $('.qa-ap-time');
+      const out = []; let idx = 0, left = 0, total = 0, tick = null;
+      function fmt(s){ return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); }
+      function stop(){ if(tick){ clearInterval(tick); tick = null; } }
+      function close(v){ stop(); document.removeEventListener('keydown', onKey); box.remove(); resolve(v); }
       function onKey(e){ if(e.key === 'Escape') close(null); }
+      function paint(){
+        clock.textContent = fmt(left);
+        const low = left <= 10;
+        timer.classList.toggle('low', low); bar.classList.toggle('low', low);
+        bar.style.width = (total ? Math.max(0, left / total * 100) : 0) + '%';
+      }
+      function show(){
+        const x = qs[idx];
+        total = left = Math.max(1, +x.mins || 1) * 60;
+        $('.qa-ap-step').textContent = 'Question ' + (idx + 1) + ' of ' + qs.length;
+        $('.qa-ap-sub').textContent = (title ? title + ' · ' : '') + 'You have ' + (+x.mins || 1) + ' min for this question';
+        $('.qa-ap-q').textContent = x.q;
+        $('.qa-ap-go').textContent = idx === qs.length - 1 ? 'Submit application' : 'Next';
+        ta.value = ''; ta.classList.remove('bad'); err.textContent = '';
+        bar.style.transition = 'none'; bar.style.width = '100%'; void bar.offsetWidth; bar.style.transition = '';
+        paint(); stop();
+        tick = setInterval(function(){ left--; paint(); if(left <= 0){ advance(true); } }, 1000);
+        ta.focus();
+      }
+      function advance(timedOut){
+        const a = ta.value.trim();
+        if(!timedOut && a.length < 2){ ta.classList.add('bad'); err.textContent = 'Please answer this question.'; ta.focus(); return; }
+        stop();
+        out.push({ q: qs[idx].q, mins: +qs[idx].mins || 1, a: a.length >= 2 ? a : '(No answer \u2014 time ran out)' });
+        idx++;
+        if(idx >= qs.length){ close(out); return; }
+        show();
+      }
       document.addEventListener('keydown', onKey);
-      box.addEventListener('mousedown', function(e){ if(e.target === box) close(null); });
-      box.querySelector('.qa-ap-cancel').onclick = function(){ close(null); };
-      [].forEach.call(tas, function(t){ t.addEventListener('input', function(){ t.classList.remove('bad'); t.nextSibling.textContent = ''; }); });
-      box.querySelector('.qa-ap-go').onclick = function(){
-        let first = null;
-        [].forEach.call(tas, function(t){
-          const ok = t.value.trim().length >= 2;
-          t.classList.toggle('bad', !ok); t.nextSibling.textContent = ok ? '' : 'Please answer this question.';
-          if(!ok && !first) first = t;
-        });
-        if(first){ first.focus(); return; }
-        close(qs.map(function(x, i){ return { q: x.q, mins: +x.mins || 1, a: tas[i].value.trim() }; }));
-      };
-      if(tas[0]) tas[0].focus();
+      ta.addEventListener('input', function(){ ta.classList.remove('bad'); err.textContent = ''; });
+      $('.qa-ap-cancel').onclick = function(){ close(null); };
+      $('.qa-ap-go').onclick = function(){ advance(false); };
+      show();
     });
   }
 
@@ -507,6 +539,13 @@
   const appByCandidate = {};          // candidateId -> latest application id (for status updates)
   const appByJobCand = {};            // jobKey:candidateId -> application id
 
+  /* The faculty's answers to the employer's questions, whatever shape the API sends them in -> [{q, a, mins}] */
+  function normAnswers(v){
+    if(!v) return [];
+    if(typeof v === 'string'){ try{ v = JSON.parse(v); }catch(e){ return []; } }
+    if(!Array.isArray(v)) v = Object.keys(v).map(function(k){ return { q: k, a: v[k] }; });
+    return v.map(function(x){ return { q: x.q || x.question || '', a: x.a || x.answer || '', mins: x.mins || x.minutes || '' }; }).filter(function(x){ return x.q || x.a; });
+  }
   function mapPostedJob(j){
     const m = j.meta || {};
     return {
@@ -581,6 +620,7 @@
     Object.keys(facultyProfiles).forEach(function(k){ delete facultyProfiles[k]; });
     Object.keys(candidateStatus).forEach(function(k){ if(candidateStatus[k] !== 'invited') delete candidateStatus[k]; });
     Object.keys(postedJobs).forEach(function(k){ delete postedJobs[k]; });
+    window.__apAnswers = {};
     const jobs = fetched[0];
     jobs.forEach(function(j){ postedJobs['j' + j.id] = mapPostedJob(j); });
     const apps = fetched[1];
@@ -590,6 +630,8 @@
       if(!facultyProfiles[cid]) setProfile(cand);
       if(postedJobs[key] && postedJobs[key].applicantIds.indexOf(cid) < 0) postedJobs[key].applicantIds.push(cid);
       appByJobCand[key + ':' + cid] = a.id;
+      const qaList = normAnswers(a.answers || a.qa_answers || a.screening_answers || (a.meta && a.meta.answers));
+      if(qaList.length){ (window.__apAnswers = window.__apAnswers || {})[key + ':' + cid] = qaList; }
       if(!appByCandidate[cid] || a.id > appByCandidate[cid]) appByCandidate[cid] = a.id;
       if(['shortlisted','interview','selected'].indexOf(a.status) > -1) candidateStatus[cid] = 'shortlisted';
       else if(a.status === 'rejected') candidateStatus[cid] = 'rejected';
