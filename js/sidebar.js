@@ -41,8 +41,8 @@
     var I = lsj('upadyay_inst_v1') || {};
     tab('company');
     if(I.view === 'wizard' && window.IN){
-      /* not submitted yet: Verification opens its wizard step, Sub-branches shows its locked page */
-      if(k === 'verify' && IN.openVerify) IN.openVerify();
+      /* not submitted yet: Verification shows its status page, Sub-branches its locked page */
+      if(k === 'verify' && IN.peek) IN.peek('verify');
       else if(k === 'branches' && IN.peek) IN.peek('branches');
       else if(IN.sec) IN.sec(k);
     } else if(window.IN && IN.sec) IN.sec(k);
