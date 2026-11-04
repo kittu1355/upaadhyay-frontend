@@ -634,27 +634,32 @@ if(typeof window.bkStatusBadge !== 'function'){
     const jobs = Object.keys(jobsData).filter(k=>(jobsData[k].applicantIds||[]).indexOf(id)>-1).map(k=>jobsData[k].title);
     const deg = highestDegree(p);
     const ini = String(p.name||'?').replace(/^(dr|mr|mrs|ms|prof)\.?\s+/i,'').trim().split(/\s+/).slice(0,2).map(w=>w[0]||'').join('').toUpperCase() || '?';
-    const av = p.avatar ? `<div class="ap-avatar" style="background-image:url('${jbEsc(p.avatar)}');"></div>` : `<div class="ap-avatar ap-avatar-ini">${jbEsc(ini)}</div>`;
+    const PERSON = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="2"/><path d="M4 21c0-4.2 3.6-7 8-7s8 2.8 8 7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
+    const av = p.avatar ? `<div class="ap-avatar" style="background-image:url('${jbEsc(p.avatar)}');"></div>` : `<div class="ap-avatar ap-avatar-ini">${PERSON}</div>`;
+    const st = candidateStatus[id];
+    const stBadge = st ? statusBadge(id) : '<span class="badge ap-new">New</span>';
+    const roleLine = [p.role || 'Faculty', deg].filter(Boolean).join(' \u00b7 ');
     return `
       <div class="job-card ap-card" onclick="openProfile('${id}')">
-        <div class="ap-banner" style="background:${bannerGradient(p.name)};">${av}</div>
-        <div class="ap-body">
+        <div class="ap-head">
+          ${av}
           <div class="ap-info">
             <p class="ap-name">${jbEsc(p.name)}${p.verified?VERIFIED_TICK:''}</p>
-            <p class="ap-role">${jbEsc(p.role || 'Faculty')}</p>
-            <div class="ap-tags">${statusBadge(id)}
-              ${jobs.length ? `<span class="ap-tag ap-tag-job">Applied for: ${jbEsc(jobs[0])}${jobs.length>1 ? ' +'+(jobs.length-1) : ''}</span>` : ''}
-              ${deg ? `<span class="ap-tag ap-tag-deg">${jbEsc(deg)}</span>` : ''}
-            </div>
+            <p class="ap-role">${jbEsc(roleLine)}</p>
           </div>
-          <div class="ap-actions">
-            <button class="btn btn-light btn-sm" onclick="event.stopPropagation(); messageCandidate('${id}', event)">Message</button>
-            ${candidateStatus[id]==='shortlisted'
-              ? `<button class="btn btn-light btn-sm" onclick="event.stopPropagation(); undoApplicant('${id}', event)">Remove shortlist</button>`
-              : candidateStatus[id]==='rejected'
-                ? `<button class="btn btn-light btn-sm" onclick="event.stopPropagation(); undoApplicant('${id}', event)">Undo reject</button>`
-                : `<button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); shortlistCandidate('${id}', event)">Shortlist</button><button class="btn btn-ghost btn-sm" style="color:#B3261E;border-color:#B3261E" onclick="event.stopPropagation(); rejectCandidate('${id}', event)">Reject</button>`}
-          </div>
+          <div class="ap-status">${stBadge}</div>
+        </div>
+        <div class="ap-applied">
+          <label>Applied for</label>
+          <b>${jobs.length ? jbEsc(jobs[0]) + (jobs.length>1 ? ' +'+(jobs.length-1) : '') : '\u2014'}</b>
+        </div>
+        <div class="ap-actions">
+          <button class="btn btn-light btn-sm" onclick="event.stopPropagation(); messageCandidate('${id}', event)">Message</button>
+          ${st==='shortlisted'
+            ? `<button class="btn btn-light btn-sm" onclick="event.stopPropagation(); undoApplicant('${id}', event)">Remove shortlist</button>`
+            : st==='rejected'
+              ? `<button class="btn btn-light btn-sm" onclick="event.stopPropagation(); undoApplicant('${id}', event)">Undo reject</button>`
+              : `<button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); shortlistCandidate('${id}', event)">Shortlist</button><button class="btn btn-ghost btn-sm ap-rej" onclick="event.stopPropagation(); rejectCandidate('${id}', event)">Reject</button>`}
         </div>
       </div>`;
   }
