@@ -655,7 +655,13 @@ function peekVerify(){
    <div class="in-actions" style="justify-content:flex-start"><button class="btn btn-primary btn-sm" onclick="IN.openVerify()">Update verification details</button><button class="btn btn-ghost btn-sm" onclick="IN.resume()">Back to registration</button></div></div></div>`;
 }
 function peekPage(k){ if(k==='verify') return peekVerify(); if(k==='branches'&&approved()) return `<div class="in-wrap in-dash" data-sec="branches"><div class="in-head"><h3>Sub-branches</h3></div>${branchMgr()}<div style="margin-top:14px"><button class="btn btn-ghost btn-sm" onclick="IN.resume()">Back to profile editing</button></div></div>`; if(k==='branches') return `<div class="in-wrap in-dash" data-sec="branches"><div class="in-head"><h3>Sub-branches</h3></div>${card('Sub-branches','',note('<b>Locked until admin approval.</b><br>Submit your institution profile first. Once an admin approves it, you can add campuses and review requests from sub-branches here.','in-warn')+'<div style="margin-top:14px"><button class="btn btn-primary btn-sm" onclick="IN.resume()">Back to registration</button></div>')}</div>`; return ''; }
-function render(){ const r=$('instRoot'); if(!r) return; if(!BRQ.loaded&&!BRQ.busy&&I.view!=='wizard') brLoad(); const y=window.scrollY; r.style.minHeight=r.offsetHeight+'px'; r.innerHTML=(PEEK&&I.view==='wizard')?peekPage(PEEK):I.view==='wizard'?wiz():I.view==='status'?statusPage():dash(); instHeader(); window.scrollTo(0,y); r.style.minHeight=''; }
+function render(){ const r=$('instRoot'); if(!r) return; if(!BRQ.loaded&&!BRQ.busy&&I.view!=='wizard') brLoad(); const y=window.scrollY; r.style.minHeight=r.offsetHeight+'px';
+  const base=()=>I.view==='wizard'?wiz():I.view==='status'?statusPage():dash();
+  let h;
+  try{ h=(PEEK&&I.view==='wizard')?peekPage(PEEK):base(); }
+  catch(e){ console.error('[institution] page failed to draw',e); PEEK='';
+    try{ h=base(); }catch(e2){ console.error('[institution] fallback failed',e2); h='<div class="in-wrap"><div class="in-card"><h3 style="margin:0 0 8px">This page could not be loaded</h3><p style="margin:0 0 12px;color:var(--ink-soft)">'+esc(String((e2&&e2.message)||e2))+'</p><button class="btn btn-primary btn-sm" onclick="location.reload()">Reload page</button></div></div>'; } }
+  r.innerHTML=h; try{ instHeader(); }catch(e){ console.error(e); } window.scrollTo(0,y); r.style.minHeight=''; }
 function setHeader(){
   try{
     const d=I.d; Object.assign(currentCompany,{name:d.name,type:d.type,city:d.city||locStr(d),website:d.website,desc:d.about2||d.about1||'',contactName:d.rname,designation:d.rdes,email:d.remail||d.email,phone:d.rphone||d.phone,logo:d.logo||'',saved:true}); saveState();
