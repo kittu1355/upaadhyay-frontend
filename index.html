@@ -192,5 +192,6 @@
   $('fhCatGrid').innerHTML=''; $('fhPills').innerHTML='';   SUBJ.forEach(function(s){ var b=document.createElement('button'); b.className='fh-cat-item'; b.innerHTML='<span class="fh-ico">'+s[1]+'</span>'+s[0]; b.onclick=function(){ go({q:s[0]}); }; $('fhCatGrid').appendChild(b); });
   ROLES.forEach(function(r){ var b=document.createElement('button'); b.className='fh-pill'; b.textContent=r; b.onclick=function(){ go({q:r}); }; $('fhPills').appendChild(b); });
 </script>
+<script src="js/track.js" defer></script>
 </body>
 </html>
