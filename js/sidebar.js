@@ -39,8 +39,14 @@
   function tab(t){ if(typeof switchEmployerTab === 'function') switchEmployerTab(t); }
   function sec(k){
     var I = lsj('upadyay_inst_v1') || {};
-    if(I.view === 'wizard' && k !== 'profile'){ toast('Finish your institution registration first.'); return; }
-    tab('company'); if(window.IN && IN.sec) IN.sec(k); window.scrollTo(0, 0);
+    tab('company');
+    if(I.view === 'wizard' && window.IN){
+      /* not submitted yet: Verification opens its wizard step, Sub-branches shows its locked page */
+      if(k === 'verify' && IN.openVerify) IN.openVerify();
+      else if(k === 'branches' && IN.peek) IN.peek('branches');
+      else if(IN.sec) IN.sec(k);
+    } else if(window.IN && IN.sec) IN.sec(k);
+    window.scrollTo(0, 0);
   }
   function overview(){
     var host = $('dashCompanyTab'); if(!host) return;
@@ -78,7 +84,7 @@
       list:[ { k:'ov', t:'Overview', i:'grid', go:overview },
         { k:'profile', t:'Institution profile', i:'building', go:function(){ sec('profile'); } },
         { k:'verify', t:'Verification', i:'shield', go:function(){ sec('verify'); }, flag:!ok },
-        { k:'reqs', t:'Sub-branches', i:'tree', go:function(){ if(!approvedMain()){ toast('Locked until an admin approves your institution.'); return; } sec('branches'); }, lock:!ok, n:c.pending },
+        { k:'reqs', t:'Sub-branches', i:'tree', go:function(){ sec('branches'); }, lock:!ok, n:c.pending },
         { k:'post', t:'Post a job', i:'plus', go:function(){ tab('post'); }, lock:!ok },
         { k:'myjobs', t:'Posted jobs', i:'list', go:function(){ tab('myjobs'); }, lock:!ok, n:c.stats[2][0] },
         { k:'apps', t:'Applicants', i:'people', go:function(){ if(typeof openAllApplicants === 'function') openAllApplicants(); else tab('myjobs'); }, lock:!ok, n:c.stats[3][0] },
