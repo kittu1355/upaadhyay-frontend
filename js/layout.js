@@ -19,7 +19,7 @@ const NAV_CSS = `
 .nav-inner{max-width:1360px !important;padding:10px 28px !important;gap:22px !important;justify-content:flex-start !important}
 .fn-brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:inherit}
 .fn-mark{height:38px;width:auto;display:block}
-.fn-word{font-family:'Poppins',sans-serif;font-weight:800;font-size:24px;letter-spacing:-1.2px;color:#3a1580;line-height:1}
+.fn-word{font-family:'Inter','Poppins',sans-serif;font-weight:700;font-size:24px;letter-spacing:-.2px;word-spacing:0;white-space:nowrap;color:#3a1580;line-height:1}
 .fn-word span{color:inherit}
 .fn-badge{background:#ebe3ff;color:#4b1f9e;font-size:10px;font-weight:600;padding:2px 8px;border-radius:2px;align-self:center;margin-top:4px}
 .nav-links{justify-content:flex-start !important;gap:22px !important;flex:1}
@@ -40,7 +40,6 @@ const NAV_CSS = `
 /* auto-fit: nav items, gaps and the logged-in user block scale with the screen width instead of overflowing */
 .nav-inner{flex-wrap:nowrap;gap:clamp(10px,1.6vw,22px) !important}
 .fn-brand{flex-shrink:0}
-.fn-word{font-size:clamp(20px,1.9vw,24px)}
 .nav-links{min-width:0;gap:clamp(10px,1.5vw,22px) !important}
 .nav-links a{font-size:clamp(12.5px,1.05vw,13.5px) !important}
 .nav-user{margin-left:auto;flex-shrink:0;gap:clamp(6px,1vw,14px)}
