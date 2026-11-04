@@ -30,3 +30,24 @@
 .pf-menu button:hover{background:#2a2a2a}
 .pf-menu button.bad{color:#ff8a80}
 .pf-card .in-vbadge{font-size:11.5px}
+
+
+/* --- black & white cards, 5px corners on the card and every control inside it --- */
+.pf-card{background:#000;border:1px solid #000;border-radius:5px;box-shadow:0 2px 10px rgba(0,0,0,.18)}
+.pf-card:hover{transform:translateY(-2px);box-shadow:0 8px 22px rgba(0,0,0,.28)}
+.pf-cover{background:#fff;height:80px}
+.pf-flag{background:#000;color:#fff;border-radius:5px}
+.pf-av{border:3px solid #000;background-color:#fff;color:#000}
+.pf-name,.pf-sub{color:#fff}
+.pf-meta,.pf-stats{color:#bdbdbd}
+.pf-chip{border:1px solid #fff;color:#fff;border-radius:5px}
+.pf-btn{border:1.5px solid #fff;border-radius:5px}
+.pf-btn.pri{background:#fff;color:#000}
+.pf-btn.pri:hover{background:#e6e6e6}
+.pf-btn.out{background:transparent;color:#fff}
+.pf-btn.out:hover{background:rgba(255,255,255,.14)}
+.pf-more{border:1.5px solid #fff;border-radius:5px;color:#fff}
+.pf-more:hover{background:rgba(255,255,255,.14)}
+.pf-menu{background:#000;border:1px solid #fff;border-radius:5px}
+.pf-menu button{border-radius:5px}
+.pf-menu button:hover{background:#262626}
