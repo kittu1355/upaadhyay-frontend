@@ -331,6 +331,12 @@ if(typeof window.bkStatusBadge !== 'function'){
     const d = new Date(String(v).replace(' ', 'T')); if(isNaN(d)) return '';
     return d.toLocaleDateString('en-IN', {day:'numeric', month:'short', year:'numeric'});
   }
+  function apToggleQa(btn){
+    const panel = btn.nextElementSibling; if(!panel) return;
+    const open = panel.classList.toggle('open'); btn.classList.toggle('open', open);
+    btn.querySelector('span').textContent = (open ? 'Hide answers' : 'View answers') + btn.querySelector('span').textContent.replace(/^(View|Hide) answers/, '');
+  }
+  window.apToggleQa = apToggleQa;
   function pjCloseMenus(){ document.querySelectorAll('.pj-menu.open').forEach(m=>m.classList.remove('open')); }
   function pjToggleMenu(btn){
     const m = btn.parentNode.querySelector('.pj-menu'); const was = m.classList.contains('open');
@@ -636,6 +642,14 @@ if(typeof window.bkStatusBadge !== 'function'){
     const ini = String(p.name||'?').replace(/^(dr|mr|mrs|ms|prof)\.?\s+/i,'').trim().split(/\s+/).slice(0,2).map(w=>w[0]||'').join('').toUpperCase() || '?';
     const PERSON = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="2"/><path d="M4 21c0-4.2 3.6-7 8-7s8 2.8 8 7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
     const av = p.avatar ? `<div class="ap-avatar" style="background-image:url('${jbEsc(p.avatar)}');"></div>` : `<div class="ap-avatar ap-avatar-ini">${PERSON}</div>`;
+    const qaBlocks = Object.keys(jobsData).filter(k=>(jobsData[k].applicantIds||[]).indexOf(id)>-1).map(k=>{
+      const list = (window.__apAnswers || {})[k + ':' + id] || [];
+      if(!list.length) return '';
+      return '<div class="ap-qa-job">' + (jobs.length > 1 ? '<div class="ap-qa-jt">' + jbEsc(jobsData[k].title) + '</div>' : '')
+        + list.map((x, n)=>'<div class="ap-qa-item"><div class="ap-qa-q">' + (n+1) + '. ' + jbEsc(x.q) + (x.mins ? ' <small>' + jbEsc(x.mins) + ' min</small>' : '') + '</div><div class="ap-qa-a">' + jbEsc(x.a) + '</div></div>').join('') + '</div>';
+    }).join('');
+    const qaCount = Object.keys(window.__apAnswers || {}).filter(k=>k.slice(-(id.length + 1)) === ':' + id).reduce((n,k)=>n + window.__apAnswers[k].length, 0);
+    const qaHtml = qaBlocks ? `<button type="button" class="ap-qa-btn" onclick="event.stopPropagation(); apToggleQa(this)"><span>View answers (${qaCount})</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button><div class="ap-qa" onclick="event.stopPropagation()">${qaBlocks}</div>` : '';
     const st = candidateStatus[id];
     const stBadge = st ? statusBadge(id) : '<span class="badge ap-new">New</span>';
     const roleLine = [p.role || 'Faculty', deg].filter(Boolean).join(' \u00b7 ');
@@ -653,6 +667,7 @@ if(typeof window.bkStatusBadge !== 'function'){
           <label>Applied for</label>
           <b>${jobs.length ? jbEsc(jobs[0]) + (jobs.length>1 ? ' +'+(jobs.length-1) : '') : '\u2014'}</b>
         </div>
+        ${qaHtml}
         <div class="ap-actions">
           <button class="btn btn-light btn-sm" onclick="event.stopPropagation(); messageCandidate('${id}', event)">Message</button>
           ${st==='shortlisted'
