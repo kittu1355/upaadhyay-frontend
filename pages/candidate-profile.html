@@ -75,5 +75,6 @@
   mountNav(); mountChrome();
   requireLogin('company').then(function(ok){ if(ok) bkEnsureCandidate(getParam('id')).then(function(){ renderCandidateProfilePage(getParam('id')); }); });
 </script>
+<script src="../js/track.js" defer></script>
 </body>
 </html>
