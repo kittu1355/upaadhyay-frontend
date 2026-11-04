@@ -644,7 +644,9 @@ function instHeader(){
   try{ if(typeof updateNavForLogin==='function') updateNavForLogin(); if(document.getElementById('miniPanel')&&typeof refreshMiniProfile==='function') refreshMiniProfile(); }catch(e){}
 }
 window.instHeader=instHeader;
-function render(){ const r=$('instRoot'); if(!r) return; if(!BRQ.loaded&&!BRQ.busy&&I.view!=='wizard') brLoad(); const y=window.scrollY; r.style.minHeight=r.offsetHeight+'px'; r.innerHTML=I.view==='wizard'?wiz():I.view==='status'?statusPage():dash(); instHeader(); window.scrollTo(0,y); r.style.minHeight=''; }
+let PEEK='';
+function peekPage(k){ if(k==='branches') return `<div class="in-wrap in-dash" data-sec="branches"><div class="in-head"><h3>Sub-branches</h3></div>${card('Sub-branches','',note('<b>Locked until admin approval.</b><br>Submit your institution profile first. Once an admin approves it, you can add campuses and review requests from sub-branches here.','in-warn')+'<div style="margin-top:14px"><button class="btn btn-primary btn-sm" onclick="IN.resume()">Back to registration</button></div>')}</div>`; return ''; }
+function render(){ const r=$('instRoot'); if(!r) return; if(!BRQ.loaded&&!BRQ.busy&&I.view!=='wizard') brLoad(); const y=window.scrollY; r.style.minHeight=r.offsetHeight+'px'; r.innerHTML=(PEEK&&I.view==='wizard')?peekPage(PEEK):I.view==='wizard'?wiz():I.view==='status'?statusPage():dash(); instHeader(); window.scrollTo(0,y); r.style.minHeight=''; }
 function setHeader(){
   try{
     const d=I.d; Object.assign(currentCompany,{name:d.name,type:d.type,city:d.city||locStr(d),website:d.website,desc:d.about2||d.about1||'',contactName:d.rname,designation:d.rdes,email:d.remail||d.email,phone:d.rphone||d.phone,logo:d.logo||'',saved:true}); saveState();
@@ -672,10 +674,10 @@ window.IN={
   cur(){ return I.view==='wizard'?I.step:-1; },
   can(i){ return I.view!=='wizard'||i<=I.max||i<I.step; },
   open(i){ if(I.view==='wizard') IN.jump(i); else IN.edit(i); },
-  jump(i){ if(i<=I.max||i<I.step){ I.step=i; welcome=false; save(); render(); top(); } },
-  go(i){ I.step=i; I.max=Math.max(I.max,i); welcome=false; I.view='wizard'; save(); render(); top(); },
-  back(){ I.step=Math.max(0,I.step-1); welcome=false; save(); render(); top(); },
-  edit(i){ I.view='wizard'; I.step=i; I.max=STEPS.length-1; welcome=false; save(); render(); top(); },
+  jump(i){ PEEK=''; if(i<=I.max||i<I.step){ I.step=i; welcome=false; save(); render(); top(); } },
+  go(i){ PEEK=''; I.step=i; I.max=Math.max(I.max,i); welcome=false; I.view='wizard'; save(); render(); top(); },
+  back(){ PEEK=''; I.step=Math.max(0,I.step-1); welcome=false; save(); render(); top(); },
+  edit(i){ PEEK=''; I.view='wizard'; I.step=i; I.max=STEPS.length-1; welcome=false; save(); render(); top(); },
   later(){ save(); toast('Progress saved. You can continue later.'); },
   focusPin(){ const el=document.querySelector('#f-d-pin input'); if(el){ el.focus(); el.select(); } },
   next(){
@@ -694,6 +696,9 @@ window.IN={
     } else if(s===STEPS.length-1&&!I.c2){ $('finalErr').style.display='block'; ok=false; }
     if(!ok) return;
     if(s===STEPS.length-1){
+      const okL=l=>l.filter(f=>!f.sh||f.sh(I.d)).every(f=>!chk(f,I.d[f.k]));
+      const bad=!okL(F0)?0:!okL(F1)?1:(!okL(F2.concat(F2A))||!I.regRole)?2:-1;
+      if(bad>-1){ I.step=bad; I.max=Math.max(I.max,bad); save(); render(); setTimeout(()=>{ try{ valid(bad===0?F0:bad===1?F1:F2.concat(F2A),'d'); }catch(e){} },0); toast('Complete '+STEPS[bad]+' before submitting.'); return; }
       const b=$('nextBtn'); b.disabled=true; b.innerHTML='<span class="in-load" style="border-top-color:#fff"></span>Submitting…';
       setTimeout(()=>{ I.sub=true; I.view='status'; I.vs='pending'; setHeader(); save(); render(); top(); toast('Institution profile submitted'); },1000); return;
     }
@@ -718,8 +723,11 @@ window.IN={
   xopen(v){ XOPEN=!!v; XTO=''; delete ERR['new']; render(); },
   xt(v){ XT=v; if(v!=='Other') XTO=''; render(); if(v==='Other'){ const el=document.querySelector('[data-xt-other]'); if(el) el.focus(); } }, xto(v){ XTO=v; delete ERR['new']; },
   auth(v){ I.auth=v; save(); render(); }, role(v){ const was=I.role==='Other'||(I.role&&!ROLES.includes(I.role)); I.role=v; save(); if(v==='Other'||was){ render(); const el=document.querySelector('[data-role-other]'); if(el) el.focus(); } }, roleTxt(v){ I.role=v.trim()||'Other'; save(); }, c1(v){ I.c1=v; save(); }, c2(v){ I.c2=v; save(); },
-  dash(){ I.view='dash'; save(); render(); top(); },
-  sec(k){ I.sec=k; if(k==='branches') brLoad(true); if(k==='verify') VS=0; if(I.view==='status'&&k!=='verify'){ I.view='dash'; save(); } render(); },
+  dash(){ PEEK=''; I.view='dash'; save(); render(); top(); },
+  resume(){ PEEK=''; render(); },
+  openVerify(){ PEEK=''; I.step=3; I.max=Math.max(I.max,3); welcome=false; save(); render(); },
+  peek(k){ PEEK=k; render(); },
+  sec(k){ PEEK=''; I.sec=k; if(k==='branches') brLoad(true); if(k==='verify') VS=0; if(I.view==='status'&&k!=='verify'){ I.view='dash'; save(); } render(); },
   snext(){ const S=dashSecs(), i=S.findIndex(x=>x[0]===I.sec); if(I.sec==='verify'&&VS<VSTEPS.length-1) VS++; else if(i<S.length-1){ I.sec=S[i+1][0]; if(I.sec==='verify') VS=0; } render(); toLayout(); },
   sback(){ const S=dashSecs(), i=S.findIndex(x=>x[0]===I.sec); if(I.sec==='verify'&&VS>0) VS--; else if(i>0){ I.sec=S[i-1][0]; if(I.sec==='verify') VS=VSTEPS.length-1; } render(); toLayout(); },
   vstep(i){ VS=i; render(); },
