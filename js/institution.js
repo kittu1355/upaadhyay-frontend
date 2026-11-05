@@ -1,88 +1,8 @@
-/* locations.js — country list (A to Z) and India State > District > City > Area > PIN data.
-   Used by the Location step of the institution profile. Only India has detailed lists for now;
-   a state, district or city with no data listed here falls back to typing it in by hand.
-   Add more data in the INDIA object below, same shape: State -> District -> City -> Area -> 'PIN'. */
+/* Country list + Indian states/UTs. Districts, cities, areas and PINs come live from the India Post API (see below). */
 (function(){
 var COUNTRIES=['Afghanistan','Albania','Algeria','Andorra','Angola','Antigua and Barbuda','Argentina','Armenia','Australia','Austria','Azerbaijan','Bahamas','Bahrain','Bangladesh','Barbados','Belarus','Belgium','Belize','Benin','Bhutan','Bolivia','Bosnia and Herzegovina','Botswana','Brazil','Brunei','Bulgaria','Burkina Faso','Burundi','Cabo Verde','Cambodia','Cameroon','Canada','Central African Republic','Chad','Chile','China','Colombia','Comoros','Congo (Republic)','Costa Rica','Croatia','Cuba','Cyprus','Czech Republic','Democratic Republic of the Congo','Denmark','Djibouti','Dominica','Dominican Republic','Ecuador','Egypt','El Salvador','Equatorial Guinea','Eritrea','Estonia','Eswatini','Ethiopia','Fiji','Finland','France','Gabon','Gambia','Georgia','Germany','Ghana','Greece','Grenada','Guatemala','Guinea','Guinea-Bissau','Guyana','Haiti','Honduras','Hungary','Iceland','India','Indonesia','Iran','Iraq','Ireland','Israel','Italy','Ivory Coast','Jamaica','Japan','Jordan','Kazakhstan','Kenya','Kiribati','Kuwait','Kyrgyzstan','Laos','Latvia','Lebanon','Lesotho','Liberia','Libya','Liechtenstein','Lithuania','Luxembourg','Madagascar','Malawi','Malaysia','Maldives','Mali','Malta','Marshall Islands','Mauritania','Mauritius','Mexico','Micronesia','Moldova','Monaco','Mongolia','Montenegro','Morocco','Mozambique','Myanmar','Namibia','Nauru','Nepal','Netherlands','New Zealand','Nicaragua','Niger','Nigeria','North Korea','North Macedonia','Norway','Oman','Pakistan','Palau','Palestine','Panama','Papua New Guinea','Paraguay','Peru','Philippines','Poland','Portugal','Qatar','Romania','Russia','Rwanda','Saint Kitts and Nevis','Saint Lucia','Saint Vincent and the Grenadines','Samoa','San Marino','Sao Tome and Principe','Saudi Arabia','Senegal','Serbia','Seychelles','Sierra Leone','Singapore','Slovakia','Slovenia','Solomon Islands','Somalia','South Africa','South Korea','South Sudan','Spain','Sri Lanka','Sudan','Suriname','Sweden','Switzerland','Syria','Taiwan','Tajikistan','Tanzania','Thailand','Timor-Leste','Togo','Tonga','Trinidad and Tobago','Tunisia','Turkey','Turkmenistan','Tuvalu','Uganda','Ukraine','United Arab Emirates','United Kingdom','United States','Uruguay','Uzbekistan','Vanuatu','Vatican City','Venezuela','Vietnam','Yemen','Zambia','Zimbabwe'];
-
-var INDIA={
- 'Telangana':{
-  'Hyderabad':{
-   'Hyderabad':{'Abids':'500001','Ameerpet':'500016','Banjara Hills':'500034','Begumpet':'500016','Charminar':'500002','Dilsukhnagar':'500060','Gachibowli':'500032','Himayatnagar':'500029','Jubilee Hills':'500033','Kondapur':'500084','Kukatpally':'500072','LB Nagar':'500074','Madhapur':'500081','Miyapur':'500049','Somajiguda':'500082','Uppal':'500039'},
-   'Secunderabad':{'Bowenpally':'500011','Secunderabad':'500003','Trimulgherry':'500015'}},
-  'Rangareddy':{'Shamshabad':{'Shamshabad':'501218'},'Ibrahimpatnam':{'Ibrahimpatnam':'501506'},'Chevella':{'Chevella':'501503'}},
-  'Medchal-Malkajgiri':{'Malkajgiri':{'Malkajgiri':'500047'},'Medchal':{'Medchal':'501401'}},
-  'Warangal':{'Warangal':{'Hanamkonda':'506001','Warangal':'506002'}},
-  'Karimnagar':{'Karimnagar':{'Karimnagar':'505001'}},
-  'Nizamabad':{'Nizamabad':{'Nizamabad':'503001'}},
-  'Khammam':{'Khammam':{'Khammam':'507001'}}},
- 'Andhra Pradesh':{
-  'Visakhapatnam':{'Visakhapatnam':{'Dwaraka Nagar':'530016','Gajuwaka':'530026','Madhurawada':'530048','MVP Colony':'530017'}},
-  'Krishna':{'Vijayawada':{'Benz Circle':'520010','Governorpet':'520002'}},
-  'Guntur':{'Guntur':{'Brodipet':'522002'}},
-  'Tirupati':{'Tirupati':{'Tirupati':'517501'}},
-  'Anantapur':{'Anantapur':{'Anantapur':'515001'}},
-  'Kurnool':{'Kurnool':{'Kurnool':'518001'}},
-  'Nellore':{'Nellore':{'Nellore':'524001'}}},
- 'Karnataka':{
-  'Bengaluru Urban':{'Bengaluru':{'BTM Layout':'560076','Electronic City':'560100','HSR Layout':'560102','Indiranagar':'560038','Jayanagar':'560011','Koramangala':'560034','Malleshwaram':'560003','MG Road':'560001','Whitefield':'560066'}},
-  'Mysuru':{'Mysuru':{'Mysuru':'570001'}},
-  'Dakshina Kannada':{'Mangaluru':{'Mangaluru':'575001'}},
-  'Dharwad':{'Dharwad':{'Dharwad':'580001'},'Hubballi':{'Hubballi':'580020'}}},
- 'Tamil Nadu':{
-  'Chennai':{'Chennai':{'Adyar':'600020','Anna Nagar':'600040','Mylapore':'600004','T. Nagar':'600017','Velachery':'600042'}},
-  'Chengalpattu':{'Tambaram':{'Tambaram':'600045'}},
-  'Coimbatore':{'Coimbatore':{'Gandhipuram':'641012','RS Puram':'641002'}},
-  'Madurai':{'Madurai':{'Madurai':'625001'}},
-  'Tiruchirappalli':{'Tiruchirappalli':{'Tiruchirappalli':'620001'}}},
- 'Maharashtra':{
-  'Mumbai City':{'Mumbai':{'Colaba':'400005','Dadar':'400014'}},
-  'Mumbai Suburban':{'Mumbai':{'Andheri West':'400058','Bandra West':'400050','Borivali West':'400092','Powai':'400076'}},
-  'Pune':{'Pune':{'Hadapsar':'411028','Hinjewadi':'411057','Kothrud':'411038','Shivajinagar':'411005','Viman Nagar':'411014'}},
-  'Nagpur':{'Nagpur':{'Dharampeth':'440010','Sitabuldi':'440012'}}},
- 'Delhi':{
-  'New Delhi':{'New Delhi':{'Connaught Place':'110001','Hauz Khas':'110016','Lajpat Nagar':'110024','Saket':'110017','Vasant Kunj':'110070'}},
-  'North Delhi':{'Delhi':{'Karol Bagh':'110005','Rohini':'110085'}},
-  'South West Delhi':{'Delhi':{'Dwarka':'110075'}}},
- 'Kerala':{
-  'Thiruvananthapuram':{'Thiruvananthapuram':{'Thiruvananthapuram':'695001'}},
-  'Ernakulam':{'Kochi':{'Ernakulam':'682001','Kakkanad':'682030'}},
-  'Kozhikode':{'Kozhikode':{'Kozhikode':'673001'}}},
- 'Gujarat':{
-  'Ahmedabad':{'Ahmedabad':{'Maninagar':'380008','Navrangpura':'380009','Satellite':'380015'}},
-  'Surat':{'Surat':{'Surat':'395003'}},
-  'Vadodara':{'Vadodara':{'Vadodara':'390001'}}},
- 'Uttar Pradesh':{
-  'Lucknow':{'Lucknow':{'Gomti Nagar':'226010','Hazratganj':'226001'}},
-  'Gautam Buddha Nagar':{'Noida':{'Sector 18':'201301','Sector 62':'201309'}},
-  'Varanasi':{'Varanasi':{'Varanasi':'221001'}},
-  'Kanpur Nagar':{'Kanpur':{'Kanpur':'208001'}},
-  'Agra':{'Agra':{'Agra':'282001'}}},
- 'West Bengal':{
-  'Kolkata':{'Kolkata':{'Park Street':'700016','Salt Lake':'700091'}},
-  'Howrah':{'Howrah':{'Howrah':'711101'}}},
- 'Rajasthan':{
-  'Jaipur':{'Jaipur':{'C-Scheme':'302001','Malviya Nagar':'302017','Vaishali Nagar':'302021'}},
-  'Jodhpur':{'Jodhpur':{'Jodhpur':'342001'}},
-  'Udaipur':{'Udaipur':{'Udaipur':'313001'}}},
- 'Punjab':{
-  'Ludhiana':{'Ludhiana':{'Ludhiana':'141001'}},
-  'Amritsar':{'Amritsar':{'Amritsar':'143001'}}},
- 'Chandigarh':{'Chandigarh':{'Chandigarh':{'Sector 17':'160017','Sector 22':'160022'}}},
- 'Haryana':{
-  'Gurugram':{'Gurugram':{'DLF Phase 1':'122002','Sector 29':'122001'}},
-  'Faridabad':{'Faridabad':{'Faridabad':'121001'}}},
- 'Madhya Pradesh':{
-  'Bhopal':{'Bhopal':{'Arera Colony':'462016','MP Nagar':'462011'}},
-  'Indore':{'Indore':{'Palasia':'452001','Vijay Nagar':'452010'}}},
- 'Odisha':{'Khordha':{'Bhubaneswar':{'Patia':'751024','Saheed Nagar':'751007'}}},
- 'Bihar':{'Patna':{'Patna':{'Boring Road':'800001','Kankarbagh':'800020'}}}
-};
-
-/* every other state and union territory is listed so it can be chosen; its lower levels are typed in */
-['Andaman and Nicobar Islands','Arunachal Pradesh','Assam','Chhattisgarh','Dadra and Nagar Haveli and Daman and Diu','Goa','Himachal Pradesh','Jammu and Kashmir','Jharkhand','Ladakh','Lakshadweep','Manipur','Meghalaya','Mizoram','Nagaland','Puducherry','Sikkim','Tripura','Uttarakhand'].forEach(function(s){ if(!INDIA[s]) INDIA[s]={}; });
-
-window.UP_LOC={countries:COUNTRIES,india:INDIA};
+var STATES=["Andaman and Nicobar Islands", "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chandigarh", "Chhattisgarh", "Dadra and Nagar Haveli and Daman and Diu", "Delhi", "Goa", "Gujarat", "Haryana", "Himachal Pradesh", "Jammu and Kashmir", "Jharkhand", "Karnataka", "Kerala", "Ladakh", "Lakshadweep", "Madhya Pradesh", "Maharashtra", "Manipur", "Meghalaya", "Mizoram", "Nagaland", "Odisha", "Puducherry", "Punjab", "Rajasthan", "Sikkim", "Tamil Nadu", "Telangana", "Tripura", "Uttar Pradesh", "Uttarakhand", "West Bengal"];
+window.UP_LOC={countries:COUNTRIES,states:STATES};
 })();
 
 /* institution.js — institution profile, verification and campus flow.
@@ -106,9 +26,8 @@ const DEP=['Administration','HR','Placement / Training & Placement','Management'
 const DOCS=['Government registration document','University affiliation certificate','Recognition / accreditation certificate','Institution registration certificate','Official authorization document','Other official institutional proof'];
 const ROLES=['HR Representative','Recruitment Consultant','Placement Agency','Administrative Representative','Authorized Partner','Other'];
 const BTYPES=['Campus','Branch','Extension centre','Study centre','Other'];
-const PINS={'500072':['Telangana','Hyderabad','Hyderabad','Kukatpally'],'506002':['Telangana','Warangal','Warangal','Hanamkonda'],'500003':['Telangana','Hyderabad','Secunderabad','Secunderabad'],'560001':['Karnataka','Bengaluru Urban','Bengaluru','MG Road']};
 const ACAD=['University','College','School','Institute'];
-const LOC=window.UP_LOC||{countries:['India'],india:{}}, COUNTRIES=(LOC.countries&&LOC.countries.length)?LOC.countries:['India'], INDIA=LOC.india;
+const LOC=window.UP_LOC||{countries:['India'],india:{}}, COUNTRIES=(LOC.countries&&LOC.countries.length)?LOC.countries:['India'], STATES=LOC.states||[];
 const REGR=['HR / Recruitment','Administration','Placement','Authorized Representative','Director / Principal / Owner'];
 const ADES=['Dean','Principal','Director','Registrar','Head of Institution','Other Authorized Head'];
 const XTYPES=['Registration','Accreditation','Affiliation','Authorization Letter','Institution ID','Other'];
@@ -203,62 +122,70 @@ const LORD=['country','state','district','city','area'], LPAR={state:'country',d
 const cmpA=(a,b)=>String(a).localeCompare(String(b));
 const isIndia=S=>!S.o_country&&(S.country||'India')==='India';
 const OTHER_K=['country','state','district','city','area'];
-function locOpts(S,k){
-  if(k==='country') return COUNTRIES.slice().sort(cmpA);
-  if(!isIndia(S)) return null;
-  if(k==='state') return Object.keys(INDIA).sort(cmpA);
-  const st=INDIA[S.state]; if(k==='district') return st?Object.keys(st).sort(cmpA):null;
-  const di=st&&st[S.district]; if(k==='city') return di?Object.keys(di).sort(cmpA):null;
-  const ci=di&&di[S.city]; return ci?Object.keys(ci).sort(cmpA):null;
-}
-function lookupPin(S){ try{ return INDIA[S.state][S.district][S.city][S.area]||''; }catch(e){ return ''; } }
-let PINIDX=null;
-function pinIdx(){ if(PINIDX) return PINIDX; PINIDX={};
-  Object.keys(INDIA).forEach(st=>Object.keys(INDIA[st]).forEach(di=>Object.keys(INDIA[st][di]).forEach(ci=>Object.keys(INDIA[st][di][ci]).forEach(ar=>{ const p=INDIA[st][di][ci][ar]; if(!PINIDX[p]) PINIDX[p]=[st,di,ci,ar]; }))));
-  return PINIDX; }
-/* ---------- India Post live lookup (api.postalpincode.in): PIN -> location, city -> area list ---------- */
-const POSTAPI='https://api.postalpincode.in', AREAS={d:null,b:null};
-const areaKey=S=>[S.state,S.district,S.city].map(x=>String(x||'').trim().toLowerCase()).join('|');
+/* ---------- live lookup via India Post API (api.postalpincode.in) ---------- */
+const POSTAPI='https://api.postalpincode.in', AREAS={d:null,b:null}, SUGT={};
+const low=x=>String(x||'').trim().toLowerCase();
+const areaKey=S=>[S.state,S.district,S.city].map(low).join('|');
 async function postGet(path){ const ac=new AbortController(), t=setTimeout(()=>ac.abort(),8000);
   try{ const r=await fetch(POSTAPI+path,{signal:ac.signal}); const j=await r.json(); const d=Array.isArray(j)?j[0]:null; return d&&d.Status==='Success'&&d.PostOffice?d.PostOffice:null; }
   catch(e){ return null; } finally{ clearTimeout(t); } }
+const uniq=a=>{ const seen={}; return a.filter(x=>x&&x!=='NA'&&!seen[low(x)]&&(seen[low(x)]=1)); };
+/* suggestions for one field, from post offices matching what was typed (or the parent value) */
+function sugList(S,k,po){
+  let r=po.slice(); if(S.state){ const f=r.filter(o=>low(o.State)===low(S.state)); if(f.length) r=f; }
+  if(k!=='district'&&S.district){ const f=r.filter(o=>low(o.District)===low(S.district)); if(f.length) r=f; }
+  return k==='district'?uniq(r.map(o=>o.District)):k==='city'?uniq(r.map(o=>o.Block).concat(r.map(o=>o.District))):uniq(r.map(o=>o.Name));
+}
+function fillDL(sc,k,po){ const S=sc==='d'?I.d:BR, dl=$('dl-'+sc+'-'+k); if(!dl) return;
+  dl.innerHTML=sugList(S,k,po).map(x=>`<option value="${esc(x)}">`).join(''); }
+const SUGPO={};
+function suggest(sc,k,txt){
+  const S=sc==='d'?I.d:BR; if(!isIndia(S)) return;
+  const par=k==='area'?(S.city||S.district):k==='city'?S.district:'', q=String(txt||'').trim().length>=3?String(txt).trim():String(par||'').trim();
+  if(q.length<3) return;
+  clearTimeout(SUGT[sc+k]); SUGT[sc+k]=setTimeout(async()=>{
+    const po=await postGet('/postoffice/'+encodeURIComponent(q)); if(!po) return;
+    SUGPO[sc+k]=po; fillDL(sc,k,po); },300);
+}
+/* when an area / city is chosen or typed, fill PIN (and empty parents) from the matching post office */
+function resolveArea(sc){
+  const S=sc==='d'?I.d:BR; if(!S.area) return;
+  const pools=[SUGPO[sc+'area'],SUGPO[sc+'city'],(AREAS[sc]&&AREAS[sc].po)].filter(Boolean);
+  for(const po of pools){ const m=po.find(o=>low(o.Name)===low(S.area)&&(!S.state||low(o.State)===low(S.state))&&(!S.district||low(o.District)===low(S.district)))||po.find(o=>low(o.Name)===low(S.area)&&(!S.state||low(o.State)===low(S.state)));
+    if(m){ let ch=false;
+      if(m.Pincode&&S.pin!==m.Pincode){ S.pin=m.Pincode; ch=true; }
+      if(!S.state&&STATES.includes(m.State)){ S.state=m.State; ch=true; }
+      if(!S.district){ S.district=m.District; ch=true; }
+      if(!S.city){ S.city=(m.Block&&m.Block!=='NA')?m.Block:m.District; ch=true; }
+      if(ch){ save(); locRefresh(sc,0); mapRefresh(sc); } return; } }
+}
 async function fetchAreas(sc){
   const S=sc==='d'?I.d:BR; if(!isIndia(S)||!S.city||String(S.city).trim().length<3) return;
-  if(S.city in ((INDIA[S.state]&&INDIA[S.state][S.district])||{})) return;
   const key=areaKey(S); if(AREAS[sc]&&AREAS[sc].key===key) return;
   const po=await postGet('/postoffice/'+encodeURIComponent(String(S.city).trim()));
-  if(areaKey(S)!==key) return;
-  if(!po){ AREAS[sc]=null; return; }
-  const low=x=>String(x||'').trim().toLowerCase(), st=po.filter(o=>low(o.State)===low(S.state));
-  const dist=st.filter(o=>low(o.District)===low(S.district)), use=dist.length?dist:st;
-  const seen={}, list=[]; use.forEach(o=>{ if(!seen[o.Name]){ seen[o.Name]=1; list.push({name:o.Name,pin:o.Pincode}); } });
-  AREAS[sc]=list.length?{key,list}:null;
-  if(list.length) locRefresh(sc,4);
+  if(areaKey(S)!==key||!po) return;
+  AREAS[sc]={key,po}; SUGPO[sc+'area']=po; fillDL(sc,'area',po);
 }
 function locField(o,sc){
-  const S=sc==='d'?I.d:BR; if(!S.country&&!S.o_country) S.country='India';
-  const k=o.k; let lst=locOpts(S,k); if(k==='area'&&!(lst&&lst.length)&&AREAS[sc]&&AREAS[sc].key===areaKey(S)) lst=AREAS[sc].list.map(x=>x.name).sort(cmpA); const par=LPAR[k], nm=o.l.replace(' / locality','').toLowerCase();
-  const withOther=OTHER_K.includes(k), cur=S[k]||'';
-  const isOther=withOther&&lst&&lst.length&&(!!S['o_'+k]||(cur&&!lst.includes(cur)));
-  const ev=`onblur="IN.blur('${sc}','${k}')"`;
-  const parOk=!par||S[par]||S['o_'+par];
-  let inp, extra='';
-  if(lst&&lst.length){
-    const dis=par&&!parOk;
-    const opts=lst.map(x=>`<option${!isOther&&cur===x?' selected':''}>${esc(x)}</option>`).join('')+(withOther?`<option value="Other"${isOther?' selected':''}>Other</option>`:'');
-    inp=`<select ${dis?'disabled ':''}onchange="IN.loc('${sc}','${k}',this.value)" ${isOther?'':ev}><option value="">${dis?'Select '+par+' first':'Select '+nm}</option>${opts}</select>`;
-    if(isOther) inp+=`<input type="text" class="in-other" style="margin-top:8px" value="${esc(S['o_'+k]?cur:cur)}" placeholder="Please specify" oninput="IN.set('${sc}','${k}',this.value)" ${ev}>`;
-  } else if(par&&isIndia(S)&&!parOk){
-    inp=`<select disabled><option value="">Select ${par} first</option></select>`;
+  const S=sc==='d'?I.d:BR; if(!S.country) S.country='India';
+  const k=o.k, cur=S[k]||'', nm=o.l.replace(' / locality','').toLowerCase();
+  let inp;
+  if(k==='country'){
+    inp=`<select onchange="IN.loc('${sc}','country',this.value)" onblur="IN.blur('${sc}','country')"><option value="">Select country</option>${COUNTRIES.slice().sort(cmpA).map(x=>`<option${cur===x?' selected':''}>${esc(x)}</option>`).join('')}</select>`;
+  } else if(k==='state'&&isIndia(S)){
+    const l=STATES.slice(); if(cur&&!l.includes(cur)) l.push(cur);
+    inp=`<select onchange="IN.loc('${sc}','state',this.value)" onblur="IN.blur('${sc}','state')"><option value="">Select state</option>${l.sort(cmpA).map(x=>`<option${cur===x?' selected':''}>${esc(x)}</option>`).join('')}</select>`;
   } else {
-    inp=`<input type="text" value="${esc(cur)}" placeholder="Type the ${nm}" oninput="IN.set('${sc}','${k}',this.value)" ${ev}>`;
+    const live=isIndia(S)&&k!=='state', dl='dl-'+sc+'-'+k;
+    inp=`<input type="text" value="${esc(cur)}" placeholder="${live?'Type or pick '+nm:'Type the '+nm}" autocomplete="off"${live?` list="${dl}"`:''} oninput="IN.set('${sc}','${k}',this.value);${live?`IN.sug('${sc}','${k}',this.value)`:''}" onfocus="${live?`IN.sug('${sc}','${k}','')`:''}" onchange="IN.chg('${sc}','${k}')" onblur="IN.blur('${sc}','${k}')">${live?`<datalist id="${dl}"></datalist>`:''}`;
   }
-  return `<div class="in-f" id="f-${sc}-${k}"><label>${o.l}<i>${o.req?'Required':'Optional'}</i></label>${inp}<div class="in-err" role="alert"></div>${extra}</div>`;
+  return `<div class="in-f" id="f-${sc}-${k}"><label>${o.l}<i>${o.req?'Required':'Optional'}</i></label>${inp}<div class="in-err" role="alert"></div></div>`;
 }
 function locRefresh(sc,from){
   const L=sc==='b'?FB:F1;
-  LORD.slice(from).forEach(x=>{ const el=$('f-'+sc+'-'+x), o=L.find(f=>f.k===x); if(el&&o) el.outerHTML=locField(o,sc); });
-  const pe=$('f-'+sc+'-pin'), po=L.find(f=>f.k==='pin'); if(pe&&po){ const box=$('pin-'+sc), keep=box?box.innerHTML:''; pe.outerHTML=fld(po,sc); const nb=$('pin-'+sc); if(nb) nb.innerHTML=keep; }
+  const ae=document.activeElement, keep=ae&&ae.closest?ae.closest('[id^="f-'+sc+'-"]'):null, keepId=keep?keep.id:'';
+  LORD.slice(from).forEach(x=>{ if(keepId==='f-'+sc+'-'+x) return; const el=$('f-'+sc+'-'+x), o=L.find(f=>f.k===x); if(el&&o) el.outerHTML=locField(o,sc); });
+  const pe=$('f-'+sc+'-pin'), po=L.find(f=>f.k==='pin'); if(pe&&po&&keepId!=='f-'+sc+'-pin'){ const box=$('pin-'+sc), kp=box?box.innerHTML:''; pe.outerHTML=fld(po,sc); const nb=$('pin-'+sc); if(nb) nb.innerHTML=kp; }
 }
 function mapRefresh(sc){ if(sc!=='d') return; const m=document.querySelector('#locMap span'); if(m) m.innerHTML=I.d.city?PIN_IC+' '+esc(locStr(I.d)):'Map preview appears once you add a location'; }
 
@@ -285,22 +212,15 @@ function pinLook(sc,val){
   if(!/^\d{6}$/.test(val)){ box.innerHTML=''; return; }
   box.innerHTML=note('<span class="in-load"></span>Looking up PIN code…');
   const S=sc==='d'?I.d:BR;
-  const apply=(r,list)=>{
-    if(S.pin!==val) return;
-    S.country='India'; ['country','state','district','city','area'].forEach(x=>{ S['o_'+x]=false; });
-    ['state','district','city','area'].forEach((k,i)=>{ S[k]=r[i]; const f=$('f-'+sc+'-'+k); if(f) f.classList.remove('err'); });
-    AREAS[sc]=list&&list.length?{key:areaKey(S),list}:null;
-    locRefresh(sc,0); mapRefresh(sc);
-    box.innerHTML=note(`<b>${ck(13)} Location found</b><br>State: ${esc(r[0])}<br>District: ${esc(r[1])}<br>City: ${esc(r[2])}<br>Area: ${esc(r[3])}<br>You can still change these.`,'in-ok'); save();
-  };
-  const local=pinIdx()[val]||PINS[val];
-  if(local){ setTimeout(()=>apply(local),250); return; }
   postGet('/pincode/'+val).then(po=>{
     if(S.pin!==val) return;
-    if(!po||!po.length){ box.innerHTML=note('We couldn\'t find this PIN code. Check it, or pick the state, district, city and area yourself.','in-warn'); return; }
+    if(!po||!po.length){ box.innerHTML=note('We couldn\'t look this PIN code up. You can still type the state, district, city and area yourself.','in-warn'); return; }
     const o=po[0], city=(o.Block&&o.Block!=='NA')?o.Block:o.District;
-    const list=[]; po.forEach(x=>{ if(!list.some(y=>y.name===x.Name)) list.push({name:x.Name,pin:x.Pincode}); });
-    apply([o.State,o.District,city,o.Name],list);
+    S.country='India'; S.state=o.State; S.district=o.District; S.city=city; S.area=o.Name;
+    AREAS[sc]={key:areaKey(S),po}; SUGPO[sc+'area']=po;
+    ['state','district','city','area'].forEach(k=>{ const f=$('f-'+sc+'-'+k); if(f) f.classList.remove('err'); });
+    locRefresh(sc,0); mapRefresh(sc); fillDL(sc,'area',po);
+    box.innerHTML=note(`<b>${ck(13)} Location found</b><br>State: ${esc(o.State)}<br>District: ${esc(o.District)}<br>City: ${esc(city)}<br>Area: ${esc(o.Name)}<br>You can still change these.`,'in-ok'); save();
   });
 }
 
@@ -705,16 +625,15 @@ function setHeader(){
 /* ---------- actions (called from inline handlers) ---------- */
 window.IN={
   completion(){ return pct(); },
-  loc(sc,k,v){ const S=sc==='d'?I.d:BR, i=LORD.indexOf(k), oth=v==='Other'&&OTHER_K.includes(k);
-    S[k]=oth?'':v; S['o_'+k]=oth;
-    LORD.slice(i+1).forEach(x=>{ S[x]=''; S['o_'+x]=false; });
-    if(k==='area'){ let p=lookupPin(S); if(!p&&AREAS[sc]&&AREAS[sc].key===areaKey(S)){ const a=AREAS[sc].list.find(x=>x.name===S.area); if(a) p=a.pin; } if(p) S.pin=p; } else S.pin='';
+  loc(sc,k,v){ const S=sc==='d'?I.d:BR, i=LORD.indexOf(k);
+    if(S[k]!==v){ S[k]=v; LORD.slice(i+1).forEach(x=>{ S[x]=''; }); S.pin=''; AREAS[sc]=null; }
     const f=$('f-'+sc+'-'+k); if(f) f.classList.remove('err');
-    save(); locRefresh(sc,i); mapRefresh(sc); const b=$('pin-'+sc); if(b) b.innerHTML='';
-    if(oth){ const el=document.querySelector('#f-'+sc+'-'+k+' .in-other'); if(el) el.focus(); } },
+    save(); locRefresh(sc,i+1); mapRefresh(sc); const b=$('pin-'+sc); if(b) b.innerHTML=''; },
+  sug(sc,k,v){ suggest(sc,k,v); },
+  chg(sc,k){ if(k==='area') resolveArea(sc); if(k==='city') fetchAreas(sc); },
   pickSel(sc,k,v){ IN.set(sc,k,v,1); const o=ALLF.find(f=>f.k===k&&(sc==='b'?FB.includes(f):!FB.includes(f))); if(o&&o.oth){ const el=$('f-'+sc+'-'+k); if(el){ const t=document.createElement('div'); t.innerHTML=fld(o,sc); el.replaceWith(t.firstChild); const inp=$('f-'+sc+'-'+k).querySelector('.in-other'); if(inp) inp.focus(); } } },
   set(sc,k,v,re){ (sc==='d'?I.d:BR)[k]=v; if(sc==='d'&&k==='aemail'&&I.aem!=='idle') I.aem='idle'; const f=$('f-'+sc+'-'+k); if(f) f.classList.remove('err'); if(k==='pin') pinLook(sc,v.trim()); if(re&&sc==='d'&&k==='type'){ save(); render(); } else if(sc==='d') save(); },
-  blur(sc,k){ if(k==='city') fetchAreas(sc); const o=ALLF.find(f=>f.k===k&&(sc==='b'?FB.includes(f):!FB.includes(f))); if(o) mark(sc,o,chk(o,(sc==='d'?I.d:BR)[k])); },
+  blur(sc,k){ if(k==='city') fetchAreas(sc); if(k==='area') resolveArea(sc); const o=ALLF.find(f=>f.k===k&&(sc==='b'?FB.includes(f):!FB.includes(f))); if(o) mark(sc,o,chk(o,(sc==='d'?I.d:BR)[k])); },
   steps(){ return STEPS; },
   cur(){ return I.view==='wizard'?I.step:-1; },
   can(i){ return I.view!=='wizard'||i<=I.max||i<I.step; },
