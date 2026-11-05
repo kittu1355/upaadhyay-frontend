@@ -647,7 +647,7 @@
       if(qaList.length){ (window.__apAnswers = window.__apAnswers || {})[key + ':' + cid] = qaList; }
       /* per-application status + interview details (API first, this browser's copy as a fallback) */
       const stt = String(a.status || '').toLowerCase();
-      window.__apStatus[key + ':' + cid] = stt === 'interview' ? 'interview' : (stt === 'shortlisted' || stt === 'selected' ? 'shortlisted' : (stt === 'rejected' ? 'rejected' : ''));
+      window.__apStatus[key + ':' + cid] = stt === 'interview' ? 'interview' : (stt === 'selected' || stt === 'hired' ? 'selected' : (stt === 'shortlisted' ? 'shortlisted' : (stt === 'rejected' ? 'rejected' : '')));
       if(window.Interview){
         let iv = Interview.norm(a.interview || a.interview_details || (a.meta && a.meta.interview));
         if(!iv) iv = Interview.getLocal(a.job_id, cid);
@@ -845,13 +845,24 @@
     try{
       await api.put('/company/applications/' + appId + '/status', { status: status });
       if(status === 'applied') delete candidateStatus[id]; else candidateStatus[id] = (status === 'rejected' ? 'rejected' : 'shortlisted');
-      if(key){ (window.__apStatus = window.__apStatus || {})[key + ':' + id] = status === 'rejected' ? 'rejected' : (status === 'applied' ? '' : 'shortlisted'); }
+      if(key){ (window.__apStatus = window.__apStatus || {})[key + ':' + id] = status === 'rejected' ? 'rejected' : (status === 'applied' ? '' : (status === 'selected' ? 'selected' : 'shortlisted')); }
       _origSaveState();
       const p = facultyProfiles[id]; api.toast(doneMsg + ' ' + (p ? p.name : 'candidate') + '.');
       refreshCandidateViews();
     }catch(e){ api.toast(e.message); }
   }
   window.rejectCandidate = function(id, ev, jk){ return setAppStatus(id, 'rejected', 'Rejected', ev, jk); };
+  /* Last step: mark the candidate as selected for this job. The faculty's My jobs card moves to the final step and they get a message. */
+  window.selectCandidate = async function(id, ev, jk){
+    if(ev) ev.stopPropagation();
+    const p = facultyProfiles[id], name = p ? p.name : 'this candidate';
+    if(!window.confirm('Mark ' + name + ' as selected for this job?')) return;
+    const key = jk || ((typeof activeJobId !== 'undefined' && activeJobId) ? activeJobId : null), job = key ? postedJobs[key] : null;
+    await setAppStatus(id, 'selected', 'Selected', null, jk);
+    if(((window.__apStatus || {})[key + ':' + id]) === 'selected'){
+      try{ await api.post('/company/messages', { candidate_id: Number(id), message: 'Congratulations! You have been selected' + (job && job.title ? ' for ' + job.title : '') + (currentCompany && currentCompany.name ? ' at ' + currentCompany.name : '') + '. The institution will contact you with the next steps.' }); }catch(e){}
+    }
+  };
   window.undoApplicant = function(id, ev, jk){ return setAppStatus(id, 'applied', 'Moved back to applied:', ev, jk); };
   /* Call for interview: the institute fills contact number, mode (Online -> Zoom/Meet link, In person -> location), date and time.
      Sent with the status update (PUT /company/applications/{id}/status {status:'interview', interview:{…}}) and also as a message,
