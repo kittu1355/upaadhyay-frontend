@@ -220,6 +220,21 @@ function completion(fp){
   return Math.min(100, req.filter(Boolean).length * 16 + rec.filter(Boolean).length * 5);
 }
 
+/* labels of the profile items that are still missing — same checks as completion() above */
+function missing(fp){
+  var out = [];
+  if(!(fp.first && fp.last && age(fp.dob) !== null)) out.push('Basic details');
+  if(!(fp.email && fp.phone)) out.push('Contact details');
+  if(!(fp.high && (fp.high !== 'Other' || nonEmpty(fp.highOth)))) out.push('Highest qualification');
+  if(!(fp.desig && (fp.desig !== 'Other' || nonEmpty(fp.desigOth)))) out.push('Designation');
+  if(!arr(fp.subjects).length) out.push('Subjects');
+  if(!(pubItem(fp, 'resumes') || (fp.files && fp.files.resume))) out.push('Resume');
+  if(!arr(fp.jobs).length) out.push('Work experience');
+  if(!rsCount(fp)) out.push('Research');
+  if(!Object.keys(fp.files || {}).some(function(k){ return k !== 'resume' && k !== 'photo'; })) out.push('Supporting documents');
+  return out;
+}
+
 function box(title, sec, body, empty, mode, full){
   var cls = 'fp-pv-box' + (full ? ' fv-full' : '');
   if(!body){
@@ -311,5 +326,5 @@ function summary(fp){
   };
 }
 
-window.FacultyView = { normalize: normalize, html: html, summary: summary, stats: stats, docItems: docItems, docLinks: docLinks, completion: completion, safeUrl: safeUrl };
+window.FacultyView = { missing: missing, months: months, sh: sh, shl: shl, eduRows: eduRows, jobRows: jobRows, tqRows: tqRows, rsBlock: rsBlock, rsCount: rsCount, linkRows: linkRows, scholarRows: scholarRows, fileRow: fileRow, esc: esc, normalize: normalize, html: html, summary: summary, stats: stats, docItems: docItems, docLinks: docLinks, completion: completion, safeUrl: safeUrl };
 })();
