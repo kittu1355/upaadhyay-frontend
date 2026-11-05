@@ -499,6 +499,7 @@ if(typeof window.bkStatusBadge !== 'function'){
   function rejectCandidate(id, ev){ _notConnected(ev); }
   function undoApplicant(id, ev){ _notConnected(ev); }
   function scheduleInterview(id, ev){ _notConnected(ev); }
+  function selectCandidate(id, ev){ _notConnected(ev); }
   function messageCandidate(id, ev){ _notConnected(ev); }
 
   /* Small dialogs used instead of the browser's prompt() box. */
@@ -661,13 +662,15 @@ if(typeof window.bkStatusBadge !== 'function'){
     const raw = (window.__apStatus || {})[jk + ':' + id];
     const st = raw !== undefined ? raw : candidateStatus[id];
     const iv = (window.__apInterviews || {})[jk + ':' + id];
-    const stBadge = st==='interview' ? '<span class="badge ap-iv">Interview</span>'
+    const stBadge = st==='selected' ? '<span class="badge badge-accepted ap-sel">Selected</span>'
+      : st==='interview' ? '<span class="badge ap-iv">Interview</span>'
       : st==='shortlisted' ? '<span class="badge badge-accepted">Shortlisted</span>'
       : st==='rejected' ? '<span class="badge badge-pending" style="background:#FDECEA;color:#B3261E">Rejected</span>'
       : st==='invited' ? '<span class="badge badge-pending">Invited</span>' : '<span class="badge ap-new">New</span>';
     const roleLine = [p.role || 'Faculty', deg].filter(Boolean).join(' \u00b7 ');
     const J = jbEsc(jk);
-    const ivBtn = st==='rejected' ? '' : `<div class="ap-actions ap-actions-iv"><button class="btn btn-iv btn-sm" onclick="event.stopPropagation(); scheduleInterview('${id}', event, '${J}')">${iv ? 'Edit interview details' : 'Call for interview'}</button></div>`;
+    const canPick = (st==='shortlisted' || st==='interview');
+    const ivBtn = (st==='rejected') ? '' : `<div class="ap-actions ap-actions-iv"><button class="btn btn-iv btn-sm" onclick="event.stopPropagation(); scheduleInterview('${id}', event, '${J}')">${iv ? 'Edit interview details' : 'Call for interview'}</button>${canPick ? `<button class="btn btn-sel btn-sm" onclick="event.stopPropagation(); selectCandidate('${id}', event, '${J}')">Mark as selected</button>` : ''}</div>`;
     return `
       <div class="job-card ap-card" onclick="openProfile('${id}')">
         <div class="ap-head">
@@ -686,8 +689,8 @@ if(typeof window.bkStatusBadge !== 'function'){
         ${iv && window.Interview ? Interview.html(iv, { compact:true }) : ''}
         <div class="ap-actions">
           <button class="btn btn-light btn-sm" onclick="event.stopPropagation(); messageCandidate('${id}', event)">Message</button>
-          ${(st==='shortlisted' || st==='interview')
-            ? `<button class="btn btn-light btn-sm" onclick="event.stopPropagation(); undoApplicant('${id}', event, '${J}')">Remove shortlist</button>`
+          ${(st==='shortlisted' || st==='interview' || st==='selected')
+            ? `<button class="btn btn-light btn-sm" onclick="event.stopPropagation(); undoApplicant('${id}', event, '${J}')">${st==='selected' ? 'Undo selection' : 'Remove shortlist'}</button>`
             : st==='rejected'
               ? `<button class="btn btn-light btn-sm" onclick="event.stopPropagation(); undoApplicant('${id}', event, '${J}')">Undo reject</button>`
               : `<button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); shortlistCandidate('${id}', event, '${J}')">Shortlist</button><button class="btn btn-ghost btn-sm ap-rej" onclick="event.stopPropagation(); rejectCandidate('${id}', event, '${J}')">Reject</button>`}
