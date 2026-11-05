@@ -498,6 +498,7 @@ if(typeof window.bkStatusBadge !== 'function'){
   function shortlistCandidate(id, ev){ _notConnected(ev); }
   function rejectCandidate(id, ev){ _notConnected(ev); }
   function undoApplicant(id, ev){ _notConnected(ev); }
+  function scheduleInterview(id, ev){ _notConnected(ev); }
   function messageCandidate(id, ev){ _notConnected(ev); }
 
   /* Small dialogs used instead of the browser's prompt() box. */
@@ -639,24 +640,34 @@ if(typeof window.bkStatusBadge !== 'function'){
   }
 
   /* Applicant card: one per row — banner + avatar, name, role, job applied for, highest degree */
-  function applicantCardHTML(id){
+  function applicantCardHTML(id, jobKey){
     const p = facultyProfiles[id] || { name:'Applicant', role:'Faculty', avatar:'', education:[], tags:[] };
-    const jobs = Object.keys(jobsData).filter(k=>(jobsData[k].applicantIds||[]).indexOf(id)>-1).map(k=>jobsData[k].title);
+    const keys = jobKey ? [jobKey] : Object.keys(jobsData).filter(k=>(jobsData[k].applicantIds||[]).indexOf(id)>-1);
+    const jobs = keys.map(k=>jobsData[k] ? jobsData[k].title : '').filter(Boolean);
+    const jk = keys[0] || '';
     const deg = highestDegree(p);
-    const ini = String(p.name||'?').replace(/^(dr|mr|mrs|ms|prof)\.?\s+/i,'').trim().split(/\s+/).slice(0,2).map(w=>w[0]||'').join('').toUpperCase() || '?';
     const PERSON = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="2"/><path d="M4 21c0-4.2 3.6-7 8-7s8 2.8 8 7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
     const av = p.avatar ? `<div class="ap-avatar" style="background-image:url('${jbEsc(p.avatar)}');"></div>` : `<div class="ap-avatar ap-avatar-ini">${PERSON}</div>`;
-    const qaBlocks = Object.keys(jobsData).filter(k=>(jobsData[k].applicantIds||[]).indexOf(id)>-1).map(k=>{
+    /* the answers THIS faculty typed for the questions of THIS job */
+    const qaBlocks = keys.map(k=>{
       const list = (window.__apAnswers || {})[k + ':' + id] || [];
       if(!list.length) return '';
-      return '<div class="ap-qa-job">' + (jobs.length > 1 ? '<div class="ap-qa-jt">' + jbEsc(jobsData[k].title) + '</div>' : '')
+      return '<div class="ap-qa-job">' + (keys.length > 1 ? '<div class="ap-qa-jt">' + jbEsc(jobsData[k].title) + '</div>' : '')
         + list.map((x, n)=>'<div class="ap-qa-item"><div class="ap-qa-q">' + (n+1) + '. ' + jbEsc(x.q) + (x.mins ? ' <small>' + jbEsc(x.mins) + ' min</small>' : '') + '</div><div class="ap-qa-a">' + jbEsc(x.a) + '</div></div>').join('') + '</div>';
     }).join('');
-    const qaCount = Object.keys(window.__apAnswers || {}).filter(k=>k.slice(-(id.length + 1)) === ':' + id).reduce((n,k)=>n + window.__apAnswers[k].length, 0);
+    const qaCount = keys.reduce((n,k)=>n + (((window.__apAnswers || {})[k + ':' + id] || []).length), 0);
     const qaHtml = qaBlocks ? `<button type="button" class="ap-qa-btn" onclick="event.stopPropagation(); apToggleQa(this)"><span>View answers (${qaCount})</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button><div class="ap-qa" onclick="event.stopPropagation()">${qaBlocks}</div>` : '';
-    const st = candidateStatus[id];
-    const stBadge = st ? statusBadge(id) : '<span class="badge ap-new">New</span>';
+    /* status of this application (per job), falling back to the candidate-wide status */
+    const raw = (window.__apStatus || {})[jk + ':' + id];
+    const st = raw !== undefined ? raw : candidateStatus[id];
+    const iv = (window.__apInterviews || {})[jk + ':' + id];
+    const stBadge = st==='interview' ? '<span class="badge ap-iv">Interview</span>'
+      : st==='shortlisted' ? '<span class="badge badge-accepted">Shortlisted</span>'
+      : st==='rejected' ? '<span class="badge badge-pending" style="background:#FDECEA;color:#B3261E">Rejected</span>'
+      : st==='invited' ? '<span class="badge badge-pending">Invited</span>' : '<span class="badge ap-new">New</span>';
     const roleLine = [p.role || 'Faculty', deg].filter(Boolean).join(' \u00b7 ');
+    const J = jbEsc(jk);
+    const ivBtn = st==='rejected' ? '' : `<div class="ap-actions ap-actions-iv"><button class="btn btn-iv btn-sm" onclick="event.stopPropagation(); scheduleInterview('${id}', event, '${J}')">${iv ? 'Edit interview details' : 'Call for interview'}</button></div>`;
     return `
       <div class="job-card ap-card" onclick="openProfile('${id}')">
         <div class="ap-head">
@@ -672,15 +683,28 @@ if(typeof window.bkStatusBadge !== 'function'){
           <b>${jobs.length ? jbEsc(jobs[0]) + (jobs.length>1 ? ' +'+(jobs.length-1) : '') : '\u2014'}</b>
         </div>
         ${qaHtml}
+        ${iv && window.Interview ? Interview.html(iv, { compact:true }) : ''}
         <div class="ap-actions">
           <button class="btn btn-light btn-sm" onclick="event.stopPropagation(); messageCandidate('${id}', event)">Message</button>
-          ${st==='shortlisted'
-            ? `<button class="btn btn-light btn-sm" onclick="event.stopPropagation(); undoApplicant('${id}', event)">Remove shortlist</button>`
+          ${(st==='shortlisted' || st==='interview')
+            ? `<button class="btn btn-light btn-sm" onclick="event.stopPropagation(); undoApplicant('${id}', event, '${J}')">Remove shortlist</button>`
             : st==='rejected'
-              ? `<button class="btn btn-light btn-sm" onclick="event.stopPropagation(); undoApplicant('${id}', event)">Undo reject</button>`
-              : `<button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); shortlistCandidate('${id}', event)">Shortlist</button><button class="btn btn-ghost btn-sm ap-rej" onclick="event.stopPropagation(); rejectCandidate('${id}', event)">Reject</button>`}
+              ? `<button class="btn btn-light btn-sm" onclick="event.stopPropagation(); undoApplicant('${id}', event, '${J}')">Undo reject</button>`
+              : `<button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); shortlistCandidate('${id}', event, '${J}')">Shortlist</button><button class="btn btn-ghost btn-sm ap-rej" onclick="event.stopPropagation(); rejectCandidate('${id}', event, '${J}')">Reject</button>`}
         </div>
+        ${ivBtn}
       </div>`;
+  }
+
+  /* Applicants grouped under a heading for each job role */
+  function groupedApplicantsHTML(){
+    let html = '', total = 0;
+    Object.keys(jobsData).forEach(k=>{
+      const ids = jobsData[k].applicantIds || []; if(!ids.length) return;
+      total += ids.length;
+      html += `<div class="ap-group-h"><h4>${jbEsc(jobsData[k].title || 'Job')}</h4><span>${ids.length} ${ids.length===1 ? 'applicant' : 'applicants'}</span></div>` + ids.map(id=>applicantCardHTML(id, k)).join('');
+    });
+    return { html, total };
   }
 
   const CAND_PAGE_SIZE = 6;
@@ -949,10 +973,10 @@ if(typeof window.bkStatusBadge !== 'function'){
 
   /* Sidebar > Applicants: every applicant across all jobs, in one list */
   function paintAllApplicants(){
-    const ids = []; Object.keys(jobsData).forEach(k=>(jobsData[k].applicantIds||[]).forEach(c=>{ if(ids.indexOf(c)<0) ids.push(c); }));
-    document.getElementById('apList').innerHTML = ids.map(applicantCardHTML).join('') || `
+    const g = groupedApplicantsHTML();
+    document.getElementById('apList').innerHTML = g.html || `
       <div class="empty-state"><h4>No applicants yet</h4><p>Faculty who apply to your jobs will appear here.</p></div>`;
-    document.getElementById('apCount').textContent = ids.length + (ids.length===1 ? ' applicant' : ' applicants');
+    document.getElementById('apCount').textContent = g.total + (g.total===1 ? ' applicant' : ' applicants');
   }
   function openAllApplicants(){
     window.__empLoad = true; switchEmployerTab('myjobs'); window.__empLoad = false; window.__empApps = true;
@@ -996,7 +1020,7 @@ if(typeof window.bkStatusBadge !== 'function'){
     const job = jobsData[jobId];
     if(!job) return;
     const _ids = job.applicantIds || [];
-    document.getElementById('apList').innerHTML = _ids.map(applicantCardHTML).join('') || `
+    document.getElementById('apList').innerHTML = _ids.map(id=>applicantCardHTML(id, jobId)).join('') || `
       <div class="empty-state">
         <div class="empty-state-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2" stroke="currentColor" stroke-width="2"/><circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="2"/></svg></div>
         <h4>No applicants yet</h4>
