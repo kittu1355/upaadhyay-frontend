@@ -11,7 +11,7 @@
     plus:'M12 5v14M5 12h14', list:'M4 7h16M4 12h16M4 17h10', people:'M16 11a3 3 0 100-6 3 3 0 000 6zM8 12a3 3 0 100-6 3 3 0 000 6zM2 20c0-3 3-5 6-5s6 2 6 5M14 15c3 0 8 1 8 5',
     search:'M11 18a7 7 0 100-14 7 7 0 000 14zM21 21l-4.35-4.35', user:'M12 12a4 4 0 100-8 4 4 0 000 8zM4 21c0-4 4-6 8-6s8 2 8 6', badge:'M12 8v4l3 2M12 21a9 9 0 100-18 9 9 0 000 18z',
     bell:'M12 3a5 5 0 00-5 5v3l-2 4h14l-2-4V8a5 5 0 00-5-5zM10 18a2 2 0 004 0', cog:'M12 15a3 3 0 100-6 3 3 0 000 6zM19 12l2-1-2-4-2 1-2-1-1-2h-4l-1 2-2 1-2-1-2 4 2 1v2l-2 1 2 4 2-1 2 1 1 2h4l1-2 2-1 2 1 2-4-2-1z',
-    out:'M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9', lock:'M7 11V8a5 5 0 0110 0v3M5 11h14v10H5z' };
+    out:'M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9', lock:'M7 11V8a5 5 0 0110 0v3M5 11h14v10H5z', mark:'M6 3h12v18l-6-4-6 4z' };
   function ic(n){ return '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="' + P[n] + '"/></svg>'; }
   function lsj(k){ try{ return JSON.parse(localStorage.getItem(k)); }catch(e){ return null; } }
   function toast(m){ if(typeof showGenericToast === 'function') showGenericToast(m); else if(window.api && api.toast) api.toast(m); }
@@ -146,12 +146,19 @@
     applyFilters();
   }
 
+  function hideMj(){ var m = $('upMyJobs'); state.mj = false; if(m) m.style.display = 'none'; }
+  function showMj(){
+    var h = $('dashProfileTab'); if(!h) return false; hideSet();
+    var e = $('upEmbed'); if(e) e.style.display = 'none'; state.emb = false;
+    var m = $('upMyJobs'); if(!m){ m = document.createElement('div'); m.id = 'upMyJobs'; h.parentNode.insertBefore(m, h.nextSibling); }
+    h.style.display = 'none'; m.style.display = 'block'; state.mj = true; if(window.MyJobs) MyJobs.open(m); window.scrollTo(0, 0); return true;
+  }
   function hideEmbed(){
-    var e = $('upEmbed'), h = $('dashProfileTab'); state.emb = false;
+    var e = $('upEmbed'), h = $('dashProfileTab'); state.emb = false; hideMj();
     if(e) e.style.display = 'none'; if(h) h.style.display = 'block';
   }
   function showEmbed(src){
-    var h = $('dashProfileTab'); if(!h) return false;
+    var h = $('dashProfileTab'); if(!h) return false; hideMj();
     var e = $('upEmbed');
     if(!e){ e = document.createElement('div'); e.id = 'upEmbed'; e.className = 'up-embed'; h.parentNode.insertBefore(e, h.nextSibling); }
     if(e.getAttribute('data-src') !== src){ e.setAttribute('data-src', src); e.innerHTML = '<iframe src="' + src + '" title="Browse jobs" loading="eager"></iframe>'; e.firstChild.addEventListener('load', applyFilters); }
@@ -161,9 +168,10 @@
     var onPage = !!$('dashProfileTab');
     function mine(){ if(onPage){ hideSet(); hideEmbed(); if(typeof switchDashTab === 'function') switchDashTab('profile'); window.scrollTo(0, 0); } else goTo('faculty'); }
     function jobs(){ hideSet(); if(onPage && showEmbed((window.PAGES && PAGES.jobs ? PAGES.jobs : '../pages/jobs.html') + '?embed=1')) return; goTo('jobs'); }
-    return { active:onPage ? (state.set ? 'set' : state.emb ? 'jobs' : 'profile') : '', edit:mine,
+    return { active:onPage ? (state.set ? 'set' : state.mj ? 'myjobs' : state.emb ? 'jobs' : 'profile') : '', edit:mine,
       list:[ { k:'profile', t:'My profile', i:'user', go:mine },
         { k:'jobs', t:'Browse jobs', i:'search', go:jobs },
+        { k:'myjobs', t:'My jobs', i:'mark', go:function(){ if(onPage && showMj()) return; goTo('faculty'); } },
         { k:'notif', t:'Notifications', i:'bell', go:function(){ var b = document.querySelector('.nav-bell'); if(b) b.click(); } },
         { k:'set', t:'Settings', i:'cog', go:function(){ openSet(); }, sub:true },
         { k:'out', t:'Log out', i:'out', go:function(){ logoutUser(); }, out:1 } ] };
