@@ -1520,3 +1520,13 @@ html, body.page{height:auto !important; min-height:100%; overflow-y:auto !import
 .ap-card .ap-qa{border-radius:3px;background:var(--blue-50,#F3F7FF);max-height:260px}
 .ap-qa-item{padding:10px 0}
 .ap-qa-a{font-size:13.5px}
+
+/* applicants grouped by job role + interview */
+#apList .ap-group-h{grid-column:1/-1; display:flex; align-items:baseline; justify-content:space-between; gap:12px; margin:14px 0 2px; padding:0 0 8px; border-bottom:2px solid var(--blue-700);}
+#apList .ap-group-h:first-child{margin-top:0;}
+#apList .ap-group-h h4{margin:0; font-size:17px; font-weight:800; color:var(--ink); text-transform:uppercase; letter-spacing:.01em;}
+#apList .ap-group-h span{font-size:13px; font-weight:600; color:var(--ink-soft); white-space:nowrap;}
+.ap-card .ap-iv{background:#EFE8FF; color:#5b34b8; font-size:11.5px; font-weight:700; padding:3px 11px; border-radius:999px;}
+.ap-card .ap-actions-iv{margin-top:-2px;}
+.ap-card .ap-actions .btn-iv{background:#5b34b8; color:#fff; border:1px solid #5b34b8;}
+.ap-card .ap-actions .btn-iv:hover{background:#4a2a9a;}
