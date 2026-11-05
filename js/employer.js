@@ -766,8 +766,8 @@ if(typeof window.bkStatusBadge !== 'function'){
   }
   function addJob(e){
     if(e && e.preventDefault) e.preventDefault();
-    const v = id => (document.getElementById(id).value || '').trim();
-    const chk = id => !!document.getElementById(id).checked;
+    const v = id => ((document.getElementById(id) || {}).value || '').trim();
+    const chk = id => !!(document.getElementById(id) || {}).checked;
     ['title','role','category','dept','type','qual','notice','exp','expmax','salmin','salmax','campus','vac','deadline'].forEach(jbClear);
 
     const title = v('jbTitle'), role = (v('jbRole') === 'Other' && v('jbRoleOther')) ? v('jbRoleOther') : v('jbRole'), category = jbPick('jbCategory'), dept = v('jbDept'), type = jbPick('jbType');
