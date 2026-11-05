@@ -216,9 +216,28 @@ let PINIDX=null;
 function pinIdx(){ if(PINIDX) return PINIDX; PINIDX={};
   Object.keys(INDIA).forEach(st=>Object.keys(INDIA[st]).forEach(di=>Object.keys(INDIA[st][di]).forEach(ci=>Object.keys(INDIA[st][di][ci]).forEach(ar=>{ const p=INDIA[st][di][ci][ar]; if(!PINIDX[p]) PINIDX[p]=[st,di,ci,ar]; }))));
   return PINIDX; }
+/* ---------- India Post live lookup (api.postalpincode.in): PIN -> location, city -> area list ---------- */
+const POSTAPI='https://api.postalpincode.in', AREAS={d:null,b:null};
+const areaKey=S=>[S.state,S.district,S.city].map(x=>String(x||'').trim().toLowerCase()).join('|');
+async function postGet(path){ const ac=new AbortController(), t=setTimeout(()=>ac.abort(),8000);
+  try{ const r=await fetch(POSTAPI+path,{signal:ac.signal}); const j=await r.json(); const d=Array.isArray(j)?j[0]:null; return d&&d.Status==='Success'&&d.PostOffice?d.PostOffice:null; }
+  catch(e){ return null; } finally{ clearTimeout(t); } }
+async function fetchAreas(sc){
+  const S=sc==='d'?I.d:BR; if(!isIndia(S)||!S.city||String(S.city).trim().length<3) return;
+  if(S.city in ((INDIA[S.state]&&INDIA[S.state][S.district])||{})) return;
+  const key=areaKey(S); if(AREAS[sc]&&AREAS[sc].key===key) return;
+  const po=await postGet('/postoffice/'+encodeURIComponent(String(S.city).trim()));
+  if(areaKey(S)!==key) return;
+  if(!po){ AREAS[sc]=null; return; }
+  const low=x=>String(x||'').trim().toLowerCase(), st=po.filter(o=>low(o.State)===low(S.state));
+  const dist=st.filter(o=>low(o.District)===low(S.district)), use=dist.length?dist:st;
+  const seen={}, list=[]; use.forEach(o=>{ if(!seen[o.Name]){ seen[o.Name]=1; list.push({name:o.Name,pin:o.Pincode}); } });
+  AREAS[sc]=list.length?{key,list}:null;
+  if(list.length) locRefresh(sc,4);
+}
 function locField(o,sc){
   const S=sc==='d'?I.d:BR; if(!S.country&&!S.o_country) S.country='India';
-  const k=o.k, lst=locOpts(S,k), par=LPAR[k], nm=o.l.replace(' / locality','').toLowerCase();
+  const k=o.k; let lst=locOpts(S,k); if(k==='area'&&!(lst&&lst.length)&&AREAS[sc]&&AREAS[sc].key===areaKey(S)) lst=AREAS[sc].list.map(x=>x.name).sort(cmpA); const par=LPAR[k], nm=o.l.replace(' / locality','').toLowerCase();
   const withOther=OTHER_K.includes(k), cur=S[k]||'';
   const isOther=withOther&&lst&&lst.length&&(!!S['o_'+k]||(cur&&!lst.includes(cur)));
   const ev=`onblur="IN.blur('${sc}','${k}')"`;
@@ -263,15 +282,26 @@ const note=(t,c)=>`<div class="in-note ${c||''}">${t}</div>`;
 
 function pinLook(sc,val){
   const box=$('pin-'+sc); if(!box) return;
-  if(val.length!==6){ box.innerHTML=''; return; }
+  if(!/^\d{6}$/.test(val)){ box.innerHTML=''; return; }
   box.innerHTML=note('<span class="in-load"></span>Looking up PIN code…');
-  setTimeout(()=>{
-    const r=pinIdx()[val]||PINS[val], S=sc==='d'?I.d:BR;
-    if(!r){ box.innerHTML=note('We couldn\'t find this PIN code in our list. Pick the state, district, city and area from the lists, or type them in yourself.','in-warn'); return; }
-    S.country='India'; ['country','state','district','city','area'].forEach(x=>{ S['o_'+x]=false; }); ['state','district','city','area'].forEach((k,i)=>{ S[k]=r[i]; const f=$('f-'+sc+'-'+k); if(f) f.classList.remove('err'); });
+  const S=sc==='d'?I.d:BR;
+  const apply=(r,list)=>{
+    if(S.pin!==val) return;
+    S.country='India'; ['country','state','district','city','area'].forEach(x=>{ S['o_'+x]=false; });
+    ['state','district','city','area'].forEach((k,i)=>{ S[k]=r[i]; const f=$('f-'+sc+'-'+k); if(f) f.classList.remove('err'); });
+    AREAS[sc]=list&&list.length?{key:areaKey(S),list}:null;
     locRefresh(sc,0); mapRefresh(sc);
-    box.innerHTML=note(`<b>${ck(13)} Location found</b><br>State: ${r[0]}<br>District: ${r[1]}<br>City: ${r[2]}<br>Area: ${r[3]}<br>You can still change these.`,'in-ok'); save();
-  },450);
+    box.innerHTML=note(`<b>${ck(13)} Location found</b><br>State: ${esc(r[0])}<br>District: ${esc(r[1])}<br>City: ${esc(r[2])}<br>Area: ${esc(r[3])}<br>You can still change these.`,'in-ok'); save();
+  };
+  const local=pinIdx()[val]||PINS[val];
+  if(local){ setTimeout(()=>apply(local),250); return; }
+  postGet('/pincode/'+val).then(po=>{
+    if(S.pin!==val) return;
+    if(!po||!po.length){ box.innerHTML=note('We couldn\'t find this PIN code. Check it, or pick the state, district, city and area yourself.','in-warn'); return; }
+    const o=po[0], city=(o.Block&&o.Block!=='NA')?o.Block:o.District;
+    const list=[]; po.forEach(x=>{ if(!list.some(y=>y.name===x.Name)) list.push({name:x.Name,pin:x.Pincode}); });
+    apply([o.State,o.District,city,o.Name],list);
+  });
 }
 
 /* ---------- verification helpers (documents, role, status) ---------- */
@@ -678,13 +708,13 @@ window.IN={
   loc(sc,k,v){ const S=sc==='d'?I.d:BR, i=LORD.indexOf(k), oth=v==='Other'&&OTHER_K.includes(k);
     S[k]=oth?'':v; S['o_'+k]=oth;
     LORD.slice(i+1).forEach(x=>{ S[x]=''; S['o_'+x]=false; });
-    if(k==='area'){ const p=lookupPin(S); if(p) S.pin=p; } else S.pin='';
+    if(k==='area'){ let p=lookupPin(S); if(!p&&AREAS[sc]&&AREAS[sc].key===areaKey(S)){ const a=AREAS[sc].list.find(x=>x.name===S.area); if(a) p=a.pin; } if(p) S.pin=p; } else S.pin='';
     const f=$('f-'+sc+'-'+k); if(f) f.classList.remove('err');
     save(); locRefresh(sc,i); mapRefresh(sc); const b=$('pin-'+sc); if(b) b.innerHTML='';
     if(oth){ const el=document.querySelector('#f-'+sc+'-'+k+' .in-other'); if(el) el.focus(); } },
   pickSel(sc,k,v){ IN.set(sc,k,v,1); const o=ALLF.find(f=>f.k===k&&(sc==='b'?FB.includes(f):!FB.includes(f))); if(o&&o.oth){ const el=$('f-'+sc+'-'+k); if(el){ const t=document.createElement('div'); t.innerHTML=fld(o,sc); el.replaceWith(t.firstChild); const inp=$('f-'+sc+'-'+k).querySelector('.in-other'); if(inp) inp.focus(); } } },
   set(sc,k,v,re){ (sc==='d'?I.d:BR)[k]=v; if(sc==='d'&&k==='aemail'&&I.aem!=='idle') I.aem='idle'; const f=$('f-'+sc+'-'+k); if(f) f.classList.remove('err'); if(k==='pin') pinLook(sc,v.trim()); if(re&&sc==='d'&&k==='type'){ save(); render(); } else if(sc==='d') save(); },
-  blur(sc,k){ const o=ALLF.find(f=>f.k===k&&(sc==='b'?FB.includes(f):!FB.includes(f))); if(o) mark(sc,o,chk(o,(sc==='d'?I.d:BR)[k])); },
+  blur(sc,k){ if(k==='city') fetchAreas(sc); const o=ALLF.find(f=>f.k===k&&(sc==='b'?FB.includes(f):!FB.includes(f))); if(o) mark(sc,o,chk(o,(sc==='d'?I.d:BR)[k])); },
   steps(){ return STEPS; },
   cur(){ return I.view==='wizard'?I.step:-1; },
   can(i){ return I.view!=='wizard'||i<=I.max||i<I.step; },
