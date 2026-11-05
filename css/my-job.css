@@ -1,0 +1,20 @@
+.mj{max-width:980px;margin:0 auto;padding:8px 4px 60px}
+.mj h2{font-size:24px;margin:0 0 16px;font-weight:800;color:var(--ink,#111827)}
+.mj-tabs{display:flex;gap:6px;border-bottom:1px solid var(--line,#e5e7eb);margin-bottom:16px}
+.mj-tabs button{background:none;border:0;border-bottom:3px solid transparent;padding:10px 16px;font:600 14.5px inherit;font-family:inherit;color:var(--ink-soft,#4b5563);cursor:pointer;margin-bottom:-1px}
+.mj-tabs button.on{color:var(--blue-700,#4b1f9e);border-bottom-color:var(--blue-700,#4b1f9e)}
+.mj-tabs b{background:#eef2ff;color:var(--blue-700,#4b1f9e);border-radius:999px;padding:1px 8px;font-size:12px;margin-left:4px}
+.mj-card{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;background:#fff;border:1px solid var(--line,#e5e7eb);border-radius:10px;padding:18px 20px;margin-bottom:12px;box-shadow:0 1px 2px rgba(16,24,40,.04)}
+.mj-main{min-width:0}.mj-main h4{margin:0;font-size:17px;font-weight:700;color:var(--ink,#111827)}
+.mj-org{margin-top:3px;font-size:14px;color:var(--ink-soft,#4b5563);font-weight:600}
+.mj-meta{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:8px;font-size:13px;color:var(--ink-faint,#6b7280)}
+.mj-date{margin-top:8px;font-size:12.5px;color:var(--ink-faint,#6b7280)}
+.mj-side{display:flex;flex-direction:column;align-items:flex-end;gap:10px;flex:0 0 auto}
+.mj-st{font-size:12.5px;font-weight:700;border-radius:999px;padding:5px 12px;white-space:nowrap}
+.st-blue{background:#eff6ff;color:#1d4ed8}.st-gray{background:#f3f4f6;color:#4b5563}.st-green{background:#ecfdf5;color:#047857}.st-purple{background:#f5f3ff;color:#6d28d9}.st-red{background:#fef2f2;color:#b91c1c}
+.mj-btns{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.mj-btn{display:inline-flex;align-items:center;padding:8px 14px;border-radius:7px;border:1px solid var(--line,#d1d5db);background:#fff;color:var(--ink,#111827);font:600 13px inherit;font-family:inherit;cursor:pointer;text-decoration:none}
+.mj-btn:hover{background:#f3f4f6}.mj-btn.pri{background:var(--blue-700,#4b1f9e);border-color:var(--blue-700,#4b1f9e);color:#fff}.mj-btn.done{background:#ecfdf5;border-color:#a7f3d0;color:#047857;cursor:default}
+.mj-empty{padding:44px 20px;text-align:center;color:var(--ink-faint,#6b7280);border:1.5px dashed var(--line,#e5e7eb);border-radius:10px;background:#fff}
+#upMyJobs{display:none}
+@media(max-width:640px){.mj-card{flex-direction:column}.mj-side{align-items:flex-start}.mj-btns{justify-content:flex-start}}
