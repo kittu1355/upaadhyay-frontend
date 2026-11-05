@@ -197,6 +197,10 @@ if(typeof window.bkStatusBadge !== 'function'){
     }
     slideProfileId = id;
     document.title = `${p.name} — Upaadhyay.com`;
+    if(window.CandidateView && document.getElementById('cvRoot')){
+      CandidateView.render({ id: id, p: p, role: currentRole, status: candidateStatus[id], rerender: function(){ renderCandidateProfilePage(id); } });
+      return;
+    }
     const cpBanner = document.getElementById('cpBanner');
     if(cpBanner) cpBanner.style.background = bannerGradient(p.name);
     document.getElementById('cpAvatar').style.backgroundImage = `url('${p.avatar}')`;
