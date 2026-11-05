@@ -236,6 +236,7 @@
       let body = {};
       if(qs.length){ const ans = await askQuestions(qs, title); if(!ans) return; body = { answers: ans }; }
       await api.post('/jobs/' + id + '/apply', body);
+      if(body.answers) window.bkSaveLocalAnswers(id, body.answers);
       try{ currentUser.appliedIds = currentUser.appliedIds || []; if(currentUser.appliedIds.indexOf(String(id)) < 0){ currentUser.appliedIds.push(String(id)); saveState(); } }catch(e){}
       api.toast('Application sent' + (title ? ' for ' + title : ''));
       document.querySelectorAll('[data-apply-job="' + id + '"]').forEach(function(b){ b.textContent = 'Applied ✓'; b.disabled = true; });
@@ -546,6 +547,17 @@
     if(!Array.isArray(v)) v = Object.keys(v).map(function(k){ return { q: k, a: v[k] }; });
     return v.map(function(x){ return { q: x.q || x.question || '', a: x.a || x.answer || '', mins: x.mins || x.minutes || '' }; }).filter(function(x){ return x.q || x.a; });
   }
+  /* Answers are also kept in this browser (key "jobId:candidateId") so the card can show them even if the API list leaves them out. */
+  function localAnswers(jobId, candId){
+    try{ var all = JSON.parse(localStorage.getItem('upaadhyay_app_answers') || '{}'); return normAnswers(all[jobId + ':' + candId]); }catch(e){ return []; }
+  }
+  window.bkSaveLocalAnswers = function(jobId, answers){
+    try{
+      var uid = String((api.user && api.user.id) || ''), all = JSON.parse(localStorage.getItem('upaadhyay_app_answers') || '{}');
+      all[jobId + ':' + uid] = answers; all[jobId + ':me'] = answers;
+      localStorage.setItem('upaadhyay_app_answers', JSON.stringify(all));
+    }catch(e){}
+  };
   function mapPostedJob(j){
     const m = j.meta || {};
     return {
@@ -630,7 +642,8 @@
       if(!facultyProfiles[cid]) setProfile(cand);
       if(postedJobs[key] && postedJobs[key].applicantIds.indexOf(cid) < 0) postedJobs[key].applicantIds.push(cid);
       appByJobCand[key + ':' + cid] = a.id;
-      const qaList = normAnswers(a.answers || a.qa_answers || a.screening_answers || (a.meta && a.meta.answers));
+      let qaList = normAnswers(a.answers || a.qa_answers || a.screening_answers || a.application_answers || a.responses || a.qa || (a.meta && (a.meta.answers || a.meta.qa_answers)));
+      if(!qaList.length){ qaList = localAnswers(a.job_id, cid); }   /* fallback: answers saved in this browser when the faculty applied */
       if(qaList.length){ (window.__apAnswers = window.__apAnswers || {})[key + ':' + cid] = qaList; }
       if(!appByCandidate[cid] || a.id > appByCandidate[cid]) appByCandidate[cid] = a.id;
       if(['shortlisted','interview','selected'].indexOf(a.status) > -1) candidateStatus[cid] = 'shortlisted';
