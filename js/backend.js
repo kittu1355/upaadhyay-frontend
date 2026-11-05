@@ -632,7 +632,7 @@
     Object.keys(facultyProfiles).forEach(function(k){ delete facultyProfiles[k]; });
     Object.keys(candidateStatus).forEach(function(k){ if(candidateStatus[k] !== 'invited') delete candidateStatus[k]; });
     Object.keys(postedJobs).forEach(function(k){ delete postedJobs[k]; });
-    window.__apAnswers = {};
+    window.__apAnswers = {}; window.__apStatus = {}; window.__apInterviews = {};
     const jobs = fetched[0];
     jobs.forEach(function(j){ postedJobs['j' + j.id] = mapPostedJob(j); });
     const apps = fetched[1];
@@ -645,6 +645,14 @@
       let qaList = normAnswers(a.answers || a.qa_answers || a.screening_answers || a.application_answers || a.responses || a.qa || (a.meta && (a.meta.answers || a.meta.qa_answers)));
       if(!qaList.length){ qaList = localAnswers(a.job_id, cid); }   /* fallback: answers saved in this browser when the faculty applied */
       if(qaList.length){ (window.__apAnswers = window.__apAnswers || {})[key + ':' + cid] = qaList; }
+      /* per-application status + interview details (API first, this browser's copy as a fallback) */
+      const stt = String(a.status || '').toLowerCase();
+      window.__apStatus[key + ':' + cid] = stt === 'interview' ? 'interview' : (stt === 'shortlisted' || stt === 'selected' ? 'shortlisted' : (stt === 'rejected' ? 'rejected' : ''));
+      if(window.Interview){
+        let iv = Interview.norm(a.interview || a.interview_details || (a.meta && a.meta.interview));
+        if(!iv) iv = Interview.getLocal(a.job_id, cid);
+        if(iv){ window.__apInterviews[key + ':' + cid] = iv; if(!window.__apStatus[key + ':' + cid] || window.__apStatus[key + ':' + cid] === 'shortlisted') window.__apStatus[key + ':' + cid] = 'interview'; }
+      }
       if(!appByCandidate[cid] || a.id > appByCandidate[cid]) appByCandidate[cid] = a.id;
       if(['shortlisted','interview','selected'].indexOf(a.status) > -1) candidateStatus[cid] = 'shortlisted';
       else if(a.status === 'rejected') candidateStatus[cid] = 'rejected';
@@ -816,33 +824,62 @@
       refreshCandidateViews();
     }catch(e){ api.toast(e.message); }
   };
-  window.shortlistCandidate = async function(id, ev){
+  window.shortlistCandidate = async function(id, ev, jk){
     if(ev) ev.stopPropagation();
-    const key = (typeof activeJobId !== 'undefined' && activeJobId) ? activeJobId : null;
+    const key = jk || ((typeof activeJobId !== 'undefined' && activeJobId) ? activeJobId : null);
     const appId = key ? appByJobCand[key + ':' + id] : appByCandidate[id]; /* with a job open, only that job's application counts */
     if(!appId){ api.toast(key ? 'This candidate has not applied to this job. Invite them first.' : 'This candidate has not applied to any of your jobs yet — invite them first.'); return; }
     try{
       await api.put('/company/applications/' + appId + '/status', { status: 'shortlisted' });
       candidateStatus[id] = 'shortlisted'; _origSaveState();
+      if(key){ (window.__apStatus = window.__apStatus || {})[key + ':' + id] = 'shortlisted'; }
       const p = facultyProfiles[id]; api.toast('Shortlisted ' + (p ? p.name : 'candidate') + '.');
       refreshCandidateViews();
     }catch(e){ api.toast(e.message); }
   };
-  async function setAppStatus(id, status, doneMsg, ev){
+  async function setAppStatus(id, status, doneMsg, ev, jk){
     if(ev) ev.stopPropagation();
-    const key = (typeof activeJobId !== 'undefined' && activeJobId) ? activeJobId : null;
+    const key = jk || ((typeof activeJobId !== 'undefined' && activeJobId) ? activeJobId : null);
     const appId = key ? appByJobCand[key + ':' + id] : appByCandidate[id];
     if(!appId){ api.toast('This candidate has not applied to this job.'); return; }
     try{
       await api.put('/company/applications/' + appId + '/status', { status: status });
       if(status === 'applied') delete candidateStatus[id]; else candidateStatus[id] = (status === 'rejected' ? 'rejected' : 'shortlisted');
+      if(key){ (window.__apStatus = window.__apStatus || {})[key + ':' + id] = status === 'rejected' ? 'rejected' : (status === 'applied' ? '' : 'shortlisted'); }
       _origSaveState();
       const p = facultyProfiles[id]; api.toast(doneMsg + ' ' + (p ? p.name : 'candidate') + '.');
       refreshCandidateViews();
     }catch(e){ api.toast(e.message); }
   }
-  window.rejectCandidate = function(id, ev){ return setAppStatus(id, 'rejected', 'Rejected', ev); };
-  window.undoApplicant = function(id, ev){ return setAppStatus(id, 'applied', 'Moved back to applied:', ev); };
+  window.rejectCandidate = function(id, ev, jk){ return setAppStatus(id, 'rejected', 'Rejected', ev, jk); };
+  window.undoApplicant = function(id, ev, jk){ return setAppStatus(id, 'applied', 'Moved back to applied:', ev, jk); };
+  /* Call for interview: the institute fills contact number, mode (Online -> Zoom/Meet link, In person -> location), date and time.
+     Sent with the status update (PUT /company/applications/{id}/status {status:'interview', interview:{…}}) and also as a message,
+     so the faculty's My jobs card updates and they get the details even if the API ignores the extra field. */
+  window.scheduleInterview = async function(id, ev, jk){
+    if(ev) ev.stopPropagation();
+    const key = jk || ((typeof activeJobId !== 'undefined' && activeJobId) ? activeJobId : null);
+    const appId = key ? appByJobCand[key + ':' + id] : appByCandidate[id];
+    if(!appId){ api.toast('This candidate has not applied to this job.'); return; }
+    if(!window.Interview){ api.toast('Reload the page and try again.'); return; }
+    const p = facultyProfiles[id], ex = (window.__apInterviews || {})[key + ':' + id];
+    const data = await Interview.dialog(p ? p.name : 'candidate', ex);
+    if(!data) return;
+    const job = key ? postedJobs[key] : null;
+    try{
+      try{ await api.put('/company/applications/' + appId + '/status', { status: 'interview', interview: data, meta: { interview: data } }); }
+      catch(e1){
+        if(e1 && (e1.status === 422 || e1.status === 400)){ await api.put('/company/applications/' + appId + '/status', { status: 'shortlisted', interview: data, meta: { interview: data } }); }  // server does not know 'interview' yet
+        else throw e1;
+      }
+      candidateStatus[id] = 'shortlisted'; _origSaveState();
+      if(key){ (window.__apStatus = window.__apStatus || {})[key + ':' + id] = 'interview'; (window.__apInterviews = window.__apInterviews || {})[key + ':' + id] = data; }
+      if(job) Interview.saveLocal(job.id, id, data);
+      try{ await api.post('/company/messages', { candidate_id: Number(id), message: Interview.text(data, job && job.title, currentCompany && currentCompany.name).slice(0, 2000) }); }catch(e2){}
+      api.toast('Interview call sent to ' + (p ? p.name : 'the candidate') + '.');
+      refreshCandidateViews();
+    }catch(e){ api.toast(e.message || 'Could not send the interview call.'); }
+  };
   window.messageCandidate = async function(id, ev){
     if(ev) ev.stopPropagation();
     const p = facultyProfiles[id];
