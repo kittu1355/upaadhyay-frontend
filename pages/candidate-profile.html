@@ -8,6 +8,7 @@
 <link rel="stylesheet" href="../css/style.css">
 <link rel="stylesheet" href="../css/faculty-profile.css?v=9">
 <link rel="stylesheet" href="../css/faculty-view.css?v=1">
+<link rel="stylesheet" href="../css/candidate-view.css?v=1">
 </head>
 <body class="page">
   <div id="siteNav"></div>
@@ -19,47 +20,7 @@
         Back to candidates
       </a>
     </div>
-
-    <div class="cp-card">
-      <div class="cp-banner" id="cpBanner"></div>
-
-      <div class="cp-main">
-        <div class="cp-body">
-          <div class="cp-avatar-row">
-            <div class="cp-avatar" id="cpAvatar"></div>
-          </div>
-          <h1 class="cp-name">
-            <span id="cpName"></span>
-            <svg class="cp-verified" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" title="Verified profile">
-              <path d="M12 2L14.4 4.1L17.5 3.6L18.4 6.6L21.2 8.1L20 11L21.2 13.9L18.4 15.4L17.5 18.4L14.4 17.9L12 20L9.6 17.9L6.5 18.4L5.6 15.4L2.8 13.9L4 11L2.8 8.1L5.6 6.6L6.5 3.6L9.6 4.1L12 2Z" fill="#1652C7"/>
-              <path d="M8.5 12L10.8 14.3L15.5 9.6" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </h1>
-          <p class="cp-role" id="cpRole"></p>
-          <div class="jc-tags" id="cpTags"></div>
-
-          <div class="cp-actions-row" id="cpActions"></div>
-
-          <div id="cpView"></div>
-        </div>
-
-        <aside class="slide-sidebar cp-sidebar">
-          <div class="slide-side-card">
-            <h5>Profile strength</h5>
-            <div class="slide-strength-bar"><div class="slide-strength-fill" id="cpStrengthFill"></div></div>
-            <p class="slide-side-note" id="cpStrengthNote"></p>
-          </div>
-          <div class="slide-side-card">
-            <h5>Current institution</h5>
-            <p class="slide-side-value" id="cpCollege"></p>
-          </div>
-          <div class="slide-side-card slide-side-tip">
-            <h5>Hiring tip</h5>
-            <p class="slide-side-note">Message before inviting to gauge availability and salary expectations.</p>
-          </div>
-        </aside>
-      </div>
-    </div>
+    <div class="cv" id="cvRoot"><div class="cv-empty">Loading candidate profile…</div></div>
   </div>
 
   <div id="siteChrome"></div>
@@ -67,10 +28,10 @@
 <script src="../js/api.js"></script>
 <script src="../js/live-update.js?v=1"></script>
 <script src="../js/store.js"></script>
-<script src="../js/employer.js"></script>
+<script src="../js/employer.js?v=28"></script>
 <script src="../js/auth.js"></script>
 <script src="../js/faculty.js"></script>
-<script src="../js/layout.js"></script><script src="../js/faculty-view.js?v=1"></script><script src="../js/backend.js"></script>
+<script src="../js/layout.js"></script><script src="../js/faculty-view.js?v=2"></script><script src="../js/candidate-view.js?v=1"></script><script src="../js/backend.js"></script>
 <script>
   mountNav(); mountChrome();
   requireLogin('company').then(function(ok){ if(ok) bkEnsureCandidate(getParam('id')).then(function(){ renderCandidateProfilePage(getParam('id')); }); });
