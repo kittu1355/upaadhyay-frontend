@@ -66,3 +66,6 @@
   .mj-row{flex-direction:column}.mj-side{align-items:flex-start}.mj-btns{justify-content:flex-start}
   .mj-steps li{font-size:10.5px}.mj-tabs{flex-wrap:wrap}
 }
+
+/* interview box inside the My jobs card (styles come from interview.js) */
+.mj-card .iv-box{margin:12px 0 0;}
