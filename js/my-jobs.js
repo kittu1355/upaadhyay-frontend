@@ -43,7 +43,8 @@ async function loadApps(){
         rows.forEach(function(a){
           var jid = a.job_id || (a.job && a.job.id);
           if(jid != null) map[String(jid)] = { status:String(a.status || 'applied').toLowerCase(), at:a.applied_at || a.created_at || '', job:a.job || null,
-            qa:normAnswers(a.answers || a.qa_answers || a.screening_answers || a.application_answers || a.responses || (a.meta && a.meta.answers)) };
+            qa:normAnswers(a.answers || a.qa_answers || a.screening_answers || a.application_answers || a.responses || (a.meta && a.meta.answers)),
+            iv:window.Interview ? Interview.norm(a.interview || a.interview_details || (a.meta && a.meta.interview)) : null };
         });
         break;
       }
@@ -57,7 +58,8 @@ async function load(force){
   var apps = await loadApps(), ids = appliedIds();
   Object.keys(apps).forEach(function(k){ if(ids.indexOf(k) < 0) ids.push(k); });
   S.applied = (await Promise.all(ids.map(function(id){ return jobById(id, (apps[id] || {}).job); }))).map(function(j){
-    var a = apps[j.id] || {}; j.status = a.status || 'applied'; j.at = a.at || ''; j.qa = (a.qa && a.qa.length) ? a.qa : localAnswers(j.id); return j;
+    var a = apps[j.id] || {}; j.status = a.status || 'applied'; j.at = a.at || ''; j.qa = (a.qa && a.qa.length) ? a.qa : localAnswers(j.id);
+    j.iv = a.iv || (window.Interview ? Interview.getLocal(j.id, (window.api && api.user && api.user.id) || 'me') : null); return j;
   });
   S.saved = await Promise.all(savedIds().map(function(id){ return jobById(id); }));
   S.loading = false; paint();
@@ -73,10 +75,12 @@ function answersBlock(j){
   return '<div class="mj-qa-wrap"><button type="button" class="mj-btn" data-qa="1"><span>My answers (' + j.qa.length + ')</span>' + CHEV + '</button><div class="mj-qa">' +
     j.qa.map(function(x, n){ return '<div class="mj-qa-item"><div class="mj-qa-q">' + (n + 1) + '. ' + esc(x.q) + (x.mins ? '<small>' + esc(x.mins) + ' min</small>' : '') + '</div><div class="mj-qa-a">' + esc(x.a) + '</div></div>'; }).join('') + '</div></div>';
 }
+function ivBlock(j){ return (j.iv && window.Interview) ? Interview.html(j.iv, { title:'Interview call from the institution' }) : ''; }
 function card(j, kind){
   var st = STATUS[j.status] || [String(j.status || 'Applied').replace(/_/g, ' ').replace(/^./, function(c){ return c.toUpperCase(); }), 'st-blue', 0];
   var meta = [j.city, j.type, j.sal].filter(Boolean).map(function(m){ return '<span>' + esc(m) + '</span>'; }).join('');
   var isApplied = kind === 'applied', already = appliedIds().indexOf(j.id) > -1;
+  if(isApplied && j.iv && st[2] >= 0 && st[2] < 3) st = STATUS.interview;   /* interview details exist -> show the Interview step */
   var btns = '';
   if(!j.gone) btns += '<a class="mj-btn" href="job-view.html?id=' + encodeURIComponent(j.id) + '">View job</a>';
   if(kind === 'saved'){
@@ -86,7 +90,7 @@ function card(j, kind){
   return '<article class="mj-card"><div class="mj-row"><div class="mj-main"><h4>' + esc(j.title) + '</h4>' + (j.org ? '<div class="mj-org">' + esc(j.org) + '</div>' : '') +
     (meta ? '<div class="mj-meta">' + meta + '</div>' : '') + (isApplied && j.at ? '<div class="mj-date">Applied on ' + esc(when(j.at)) + '</div>' : '') + '</div>' +
     '<div class="mj-side">' + (isApplied ? '<span class="mj-st ' + st[1] + '">' + esc(st[0]) + '</span>' : '') + '<div class="mj-btns">' + btns + '</div></div></div>' +
-    (isApplied ? steps(st[2]) + answersBlock(j) : '') + '</article>';
+    (isApplied ? steps(st[2]) + ivBlock(j) + answersBlock(j) : '') + '</article>';
 }
 function paint(){
   var host = document.getElementById('upMyJobs'); if(!host) return;
