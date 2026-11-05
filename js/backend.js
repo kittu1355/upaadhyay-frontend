@@ -878,15 +878,19 @@
     if(!data) return;
     const job = key ? postedJobs[key] : null;
     try{
-      try{ await api.put('/company/applications/' + appId + '/status', { status: 'interview', interview: data, meta: { interview: data } }); }
+      let saved = null;
+      try{ saved = await api.put('/company/applications/' + appId + '/status', { status: 'interview', interview: data, meta: { interview: data } }); }
       catch(e1){
-        if(e1 && (e1.status === 422 || e1.status === 400)){ await api.put('/company/applications/' + appId + '/status', { status: 'shortlisted', interview: data, meta: { interview: data } }); }  // server does not know 'interview' yet
+        if(e1 && (e1.status === 422 || e1.status === 400)){ saved = await api.put('/company/applications/' + appId + '/status', { status: 'shortlisted', interview: data, meta: { interview: data } }); }  // server does not know 'interview' yet
         else throw e1;
       }
       candidateStatus[id] = 'shortlisted'; _origSaveState();
       if(key){ (window.__apStatus = window.__apStatus || {})[key + ':' + id] = 'interview'; (window.__apInterviews = window.__apInterviews || {})[key + ':' + id] = data; }
       if(job) Interview.saveLocal(job.id, id, data);
-      try{ await api.post('/company/messages', { candidate_id: Number(id), message: Interview.text(data, job && job.title, currentCompany && currentCompany.name).slice(0, 2000) }); }catch(e2){}
+      /* if the server stored the interview it already notified the faculty; otherwise send the details as a message (max 1000 characters) */
+      if(!(saved && saved.interview)){
+        try{ await api.post('/company/messages', { candidate_id: Number(id), message: Interview.text(data, job && job.title, currentCompany && currentCompany.name).slice(0, 1000) }); }catch(e2){}
+      }
       api.toast('Interview call sent to ' + (p ? p.name : 'the candidate') + '.');
       refreshCandidateViews();
     }catch(e){ api.toast(e.message || 'Could not send the interview call.'); }
