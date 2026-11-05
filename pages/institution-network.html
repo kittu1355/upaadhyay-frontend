@@ -595,5 +595,21 @@ render();nwSync();
 if(window.bkLoadCandidates)bkLoadCandidates().then(function(){render()});
 </script>
 <script src="../js/track.js" defer></script>
+<script src="../js/pincode.js?v=1"></script>
+<script>
+/* PIN code -> City / State autofill (India Post API) on the institution profile Location step */
+document.addEventListener('input',function(e){
+  var t=e.target; if(!t||t.id!=='pf_pin') return;
+  var pin=t.value.trim(); if(!/^\d{6}$/.test(pin)||!window.UPPin) return;
+  UPPin.lookup(pin).then(function(r){
+    if(!r||t.value.trim()!==pin) return;
+    [['city',r.city],['state',r.state]].forEach(function(p){
+      var el=document.getElementById('pf_'+p[0]); if(el) el.value=p[1];
+      try{ if(typeof P!=='undefined'){ P.d[p[0]]=p[1]; if(P.o) P.o[p[0]]=false; } }catch(x){}
+    });
+    try{ if(typeof P!=='undefined'){ P.d.pin=pin; if(typeof saveP==='function') saveP(); } }catch(x){}
+  });
+});
+</script>
 </body>
 </html>
