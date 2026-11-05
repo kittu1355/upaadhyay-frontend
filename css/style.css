@@ -1512,3 +1512,11 @@ html, body.page{height:auto !important; min-height:100%; overflow-y:auto !import
 .ap-qa-item{padding:8px 0; border-bottom:1px solid #EEF2FB;} .ap-qa-item:last-child{border-bottom:0;}
 .ap-qa-q{font-size:12.5px; font-weight:700; color:var(--ink);} .ap-qa-q small{font-weight:500; color:var(--ink-faint); margin-left:4px;}
 .ap-qa-a{margin-top:3px; font-size:13px; color:var(--ink-soft); line-height:1.45; white-space:pre-wrap; word-break:break-word;}
+
+/* ---- Applicant cards (employer › Applicants): 3px edges everywhere, status chip, answers button ---- */
+.ap-card .ap-new,.ap-card .badge{border-radius:3px !important}
+.ap-card .ap-qa-btn{border-radius:3px;min-height:36px;background:var(--blue-50,#F3F7FF);border-color:#C9D6EE}
+.ap-card .ap-qa-btn:hover{background:#E7EFFE}
+.ap-card .ap-qa{border-radius:3px;background:var(--blue-50,#F3F7FF);max-height:260px}
+.ap-qa-item{padding:10px 0}
+.ap-qa-a{font-size:13.5px}
