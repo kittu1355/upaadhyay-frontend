@@ -223,9 +223,19 @@ function checkSec(){let ok=true,first=null;$$(`.fp-sec.open [data-v]`).forEach(e
 document.addEventListener('input',e=>{const t=e.target;if(!t.closest||!t.closest('#fpRoot'))return;
  if(t.matches('.fp-ms input')){msOpen(t.closest('.fp-ms'),t.value);return}
  const k=t.dataset.k;if(!k||t.type==='radio'||t.type==='checkbox')return;set(k,t.value);
+ if(k==='pin')pinFill(t.value.trim());
  if(k==='dob'){let d=t.value.replace(/[^\d]/g,'').slice(0,8);if(d.length>4)d=d.slice(0,2)+'/'+d.slice(2,4)+'/'+d.slice(4);else if(d.length>2)d=d.slice(0,2)+'/'+d.slice(2);if(d!==t.value){t.value=d;set(k,d)}ageUpd()}
  clearTimeout(window._fh);window._fh=setTimeout(()=>{$('#fpHero').innerHTML=S.open===11?'':heroHTML()},250)});
 document.addEventListener('focusout',e=>{const t=e.target;if(t.dataset&&t.dataset.v&&t.closest('#fpRoot'))check(t)});
+/* PIN code -> State / District / City / Area via India Post API (js/pincode.js); fields stay editable */
+function pinFill(pin){const m=$('#fpPinMsg');if(!m)return;
+ if(!/^\d{6}$/.test(pin)){m.textContent='';return}
+ if(!window.UPPin)return;m.textContent='Looking up PIN code…';
+ UPPin.lookup(pin).then(r=>{if(S.pin!==pin)return;const m2=$('#fpPinMsg');
+  if(!r){if(m2)m2.textContent="Couldn't find this PIN code. You can type the state, district, city and area yourself.";return}
+  [['state',r.state],['district',r.district],['city',r.city],['area',r.area]].forEach(([k,v])=>{set(k,v);const el=$(`#fpRoot [data-k="${k}"]`);if(el){el.value=v;el.classList.remove('bad');const f=el.closest('.fp-f'),er=f&&f.querySelector('.fp-err');if(er)er.textContent=''}});
+  const ar=$('#fpRoot [data-k="area"]');if(ar){let dl=document.getElementById('fpAreaDL');if(!dl){dl=document.createElement('datalist');dl.id='fpAreaDL';ar.after(dl)}dl.innerHTML=r.areas.map(x=>`<option value="${esc(x)}">`).join('');ar.setAttribute('list','fpAreaDL')}
+  if(m2)m2.textContent='Location found. You can still change these.'})}
 document.addEventListener('change',e=>{const t=e.target;if(!t.closest||!t.closest('#fpRoot'))return;
  if(t.type==='file'){upload(t);return}
  const k=t.dataset.k;if(!k)return;set(k,t.type==='checkbox'?t.checked:t.value);
