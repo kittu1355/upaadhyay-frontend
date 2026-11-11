@@ -107,7 +107,7 @@
   function build(){
     if(ST.built) return; ST.built = true;
     root.innerHTML =
-      '<div class="ov-head"><div><h2>Live traffic</h2><p>Real visitors on the Upaadhyay website <span id="trUpdated" class="tr-upd"></span></p></div>'
+      '<div class="ov-head"><div><h2>Live traffic</h2><p>Real visitors on the Upaadhyay.com website <span id="trUpdated" class="tr-upd"></span></p></div>'
       + '<div class="ov-head-r"><span class="tr-live" id="trLive"><i></i><span>Live</span></span>'
       + '<select id="trRange" aria-label="Range"><option value="1">Today</option><option value="7" selected>Last 7 days</option><option value="30">Last 30 days</option></select>'
       + '<button type="button" class="btn btn-ghost" id="trRefresh">Refresh</button></div></div>'
