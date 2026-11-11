@@ -247,9 +247,9 @@
 <script src="../js/api.js?v=2"></script>
 <script src="../js/live-update.js?v=1"></script>
 <script src="../js/store.js?v=2"></script>
-<script src="../js/qa-builder.js?v=1"></script>
+<script src="../js/qa-builder.js?v=2"></script>
 <script>(function(){function i(){if(window.QA)QA.init("jbQaList",[])}if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",i);else i()})();</script>
-<script src="../js/interview.js?v=1"></script><script src="../js/employer.js?v=30"></script>
+<script src="../js/interview.js?v=1"></script><script src="../js/employer.js?v=31"></script>
 <script>/* this page shows real data only: drop the built-in demo candidates */Object.keys(facultyProfiles).forEach(function(k){ delete facultyProfiles[k]; });</script>
 <script src="../js/logo-crop.js"></script>
 <script src="../js/institution.js?v=31"></script>
@@ -324,7 +324,7 @@
     h+=sec('Job location',3,kv('Institution',inst)+kv('Campus / branch',campus)+kv('City / location',loc||''));
     h+=sec('Description',4,(desc?'<p class="jbp-desc">'+esc(desc).replace(/\n/g,'<br>')+'</p>':'<p class="jbp-none">No description added.</p>')+
       (skills?'<div class="jbp-chips">'+skills.split(',').map(function(x){ return chip(x.trim()); }).join('')+'</div>':'')+kv('Apply before',dl?dateText(dl):''));
-    h+=sec('Ask Questions',5,qaOn?(kv('Contact for questions',contact)+(qs.length?'<ol class="jbp-qs">'+qs.map(function(q){ return '<li>'+esc(q.q)+' <span>'+q.mins+' min</span></li>'; }).join('')+'</ol>':'<p class="jbp-none">No questions for candidates.</p>')):'<p class="jbp-none">Candidate questions are turned off.</p>');
+    h+=sec('Ask Questions',5,qaOn?(kv('Contact for questions',contact)+(qs.length?'<ol class="jbp-qs">'+qs.map(function(q){ return '<li>'+esc(q.q)+' <span>'+(function(s){return s<60?s+' sec':(s%60?Math.floor(s/60)+' min '+(s%60)+' sec':(s/60)+' min');})(+q.secs||((+q.mins||1)*60))+'</span></li>'; }).join('')+'</ol>':'<p class="jbp-none">No questions for candidates.</p>')):'<p class="jbp-none">Candidate questions are turned off.</p>');
     box.innerHTML=h;
   }
   function go(i){ cur=i; max=Math.max(max,i); if(i===N-1) renderPreview(); paint(); if(i===N-1){ try{ F.scrollIntoView({block:'start'}); }catch(e){} } }
@@ -374,7 +374,7 @@
 .jbp-qs{margin:6px 0 0;padding-left:20px;font-size:13.5px}.jbp-qs span{color:var(--ink-faint,#8b92a1);font-size:12px;margin-left:6px}
 @media(max-width:600px){.jbp-kv{flex-direction:column;gap:0}.jbp-kv span{width:auto}}
 </style>
-<script src="../js/inr-input.js?v=1"></script><script src="../js/skills-input.js?v=1"></script><script src="../js/layout.js?v=3"></script><script src="../js/faculty-view.js?v=1"></script><script src="../js/backend.js?v=14"></script>
+<script src="../js/inr-input.js?v=1"></script><script src="../js/skills-input.js?v=1"></script><script src="../js/layout.js?v=3"></script><script src="../js/faculty-view.js?v=1"></script><script src="../js/backend.js?v=15"></script>
 <script>
 if('scrollRestoration' in history) history.scrollRestoration = 'manual';   /* reload no longer jumps the page */
 mountNav(); mountChrome();
