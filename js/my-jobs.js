@@ -20,9 +20,12 @@ function when(d){ if(!d) return ''; var t = new Date(String(d).replace(' ', 'T')
 function list(r){ return Array.isArray(r) ? r : (r && Array.isArray(r.data) ? r.data : (r && r.data && Array.isArray(r.data.data) ? r.data.data : [])); }
 function normAnswers(v){
   if(!v) return [];
-  if(typeof v === 'string'){ try{ v = JSON.parse(v); }catch(e){ return []; } }
+  if(typeof v === 'string'){ if(v.indexOf('[[QA]]') === 0) v = v.slice(6); try{ v = JSON.parse(v); }catch(e){ return []; } }
   if(!Array.isArray(v)) v = Object.keys(v).map(function(k){ return { q:k, a:v[k] }; });
-  return v.map(function(x){ return { q:x.q || x.question || '', a:x.a || x.answer || '', mins:x.mins || x.minutes || '' }; }).filter(function(x){ return x.q || x.a; });
+  return v.map(function(x){
+    if(typeof x === 'string'){ var m = x.match(/^Q:\s*([\s\S]*?)\nA:\s*([\s\S]*)$/); return m ? { q:m[1], a:m[2], mins:'' } : { q:'', a:x, mins:'' }; }
+    return { q:x.q || x.question || '', a:x.a || x.answer || '', mins:x.mins || x.minutes || '' };
+  }).filter(function(x){ return x.q || x.a; });
 }
 function localAnswers(id){ try{ return normAnswers((JSON.parse(localStorage.getItem('upaadhyay_app_answers') || '{}'))[id + ':me']); }catch(e){ return []; } }
 
