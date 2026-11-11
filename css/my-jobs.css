@@ -69,3 +69,10 @@
 
 /* interview box inside the My jobs card (styles come from interview.js) */
 .mj-card .iv-box{margin:12px 0 0;}
+
+/* Saved jobs: small Browse-jobs style cards in a grid */
+.mj-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:14px}
+.mj-grid .jb-card{padding:14px 16px 12px;gap:10px}
+.mj-grid .jb-desc-wrap,.mj-grid .jb-viewmore{display:none}
+.mj-grid .jb-title{font-size:16px}
+.mj-gone{opacity:.85}
