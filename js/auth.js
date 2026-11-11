@@ -514,9 +514,11 @@
 
   function renderNotifPanelList(){
     const list = document.getElementById('notifPanelList');
-    list.innerHTML = dashNotifs.length
-      ? dashNotifs.map(n=>`<div class="notif-panel-item">${n.text}</div>`).join('')
-      : `<div class="notif-panel-empty">No notifications yet.</div>`;
+    const fresh = dashNotifs.filter(n=>!n.read);
+    list.innerHTML = (fresh.length
+      ? fresh.map(n=>`<div class="notif-panel-item">${n.text}</div>`).join('')
+      : `<div class="notif-panel-empty">No new notifications.</div>`)
+      + `<div class="notif-panel-item" style="text-align:center;"><a href="#" onclick="closeNotifPanel();if(window.bkShowAllNotifs)bkShowAllNotifs();return false;" style="font-weight:600;color:#1d4fd7;">View all notifications</a></div>`;
   }
   function openNotifPanel(){
     closeMiniProfile();
