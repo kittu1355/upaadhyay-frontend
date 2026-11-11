@@ -271,11 +271,14 @@
   async function sendApplication(id, answers){
     /* The server wants `answers` as an ARRAY. If it rejects or crashes on one shape, try the next so the application never gets lost:
        1) objects  2) plain "Q: ... A: ..." strings  3) packed into cover_letter  4) no answers */
+    /* Each answer is sent with BOTH key styles (q/a and question/answer) so it works whichever the server reads. */
     const A = answers || [];
+    const full = A.map(function(x){ return { q: x.q, a: x.a, question: x.q, answer: x.a, mins: x.mins }; });
+    const lean = A.map(function(x){ return { q: x.q, a: x.a }; });
     const tries = answers ? [
-      { answers: A },
-      { answers: A.map(function(x){ return 'Q: ' + x.q + '\nA: ' + x.a; }) },
-      { cover_letter: '[[QA]]' + JSON.stringify(A.map(function(x){ return { q: x.q, a: x.a }; })) },
+      { answers: full },
+      { answers: lean },
+      { cover_letter: '[[QA]]' + JSON.stringify(lean) },
       {}
     ] : [{}];
     let sent = false, firstErr = null, usedIdx = 0, savedRow = null;
