@@ -341,22 +341,24 @@
     return '';
   }
   let _spPromise = null;
+  /* SP_JOBS is declared (let) in site-pages.js only; pages without that script (e.g. the faculty dashboard) fall back to window.__spJobs. */
+  function spSet(v){ try{ SP_JOBS = v; }catch(e){} window.__spJobs = v; return v; }
+  function spGet(){ try{ return SP_JOBS; }catch(e){ return window.__spJobs || []; } }
   window.spLoadJobs = function(){
     if(!_spPromise){
       _spPromise = fetchJobs({}).then(function(rows){
         if(!rows.length && (window.UPADYAY_DEMO_JOBS === true || /^(localhost|127\.0\.0\.1)$/.test(location.hostname))) rows = demoJobs(); /* same demo rule as Browse Jobs */
-        SP_JOBS = rows.map(function(j){
+        return spSet(rows.map(function(j){
           return { id: j.id, cat: spCatFor(j), title: j.title, inst: j.org, loc: j.city, subj: j.dept, qual: j.qualification || '—',
                    exp: j.minExp, type: j.type, sal: j.salary, desc: j.description, raw: j };
-        });
-        return SP_JOBS;
-      }).catch(function(){ SP_JOBS = []; _spPromise = null; return SP_JOBS; });
+        }));
+      }).catch(function(){ _spPromise = null; return spSet([]); });
     }
     return _spPromise;
   };
   window.spGetJob = async function(id){
     await spLoadJobs();
-    let j = SP_JOBS.filter(function(x){ return x.id == id; })[0];
+    let j = (spGet() || []).filter(function(x){ return x.id == id; })[0];
     if(j) return j;
     if(String(id).indexOf('demo-') === 0){
       const d = demoJobs().filter(function(x){ return x.id == id; })[0];
