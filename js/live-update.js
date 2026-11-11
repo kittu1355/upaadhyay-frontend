@@ -60,7 +60,7 @@
     bar.style.cssText = 'position:fixed;left:50%;bottom:20px;transform:translateX(-50%);z-index:100000;background:#0B1F45;color:#fff;' +
       'padding:10px 14px;border-radius:10px;font:600 13.5px/1.3 system-ui,sans-serif;display:flex;gap:12px;align-items:center;' +
       'box-shadow:0 8px 24px rgba(0,0,0,.28);max-width:92vw;';
-    bar.innerHTML = '<span>A new version of Upaadhyay is available.</span>';
+    bar.innerHTML = '<span>A new version of Upaadhyay.com is available.</span>';
     var b = document.createElement('button');
     b.type = 'button'; b.textContent = 'Refresh now';
     b.style.cssText = 'background:#2563EB;color:#fff;border:0;border-radius:7px;padding:6px 12px;font:inherit;cursor:pointer;';
