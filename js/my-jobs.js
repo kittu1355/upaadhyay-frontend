@@ -31,7 +31,7 @@ function localAnswers(id){ try{ return normAnswers((JSON.parse(localStorage.getI
 
 /* job details: public job list first; if the job is closed/removed, use what the application itself carries */
 async function jobById(id, fromApp){
-  try{ var j = window.spGetJob ? await spGetJob(id) : null; if(j) return { id:String(id), title:j.title, org:j.inst, city:j.loc, type:j.type, sal:j.sal }; }catch(e){}
+  try{ var j = window.spGetJob ? await spGetJob(id) : null; if(j) return { id:String(id), title:j.title, org:j.inst, city:j.loc, type:j.type, sal:j.sal, raw:j.raw }; }catch(e){}
   var jb = fromApp || {}, co = jb.company || jb.employer || {};
   if(jb.title) return { id:String(id), title:jb.title, org:co.company_name || co.name || jb.company_name || '', city:jb.city || jb.location || '', type:jb.employment_type || '', sal:'', closed:true };
   return { id:String(id), title:'Job #' + id, org:'', city:'', type:'', sal:'', gone:true };
@@ -95,17 +95,28 @@ function card(j, kind){
     '<div class="mj-side">' + (isApplied ? '<span class="mj-st ' + st[1] + '">' + esc(st[0]) + '</span>' : '') + '<div class="mj-btns">' + btns + '</div></div></div>' +
     (isApplied ? steps(st[2]) + ivBlock(j) + answersBlock(j) : '') + '</article>';
 }
+/* Saved jobs use the same small card as Browse jobs; a job that was removed/closed gets a short card with Remove. */
+function savedCard(j){
+  if(j.raw && typeof window.jbCardHtml === 'function') return window.jbCardHtml(j.raw);
+  return '<article class="jb-card mj-gone"><div class="jb-head"><div class="jb-main"><h3 class="jb-title">' + esc(j.title) + '</h3><div class="jb-org"><span class="jb-name">This job is no longer available</span></div></div></div>' +
+    '<div class="jb-foot"><div></div><div class="jb-actions"><button type="button" class="jb-btn" data-unsave="' + esc(j.id) + '">Remove</button></div></div></article>';
+}
 function paint(){
   var host = document.getElementById('upMyJobs'); if(!host) return;
   var a = S.applied || [], s = S.saved || [], rows = S.tab === 'applied' ? a : s;
   host.innerHTML = '<div class="mj"><h2>My jobs</h2><p class="mj-sub">Track your applications and keep the jobs you want to come back to.</p>' +
     '<div class="mj-tabs"><button type="button" data-tab="applied" class="' + (S.tab === 'applied' ? 'on' : '') + '">Applied jobs <b>' + a.length + '</b></button>' +
     '<button type="button" data-tab="saved" class="' + (S.tab === 'saved' ? 'on' : '') + '">Saved jobs <b>' + s.length + '</b></button></div><div id="mjBody">' +
-    (rows.length ? rows.map(function(j){ return card(j, S.tab); }).join('') :
+    (rows.length ? (S.tab === 'saved' ? '<div class="mj-grid">' + rows.map(savedCard).join('') + '</div>' : rows.map(function(j){ return card(j, S.tab); }).join('')) :
       '<div class="mj-empty">' + (S.tab === 'applied' ? 'You haven’t applied to any jobs yet. <a href="jobs.html">Browse jobs</a>' : 'No saved jobs yet. Tap Save on a job to keep it here.') + '</div>') + '</div></div>';
 }
 function bind(host){
   if(host._mj) return; host._mj = 1;
+  /* Save button on a saved-job card: un-saving removes the card from this list */
+  host.addEventListener('click', function(e){
+    var b = e.target.closest && e.target.closest('[data-save-job]'); if(!b || S.tab !== 'saved') return;
+    setTimeout(function(){ var ids = savedIds(); S.saved = (S.saved || []).filter(function(j){ return ids.indexOf(j.id) > -1; }); paint(); }, 0);
+  });
   host.addEventListener('click', function(e){
     var t = e.target.closest && e.target.closest('[data-tab],[data-unsave],[data-apply],[data-qa]'); if(!t) return;
     if(t.dataset.tab){ S.tab = t.dataset.tab; paint(); return; }
