@@ -662,10 +662,11 @@ if(typeof window.bkStatusBadge !== 'function'){
       const list = (window.__apAnswers || {})[k + ':' + id] || [];
       if(!list.length) return '';
       return '<div class="ap-qa-job">' + (keys.length > 1 ? '<div class="ap-qa-jt">' + jbEsc(jobsData[k].title) + '</div>' : '')
-        + list.map((x, n)=>'<div class="ap-qa-item"><div class="ap-qa-q">' + (n+1) + '. ' + jbEsc(x.q) + (x.mins ? ' <small>' + jbEsc(x.mins) + ' min</small>' : '') + '</div><div class="ap-qa-a">' + jbEsc(x.a) + '</div></div>').join('') + '</div>';
+        + list.map((x, n)=>'<div class="ap-qa-item"><div class="ap-qa-q">' + (n+1) + '. ' + jbEsc(x.q)  + '</div><div class="ap-qa-a">' + jbEsc(x.a) + '</div></div>').join('') + '</div>';
     }).join('');
     const qaCount = keys.reduce((n,k)=>n + (((window.__apAnswers || {})[k + ':' + id] || []).length), 0);
-    const qaHtml = qaBlocks ? `<button type="button" class="ap-qa-btn" onclick="event.stopPropagation(); apToggleQa(this)"><span>View answers (${qaCount})</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button><div class="ap-qa" onclick="event.stopPropagation()">${qaBlocks}</div>` : '';
+    const qaHtml = qaBlocks ? `<button type="button" class="ap-qa-btn" onclick="event.stopPropagation(); apToggleQa(this)"><span>View answers (${qaCount})</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button><div class="ap-qa" onclick="event.stopPropagation()">${qaBlocks}</div>`
+      : (keys.some(k=>jobsData[k] && jobsData[k].qa && (jobsData[k].qa.questions||[]).length) ? '<div class="ap-qa-none">No answers received for this application.</div>' : '');
     /* status of this application (per job), falling back to the candidate-wide status */
     const raw = (window.__apStatus || {})[jk + ':' + id];
     const st = raw !== undefined ? raw : candidateStatus[id];
