@@ -153,7 +153,7 @@
   }
   /* One question at a time, each with its own countdown (the minutes the employer chose) and a Next button.
      When the time runs out the answer typed so far is saved and the next question opens by itself. */
-  function askQuestions(qs, title){
+  function askQuestions(qs, title, submitFn){
     return new Promise(function(resolve){
       if(!document.getElementById('qaApStyle2')){
         const st = document.createElement('style'); st.id = 'qaApStyle2';
@@ -171,7 +171,11 @@
           + '.qa-ap-card textarea{width:100%;box-sizing:border-box;min-height:120px;padding:10px 12px;border:1px solid #cfd6e4;border-radius:4px;font:inherit;font-size:14px;resize:vertical}'
           + '.qa-ap-card textarea.bad{border-color:#B42318;outline:1px solid #B42318}.qa-ap-err{min-height:18px;margin-top:3px;font-size:12.5px;color:#B42318}'
           + '.qa-ap-foot{display:flex;justify-content:space-between;gap:10px;margin-top:6px}.qa-ap-foot button{padding:10px 20px;border-radius:4px;font:inherit;font-weight:600;cursor:pointer;border:1px solid #cfd6e4;background:#fff}'
-          + '.qa-ap-foot .qa-ap-go{background:#1d4fd7;border-color:#1d4fd7;color:#fff}';
+          + '.qa-ap-foot .qa-ap-go{background:#1d4fd7;border-color:#1d4fd7;color:#fff}'
+          + '.qa-ap-state{text-align:center;padding:26px 8px 10px}.qa-ap-state h3{margin:12px 0 6px;font-size:19px;color:#111827}.qa-ap-state p{margin:0 0 6px;font-size:14px;color:#5b6577;line-height:1.5}'
+          + '.qa-ap-check{width:56px;height:56px;margin:0 auto;border-radius:50%;background:#E9F8EF;color:#1D8A5E;font-size:30px;line-height:56px;font-weight:700}'
+          + '.qa-ap-spin{width:38px;height:38px;margin:0 auto;border:4px solid #E6ECF7;border-top-color:#1d4fd7;border-radius:50%;animation:qaApSpin .8s linear infinite}@keyframes qaApSpin{to{transform:rotate(360deg)}}'
+          + '.qa-ap-state.bad h3{color:#B42318}.qa-ap-state .qa-ap-foot{justify-content:center;margin-top:16px}';
         document.head.appendChild(st);
       }
       const box = document.createElement('div'); box.className = 'qa-ap';
@@ -184,12 +188,14 @@
       document.body.appendChild(box);
       const $ = function(s){ return box.querySelector(s); };
       const ta = $('textarea'), err = $('.qa-ap-err'), bar = $('.qa-ap-bar i'), timer = $('.qa-ap-timer'), clock = $('.qa-ap-time');
-      const out = []; let idx = 0, left = 0, total = 0, tick = null;
+      const out = []; let idx = 0, left = 0, total = 0, tick = null, busy = false;
+      const card = box.querySelector('.qa-ap-card');
+      const esc2 = function(t){ return String(t == null ? '' : t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); };
       function fmt(s){ return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); }
       function lenTxt(s){ const m = Math.floor(s / 60), r = s % 60; return s < 60 ? s + ' sec' : (r ? m + ' min ' + r + ' sec' : m + ' min'); }
       function stop(){ if(tick){ clearInterval(tick); tick = null; } }
       function close(v){ stop(); document.removeEventListener('keydown', onKey); box.remove(); resolve(v); }
-      function onKey(e){ if(e.key === 'Escape') close(null); }
+      function onKey(e){ if(e.key === 'Escape' && !busy) close(null); }
       function paint(){
         clock.textContent = fmt(left);
         const low = left <= Math.min(10, Math.ceil(total / 4));
@@ -215,8 +221,28 @@
         stop();
         out.push({ q: qs[idx].q, mins: Math.max(1, Math.ceil(total / 60)), a: a.length >= 2 ? a : '(No answer \u2014 time ran out)' });
         idx++;
-        if(idx >= qs.length){ close(out); return; }
+        if(idx >= qs.length){ finish(); return; }
         show();
+      }
+      /* After the last question: send the application right here and show Submitting... -> Application submitted (or the error + Try again). */
+      function finish(){
+        if(!submitFn){ close(out); return; }
+        run();
+      }
+      async function run(){
+        busy = true;
+        card.innerHTML = '<div class="qa-ap-state"><div class="qa-ap-spin"></div><h3>Submitting your application\u2026</h3><p>Please wait a moment.</p></div>';
+        try{
+          const r = await submitFn(out);
+          card.innerHTML = '<div class="qa-ap-state"><div class="qa-ap-check">\u2713</div><h3>Application submitted</h3><p>You have applied' + (title ? ' for <b>' + esc2(title) + '</b>' : '') + '. Good luck!</p></div>';
+          setTimeout(function(){ busy = false; close(r || true); }, 1600);
+        }catch(e){
+          busy = false;
+          card.innerHTML = '<div class="qa-ap-state bad"><h3>Could not submit</h3><p>' + esc2((e && e.message) || 'Something went wrong.') + (e && e.status ? ' (error ' + e.status + ')' : '') + '</p><p>Your answers are still here. You can try again.</p>'
+            + '<div class="qa-ap-foot"><button type="button" class="qa-ap-cancel">Close</button><button type="button" class="qa-ap-go">Try again</button></div></div>';
+          card.querySelector('.qa-ap-cancel').onclick = function(){ close(null); };
+          card.querySelector('.qa-ap-go').onclick = run;
+        }
       }
       document.addEventListener('keydown', onKey);
       ta.addEventListener('input', function(){ ta.classList.remove('bad'); err.textContent = ''; });
@@ -227,6 +253,38 @@
   }
 
   /* Apply (seeker). */
+  /* Sends the application. `answers` is null when the job has no questions. Returns { dropped } (true = applied, but the server kept no answers). */
+  async function sendApplication(id, answers){
+    /* The server wants `answers` as an ARRAY. If it rejects or crashes on one shape, try the next so the application never gets lost:
+       1) objects  2) plain "Q: ... A: ..." strings  3) packed into cover_letter  4) no answers */
+    const A = answers || [];
+    const tries = answers ? [
+      { answers: A },
+      { answers: A.map(function(x){ return 'Q: ' + x.q + '\nA: ' + x.a; }) },
+      { cover_letter: '[[QA]]' + JSON.stringify(A.map(function(x){ return { q: x.q, a: x.a }; })) },
+      {}
+    ] : [{}];
+    let sent = false, firstErr = null, usedIdx = 0;
+    for(let i = 0; i < tries.length && !sent; i++){
+      try{ await api.post('/jobs/' + id + '/apply', tries[i]); sent = true; usedIdx = i; if(i) console.warn('[apply] accepted with fallback shape #' + (i + 1)); }
+      catch(e){
+        if(!firstErr) firstErr = e;
+        if(e && (e.status === 409 || /already|duplicate/i.test(String(e.message)))){ sent = true; usedIdx = -1; break; }   /* an earlier try may have created it */
+        console.warn('[apply] try ' + (i + 1) + ' failed:', e && e.status, e && e.message, e && e.errors);
+        if(!(e && (e.status >= 500 || e.status === 422)) || !answers) break;
+      }
+    }
+    if(!sent){
+      const st = firstErr && firstErr.status, err = new Error(st >= 500 ? 'The server could not save your application right now.' : ((firstErr && firstErr.message) || 'Could not apply.'));
+      err.status = st; throw err;
+    }
+    if(answers) window.bkSaveLocalAnswers(id, answers);
+    return { dropped: !!answers && usedIdx === tries.length - 1 };
+  }
+  function markApplied(id){
+    try{ currentUser.appliedIds = currentUser.appliedIds || []; if(currentUser.appliedIds.indexOf(String(id)) < 0){ currentUser.appliedIds.push(String(id)); saveState(); } }catch(e){}
+    document.querySelectorAll('[data-apply-job="' + id + '"]').forEach(function(b){ b.textContent = 'Applied \u2713'; b.disabled = true; });
+  }
   window.applyToJob = async function(id, title){
     if(String(id).indexOf('demo-')===0){ api.toast('This is a demo job. Live jobs posted by institutions can be applied to.'); return; }
     if(isLoggedIn && currentRole === 'company'){ api.toast('Institution accounts cannot apply. Log in with a faculty account.'); return; }
@@ -234,34 +292,16 @@
     if(currentRole !== 'seeker'){ api.toast('Only faculty accounts can apply to jobs.'); return; }
     try{
       const qs = await jobQuestions(id);
-      let body = {};
-      if(qs.length){ const ans = await askQuestions(qs, title); if(!ans) return; body = { answers: ans }; }
-      /* The server wants `answers` as an ARRAY. If it rejects or crashes on the first shape, try the next one so the application (and the
-         employer's "View answers") never gets lost:  1) objects  2) plain "Q: ... A: ..." strings  3) packed into cover_letter  4) no answers */
-      const A = body.answers || [];
-      const tries = body.answers ? [
-        { answers: A },
-        { answers: A.map(function(x){ return 'Q: ' + x.q + '\nA: ' + x.a; }) },
-        { cover_letter: '[[QA]]' + JSON.stringify(A.map(function(x){ return { q: x.q, a: x.a }; })) },
-        {}
-      ] : [{}];
-      let sent = false, firstErr = null, usedIdx = 0;
-      for(let i = 0; i < tries.length && !sent; i++){
-        try{ await api.post('/jobs/' + id + '/apply', tries[i]); sent = true; usedIdx = i; if(i) console.warn('[apply] accepted with fallback shape #' + (i + 1)); }
-        catch(e){
-          if(!firstErr) firstErr = e;
-          if(e && (e.status === 409 || /already|duplicate/i.test(String(e.message)))){ sent = true; usedIdx = -1; break; }   /* an earlier try may have created it */
-          if(!(e && (e.status >= 500 || e.status === 422)) || !body.answers) throw (firstErr || e);
-          console.warn('[apply] try ' + (i + 1) + ' failed', e.status, e.message);
-        }
+      if(qs.length){
+        /* the popup sends the application itself and shows Submitting... / Application submitted */
+        const res = await askQuestions(qs, title, async function(answers){ const r = await sendApplication(id, answers); markApplied(id); return r; });
+        if(res && res.dropped) api.toast('Applied, but the server could not save your answers. Please tell the institution.');
+        return;
       }
-      if(!sent) throw firstErr;
-      const dropped = !!body.answers && usedIdx === tries.length - 1;
-      if(body.answers) window.bkSaveLocalAnswers(id, body.answers);
-      if(dropped) api.toast('Application sent, but the server could not save your answers. Please tell the institution.');
-      try{ currentUser.appliedIds = currentUser.appliedIds || []; if(currentUser.appliedIds.indexOf(String(id)) < 0){ currentUser.appliedIds.push(String(id)); saveState(); } }catch(e){}
-      if(!dropped) api.toast('Application sent' + (title ? ' for ' + title : ''));
-      document.querySelectorAll('[data-apply-job="' + id + '"]').forEach(function(b){ b.textContent = 'Applied ✓'; b.disabled = true; });
+      const btns = document.querySelectorAll('[data-apply-job="' + id + '"]'), old = [];
+      btns.forEach(function(b, i){ old[i] = b.textContent; b.textContent = 'Applying\u2026'; b.disabled = true; });
+      try{ await sendApplication(id, null); markApplied(id); api.toast('Application submitted' + (title ? ' for ' + title : '')); }
+      catch(e){ btns.forEach(function(b, i){ b.textContent = old[i]; b.disabled = false; }); throw e; }
     }catch(e){ api.toast(e.message); }
   };
 
