@@ -623,6 +623,63 @@
   /* pushNotif now only adds a local line for things the server doesn't announce itself. */
   window.bkLoadNotifs = loadNotifs;
 
+  /* Sidebar "Notifications": every notification (seen + unseen). The bell only lists the unseen ones. */
+  function ntAgo(t){
+    const d = new Date(t); if(isNaN(d)) return '';
+    const m = Math.floor((Date.now() - d.getTime()) / 60000);
+    if(m < 1) return 'Just now'; if(m < 60) return m + ' min ago';
+    const h = Math.floor(m / 60); if(h < 24) return h + ' hr ago';
+    const dd = Math.floor(h / 24); if(dd < 7) return dd + ' day' + (dd > 1 ? 's' : '') + ' ago';
+    return d.toLocaleDateString();
+  }
+  window.bkShowAllNotifs = async function(){
+    if(!api.hasToken()) return;
+    if(!document.getElementById('ntAllStyle')){
+      const st = document.createElement('style'); st.id = 'ntAllStyle';
+      st.textContent = '.nt-all{position:fixed;inset:0;z-index:2100;background:rgba(11,29,58,.45);display:flex;align-items:center;justify-content:center;padding:16px}'
+        + '.nt-card{background:#fff;width:100%;max-width:640px;max-height:86vh;display:flex;flex-direction:column;border-radius:6px;box-shadow:0 20px 50px rgba(11,29,58,.3)}'
+        + '.nt-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:16px 20px;border-bottom:1px solid #e6ecf7}'
+        + '.nt-head h3{margin:0;font-size:18px}.nt-head button{border:1px solid #cfd6e4;background:#fff;border-radius:4px;padding:7px 12px;font:inherit;font-size:13px;font-weight:600;cursor:pointer}'
+        + '.nt-tabs{display:flex;gap:8px;padding:10px 20px;border-bottom:1px solid #e6ecf7}.nt-tabs button{border:1px solid #cfd6e4;background:#fff;border-radius:999px;padding:5px 14px;font:inherit;font-size:13px;cursor:pointer}'
+        + '.nt-tabs button.on{background:#1d4fd7;border-color:#1d4fd7;color:#fff}'
+        + '.nt-list{overflow:auto}.nt-item{display:flex;gap:10px;padding:13px 20px;border-bottom:1px solid #eef2f9;font-size:14px;color:#3a4558;line-height:1.45}'
+        + '.nt-item.new{background:#F2F6FF}.nt-dot{flex:none;width:8px;height:8px;margin-top:7px;border-radius:50%;background:transparent}.nt-item.new .nt-dot{background:#1d4fd7}'
+        + '.nt-time{display:block;margin-top:3px;font-size:12px;color:#8a93a6}.nt-empty{padding:34px 20px;text-align:center;color:#8a93a6}';
+      document.head.appendChild(st);
+    }
+    const old = document.getElementById('ntAll'); if(old) old.remove();
+    const box = document.createElement('div'); box.id = 'ntAll'; box.className = 'nt-all';
+    box.innerHTML = '<div class="nt-card"><div class="nt-head"><h3>Notifications</h3><span><button type="button" data-nt="read">Mark all as read</button> <button type="button" data-nt="close">Close</button></span></div>'
+      + '<div class="nt-tabs"><button type="button" class="on" data-nt="all">All</button><button type="button" data-nt="unread">Unread</button></div><div class="nt-list"><div class="nt-empty">Loading\u2026</div></div></div>';
+    document.body.appendChild(box);
+    let rows = [], tab = 'all';
+    const list = box.querySelector('.nt-list');
+    function draw(){
+      const shown = tab === 'unread' ? rows.filter(function(n){ return !n.read; }) : rows;
+      list.innerHTML = shown.length ? shown.map(function(n){
+        return '<div class="nt-item' + (n.read ? '' : ' new') + '"><span class="nt-dot"></span><div>' + n.text + '<span class="nt-time">' + esc(ntAgo(n.time)) + '</span></div></div>';
+      }).join('') : '<div class="nt-empty">' + (tab === 'unread' ? 'No unread notifications.' : 'No notifications yet.') + '</div>';
+    }
+    function close(){ box.remove(); document.removeEventListener('keydown', onKey); }
+    function onKey(e){ if(e.key === 'Escape') close(); }
+    document.addEventListener('keydown', onKey);
+    box.addEventListener('click', function(e){
+      if(e.target === box){ close(); return; }
+      const b = e.target.closest('[data-nt]'); if(!b) return;
+      const a = b.getAttribute('data-nt');
+      if(a === 'close'){ close(); return; }
+      if(a === 'read'){ markRead(); rows.forEach(function(n){ n.read = true; }); draw(); return; }
+      tab = a; box.querySelectorAll('.nt-tabs button').forEach(function(x){ x.classList.toggle('on', x === b); }); draw();
+    });
+    try{
+      const d = await api.get('/notifications?per_page=100', { silent403: true, noAuthRedirect: true });
+      rows = (d && d.notifications ? items(d.notifications) : []).map(function(n){
+        return { id: n.id, read: !!n.read_at, time: n.created_at, text: '<b>' + esc(n.title) + '</b>' + (n.message ? ' \u2014 ' + esc(n.message) : '') };
+      });
+    }catch(e){ rows = (dashNotifs || []).slice(); }
+    draw();
+  };
+
   /* ---------------- employer: jobs, candidates, applicants ---------------- */
   const appByCandidate = {};          // candidateId -> latest application id (for status updates)
   const appByJobCand = {};            // jobKey:candidateId -> application id
