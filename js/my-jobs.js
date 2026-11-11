@@ -73,7 +73,7 @@ var CHEV = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none"><path d=
 function answersBlock(j){
   if(!j.qa || !j.qa.length) return '';
   return '<div class="mj-qa-wrap"><button type="button" class="mj-btn" data-qa="1"><span>My answers (' + j.qa.length + ')</span>' + CHEV + '</button><div class="mj-qa">' +
-    j.qa.map(function(x, n){ return '<div class="mj-qa-item"><div class="mj-qa-q">' + (n + 1) + '. ' + esc(x.q) + (x.mins ? '<small>' + esc(x.mins) + ' min</small>' : '') + '</div><div class="mj-qa-a">' + esc(x.a) + '</div></div>'; }).join('') + '</div></div>';
+    j.qa.map(function(x, n){ return '<div class="mj-qa-item"><div class="mj-qa-q">' + (n + 1) + '. ' + esc(x.q) + '' + '</div><div class="mj-qa-a">' + esc(x.a) + '</div></div>'; }).join('') + '</div></div>';
 }
 function ivBlock(j){ return (j.iv && window.Interview) ? Interview.html(j.iv, { title:'Interview call from the institution' }) : ''; }
 function card(j, kind){
