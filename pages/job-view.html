@@ -1,18 +1,18 @@
 <!DOCTYPE html>
 <html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Faculty Job Openings — Upaadhyay</title>
+<title>Faculty Job Openings — Upaadhyay.com</title>
 <meta name="description" content="Explore faculty and teaching job openings from verified institutions across India. See qualifications, experience, salary and apply in a few clicks.">
 <meta name="robots" content="index,follow,max-image-preview:large">
 <link rel="canonical" href="https://upaadhyay.com/pages/job-view.html">
 <meta property="og:type" content="website">
-<meta property="og:site_name" content="Upaadhyay">
-<meta property="og:title" content="Faculty Job Openings — Upaadhyay">
+<meta property="og:site_name" content="Upaadhyay.com">
+<meta property="og:title" content="Faculty Job Openings — Upaadhyay.com">
 <meta property="og:description" content="Explore faculty and teaching job openings from verified institutions across India. See qualifications, experience, salary and apply in a few clicks.">
 <meta property="og:url" content="https://upaadhyay.com/pages/job-view.html">
 <meta property="og:image" content="https://upaadhyay.com/assets/og-image.png">
 <meta property="og:locale" content="en_IN">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Faculty Job Openings — Upaadhyay">
+<meta name="twitter:title" content="Faculty Job Openings — Upaadhyay.com">
 <meta name="twitter:description" content="Explore faculty and teaching job openings from verified institutions across India. See qualifications, experience, salary and apply in a few clicks.">
 <meta name="twitter:image" content="https://upaadhyay.com/assets/og-image.png">
 
@@ -26,7 +26,7 @@
 <script>spBoot('jobs');
 var q=new URLSearchParams(location.search),m=document.getElementById('main'),cat=q.get('c')||(location.pathname.split('/jobs/')[1]||'').replace(/\/$/,''),id=q.get('id');
 if(!id&&/^\d+$/.test(cat)){id=cat;cat=''}
-function list(){var all=cat==='all'||!SP_CATS[cat],t=all?['All Jobs','Explore verified faculty opportunities from institutions across India.']:SP_CATS[cat];document.title=t[0]+' Jobs — Upaadhyay';
+function list(){var all=cat==='all'||!SP_CATS[cat],t=all?['All Jobs','Explore verified faculty opportunities from institutions across India.']:SP_CATS[cat];document.title=t[0]+' Jobs — Upaadhyay.com';
  m.innerHTML='<header class="sp-hero sm"><div class="wrap"><h1>'+t[0]+(all?'':' Jobs')+'</h1><p>'+(all?t[1]:'Explore verified '+t[0]+' opportunities from institutions across India. '+t[1])+'</p></div></header><section class="sp-sec"><div class="wrap"><div class="sp-filters"><input id="s" placeholder="Search title or institution" oninput="draw()"><select id="l" onchange="draw()"><option value="">Location</option>'+SP_CITY.map(function(c){return'<option>'+c+'</option>'}).join('')+'</select><select id="x" onchange="draw()"><option value="">Experience</option><option value="3">3+ yrs</option><option value="6">6+ yrs</option></select><select id="u" onchange="draw()"><option value="">Subject</option>'+['Computer Science','Physics','Commerce','Chemistry','Mathematics','Biotechnology'].map(function(c){return'<option>'+c+'</option>'}).join('')+'</select><select id="i" onchange="draw()"><option value="">Institution</option>'+SP_INST.map(function(c){return'<option>'+c+'</option>'}).join('')+'</select><select id="y" onchange="draw()"><option value="">Job type</option><option>Full-time</option><option>Contract</option></select></div><p class="sp-sub" id="n"></p><div class="sp-jobs" id="g"></div></div></section>';draw()}
 function draw(){var g=function(k){return document.getElementById(k).value},s=g('s').toLowerCase();var r=SP_JOBS.filter(function(j){return(cat==='all'||!SP_CATS[cat]||j.cat===cat)&&(!s||(j.title+j.inst).toLowerCase().indexOf(s)>-1)&&(!g('l')||j.loc===g('l'))&&(!g('x')||j.exp>=+g('x'))&&(!g('u')||j.subj===g('u'))&&(!g('i')||j.inst===g('i'))&&(!g('y')||j.type===g('y'))});document.getElementById('n').textContent=r.length+' jobs';document.getElementById('g').innerHTML=r.map(spJobCard).join('')||'<p>No jobs match these filters.</p>'}
 /* ---------- helpers for the detail page ---------- */
@@ -37,7 +37,7 @@ var JD_CHEV='<svg class="jd-chev" viewBox="0 0 24 24" width="18" height="18" fil
 
 function detail(){
  var j=SP_JOBS.filter(function(x){return x.id==id})[0];if(!j){cat='all';return list()}
- document.title=j.title+' — Upaadhyay';
+ document.title=j.title+' — Upaadhyay.com';
  var r=j.raw||{},rw=r.raw||{},meta=rw.meta||{},sid=String(j.id).replace(/'/g,''),
   sk=(r.skills&&r.skills.length?r.skills:[]),
   tl=String(j.type||'').toLowerCase(),pc=tl.indexOf('part')>-1||tl.indexOf('visit')>-1?'part':tl.indexOf('contract')>-1?'con':'',
@@ -101,7 +101,7 @@ function detail(){
     '<div id="qaList"></div><textarea id="qaText" rows="3" maxlength="500" placeholder="Type your question about this role"></textarea><div id="qaErr" class="jd-err"></div><button class="jb-btn pri" type="button" onclick="qaSend(\''+sid+'\')">Send question</button></div></section>';
  }
 
- var about='<section class="jd-card"><h2>About '+E(j.inst)+'</h2><p class="jd-about">'+E(j.inst)+(fullLoc?', '+E(fullLoc):'')+'. Verified institution on Upaadhyay.</p></section>';
+ var about='<section class="jd-card"><h2>About '+E(j.inst)+'</h2><p class="jd-about">'+E(j.inst)+(fullLoc?', '+E(fullLoc):'')+'. Verified institution on Upaadhyay.com.</p></section>';
 
  m.innerHTML='<div class="jd-page"><div class="jd-wrap"><p class="jd-crumb"><a href="jobs.html">← Back to all jobs</a></p><div class="jd-grid"><div class="jd-main">'+top+body+qaH+about+'</div><aside class="jd-side"><section class="jd-card"><h3>'+(sim.length&&sim[0].inst===j.inst?E(j.inst)+' roles you might like':'Similar jobs')+'</h3>'+simH+'</section></aside></div></div></div>';
  if(qOn)qaDraw(sid);
