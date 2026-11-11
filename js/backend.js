@@ -236,14 +236,27 @@
       const qs = await jobQuestions(id);
       let body = {};
       if(qs.length){ const ans = await askQuestions(qs, title); if(!ans) return; body = { answers: ans }; }
-      /* Send the answers; if the server answers with a 5xx, retry in a simpler shape so the application is never lost. */
-      const tries = body.answers ? [{ answers: body.answers }, { answers: JSON.stringify(body.answers) }, {}] : [{}];
-      let sent = false, lastErr = null, dropped = false;
+      /* The server wants `answers` as an ARRAY. If it rejects or crashes on the first shape, try the next one so the application (and the
+         employer's "View answers") never gets lost:  1) objects  2) plain "Q: ... A: ..." strings  3) packed into cover_letter  4) no answers */
+      const A = body.answers || [];
+      const tries = body.answers ? [
+        { answers: A },
+        { answers: A.map(function(x){ return 'Q: ' + x.q + '\nA: ' + x.a; }) },
+        { cover_letter: '[[QA]]' + JSON.stringify(A.map(function(x){ return { q: x.q, a: x.a }; })) },
+        {}
+      ] : [{}];
+      let sent = false, firstErr = null, usedIdx = 0;
       for(let i = 0; i < tries.length && !sent; i++){
-        try{ await api.post('/jobs/' + id + '/apply', tries[i]); sent = true; dropped = !!body.answers && i === tries.length - 1; if(i) console.warn('[apply] accepted on retry', i + 1); }
-        catch(e){ lastErr = e; if(/already/i.test(String(e && e.message))){ sent = true; break; } if(!(e && e.status >= 500)) throw e; console.warn('[apply] server error', e.status, 'attempt', i + 1); }
+        try{ await api.post('/jobs/' + id + '/apply', tries[i]); sent = true; usedIdx = i; if(i) console.warn('[apply] accepted with fallback shape #' + (i + 1)); }
+        catch(e){
+          if(!firstErr) firstErr = e;
+          if(e && (e.status === 409 || /already|duplicate/i.test(String(e.message)))){ sent = true; usedIdx = -1; break; }   /* an earlier try may have created it */
+          if(!(e && (e.status >= 500 || e.status === 422)) || !body.answers) throw (firstErr || e);
+          console.warn('[apply] try ' + (i + 1) + ' failed', e.status, e.message);
+        }
       }
-      if(!sent) throw lastErr;
+      if(!sent) throw firstErr;
+      const dropped = !!body.answers && usedIdx === tries.length - 1;
       if(body.answers) window.bkSaveLocalAnswers(id, body.answers);
       if(dropped) api.toast('Application sent, but the server could not save your answers. Please tell the institution.');
       try{ currentUser.appliedIds = currentUser.appliedIds || []; if(currentUser.appliedIds.indexOf(String(id)) < 0){ currentUser.appliedIds.push(String(id)); saveState(); } }catch(e){}
@@ -552,9 +565,15 @@
   /* The faculty's answers to the employer's questions, whatever shape the API sends them in -> [{q, a, mins}] */
   function normAnswers(v){
     if(!v) return [];
-    if(typeof v === 'string'){ try{ v = JSON.parse(v); }catch(e){ return []; } }
+    if(typeof v === 'string'){
+      if(v.indexOf('[[QA]]') === 0) v = v.slice(6);
+      try{ v = JSON.parse(v); }catch(e){ return []; }
+    }
     if(!Array.isArray(v)) v = Object.keys(v).map(function(k){ return { q: k, a: v[k] }; });
-    return v.map(function(x){ return { q: x.q || x.question || '', a: x.a || x.answer || '', mins: x.mins || x.minutes || '' }; }).filter(function(x){ return x.q || x.a; });
+    return v.map(function(x){
+      if(typeof x === 'string'){ const m = x.match(/^Q:\s*([\s\S]*?)\nA:\s*([\s\S]*)$/); return m ? { q: m[1], a: m[2], mins: '' } : { q: '', a: x, mins: '' }; }
+      return { q: x.q || x.question || '', a: x.a || x.answer || '', mins: x.mins || x.minutes || '' };
+    }).filter(function(x){ return x.q || x.a; });
   }
   /* Answers are also kept in this browser (key "jobId:candidateId") so the card can show them even if the API list leaves them out. */
   function localAnswers(jobId, candId){
@@ -651,7 +670,7 @@
       if(!facultyProfiles[cid]) setProfile(cand);
       if(postedJobs[key] && postedJobs[key].applicantIds.indexOf(cid) < 0) postedJobs[key].applicantIds.push(cid);
       appByJobCand[key + ':' + cid] = a.id;
-      let qaList = normAnswers(a.answers || a.qa_answers || a.screening_answers || a.application_answers || a.responses || a.qa || (a.meta && (a.meta.answers || a.meta.qa_answers)));
+      let qaList = []; [a.answers, a.qa_answers, a.screening_answers, a.application_answers, a.responses, a.qa, a.meta && a.meta.answers, a.meta && a.meta.qa_answers, a.cover_letter].some(function(v){ qaList = normAnswers(v); return qaList.length > 0; });
       if(!qaList.length){ qaList = localAnswers(a.job_id, cid); }   /* fallback: answers saved in this browser when the faculty applied */
       if(qaList.length){ (window.__apAnswers = window.__apAnswers || {})[key + ':' + cid] = qaList; }
       /* per-application status + interview details (API first, this browser's copy as a fallback) */
