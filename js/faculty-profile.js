@@ -360,8 +360,9 @@ function boxHTML(k){const T=k==='resumes'?'Resume':'CV',arr=S[k],sel=S[SELK(k)],
   <div class="fp-rs-pub"><button type="button" class="fp-btn pri" data-ra="publish:${k}" ${sel&&sel!==S[PUBK(k)]?'':'disabled'}>Publish selected ${T}</button><span class="fp-hint">${pub?`Showing on your profile: <b>${esc(pub.name)}</b>`:'Nothing published yet.'}</span></div></div>`}
 function rsBoxPaint(k){const el=$(`[data-box="${k}"]`);if(el){const n=document.createElement('div');n.innerHTML=boxHTML(k);el.replaceWith(n.firstChild)}paint()}
 function edHTML(){return `<div class="fp-card" id="fpEd"><h4>3. Editions ${tag('opt')}</h4><div id="fpEdRows">${edRows()}</div><div class="fp-rs-pub"><button type="button" class="fp-btn" data-ra="edadd">${ic('plus',13)}Add edition</button><button type="button" class="fp-btn pri" data-ra="edsave">Save</button></div></div>`}
-function linksCardHTML(){const types=['LinkedIn','Personal website','University / institute profile','Google Scholar','ResearchGate','ORCID','YouTube / teaching channel','Other'];
- return `<div class="fp-card" id="fpLinksCard"><h4>4. Official links ${tag('opt')}</h4><div class="fp-hint">Links employers can open from your profile, such as LinkedIn, your institute page or personal website.</div><div id="fpLinks">${linksHTML()}</div><div class="fp-grid"><div class="fp-f"><label>Link type</label><select class="fp-in" id="fpLt">${types.map(t=>`<option>${t}</option>`).join('')}</select></div><div class="fp-f"><label>Link</label><input class="fp-in" id="fpLu" placeholder="https://"><div class="fp-err" data-e></div></div></div><button type="button" class="fp-btn pri" data-act="addlink">${ic('plus',13)}Add link</button></div>`}
+function linksCardHTML(){return `<div class="fp-card" id="fpLinksCard"><h4>4. Official links ${tag('opt')}</h4><div class="fp-hint">Add your LinkedIn, personal website, institute profile or any other official link. Employers can click them on your profile.</div><div id="fpLkRows">${lkRows()}</div><div class="fp-rs-pub"><button type="button" class="fp-btn" data-ra="lkadd">${ic('plus',13)}Add link</button><button type="button" class="fp-btn pri" data-ra="lksave">Save</button></div></div>`}
+function lkRows(){return S.links.length?S.links.map((x,i)=>`<div class="fp-rs-ed"><div class="fp-grid">${F('Name',0,I(`links.${i}.t`,{ph:'e.g. LinkedIn, Personal website'}))}${F('Link',0,I(`links.${i}.u`,{v:'url',ph:'https://'}))}</div><button type="button" class="fp-btn sm dng" data-ra="lkrm:${i}">Remove</button></div>`).join(''):`<div class="fp-empty">No links added yet. Click "Add link".</div>`}
+function lkPaint(){const r=$('#fpLkRows');if(r){r.innerHTML=lkRows();a11y(r)}paint()}
 function edRows(){return S.editions.length?S.editions.map((x,i)=>`<div class="fp-rs-ed"><div class="fp-grid">${F('Name',0,I(`editions.${i}.name`,{ph:'e.g. 2nd Edition, 2024'}))}${F('Link',0,I(`editions.${i}.url`,{v:'url',ph:'https://'}))}</div><button type="button" class="fp-btn sm dng" data-ra="edrm:${i}">Remove</button></div>`).join(''):`<div class="fp-empty">No editions added yet.</div>`}
 function edPaint(){const r=$('#fpEdRows');if(r){r.innerHTML=edRows();a11y(r)}paint()}
 async function rsUpload(k,f,slot){const bk='rs_'+k;if(ST.busy[bk]||ST.saving)return;const m=checkFile('resume',f);if(m){toast(m,0,1);return}
@@ -395,6 +396,15 @@ document.addEventListener('click',async e=>{const b=e.target.closest&&e.target.c
   S.editions.forEach((z,i)=>{if(z.url.trim()&&!z.name.trim()){ok=false;const f=$$('#fpEdRows .fp-rs-ed')[i].querySelector('input');f.classList.add('bad');f.closest('.fp-f').querySelector('[data-e]').textContent='Add a name for this link.'}});
   if(!ok){toast('Please fix the highlighted fields',0,1);return}
   if(await saveProfile())toast('Editions saved',1);return}
+ if(a==='lkadd'){S.links.push({t:'',u:''});lkPaint();const r=$$('#fpLkRows input');if(r.length)r[r.length-2].focus();return}
+ if(a==='lkrm'){S.links.splice(+x,1);lkPaint();return}
+ if(a==='lksave'){let ok=true;S.links=S.links.filter(z=>(z.t||'').trim()||(z.u||'').trim());lkPaint();
+  $$('#fpLkRows [data-v]').forEach(i=>{if(!check(i))ok=false});
+  S.links.forEach((z,i)=>{const row=$$('#fpLkRows .fp-rs-ed')[i],inp=row.querySelectorAll('input');
+   if((z.u||'').trim()&&!(z.t||'').trim()){ok=false;inp[0].classList.add('bad');inp[0].closest('.fp-f').querySelector('[data-e]').textContent='Add a name for this link.'}
+   if((z.t||'').trim()&&!(z.u||'').trim()){ok=false;inp[1].classList.add('bad');inp[1].closest('.fp-f').querySelector('[data-e]').textContent='Add the link.'}});
+  if(!ok){toast('Please fix the highlighted fields',0,1);return}
+  if(await saveProfile())toast('Links saved',1);return}
  if(a==='tab'){ST.rtab=x;rsTabs();$('#fpRsBody').innerHTML=rsBody();a11y($('#fpRsBody'));return}
  if(a==='radd'){S.research[x].push({status:'Pending Verification'});$('#fpRsBody').innerHTML=rsBody();a11y($('#fpRsBody'));rsLive();const c=$$('#fpRsBody .fp-rs-rec');if(c.length)c[c.length-1].scrollIntoView({block:'nearest'});return}
  if(a==='rrm'){const r=S.research[x][+y];if(!confirm('Delete this record?'))return;S.research[x].splice(+y,1);$('#fpRsBody').innerHTML=rsBody();a11y($('#fpRsBody'));rsLive();return}
