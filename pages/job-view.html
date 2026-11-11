@@ -92,9 +92,9 @@ function detail(){
    (qs.length?
      '<div class="jd-qa-h"><div><h2>Questions from the employer</h2><p class="jd-sub">'+qs.length+' question'+(qs.length>1?'s':'')+' to answer when you apply. Tap a question to open it.</p></div></div>'+
      '<div class="jd-qlist">'+qs.map(function(x,i){
-       var m=+x.mins||1;
-       return'<div class="jd-q"><button type="button" class="jd-q-b" aria-expanded="false" onclick="jdToggleQ(this)"><span class="jd-q-n">'+(i+1)+'</span><span class="jd-q-t">'+E(x.q)+'</span><span class="jd-q-m">'+m+' min</span>'+JD_CHEV+'</button>'+
-        '<div class="jd-q-body" hidden><p>You will type your answer for this question when you apply. Suggested time: about '+m+' minute'+(m>1?'s':'')+'.</p>'+jdApplyBtn(sid,j.title,applied,'sm','Answer &amp; apply')+'</div></div>'
+       var sc=+x.secs||((+x.mins||1)*60),tl=sc<60?sc+' sec':(sc%60?Math.floor(sc/60)+' min '+(sc%60)+' sec':(sc/60)+' min');
+       return'<div class="jd-q"><button type="button" class="jd-q-b" aria-expanded="false" onclick="jdToggleQ(this)"><span class="jd-q-n">'+(i+1)+'</span><span class="jd-q-t">'+E(x.q)+'</span><span class="jd-q-m">'+tl+'</span>'+JD_CHEV+'</button>'+
+        '<div class="jd-q-body" hidden><p>You will type your answer for this question when you apply. Time limit: '+tl+'.</p>'+jdApplyBtn(sid,j.title,applied,'sm','Answer &amp; apply')+'</div></div>'
      }).join('')+'</div>':'')+
    (faq.length?'<div class="jd-faq">'+faq.map(function(x){return'<p class="jd-faq-q">'+E(x.q)+'</p><p class="jd-faq-a">'+(x.a?E(x.a):'<i>Answer coming soon.</i>')+'</p>'}).join('')+'</div>':'')+
    '<div class="jd-ask'+(qs.length?' sep':'')+'"><h3>Have a question about this role?</h3>'+(contact?'<p class="jd-sub">You can also email <a href="mailto:'+E(contact)+'">'+E(contact)+'</a>.</p>':'<p class="jd-sub">Ask the employer about teaching load, joining date or anything else.</p>')+
