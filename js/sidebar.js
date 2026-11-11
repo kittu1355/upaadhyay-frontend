@@ -19,7 +19,8 @@
 
   /* ---------- main institution ---------- */
   function hideOv(){ state.ov = false; var o = $('upOverview'); if(o) o.style.display = 'none'; }
-  function hideSet(){ state.set = false; var s = $('upSettings'); if(s && UpCard.role() !== 'branch') s.style.display = 'none'; }
+  function hideNt(){ var n = $('upNotifs'); state.nt = false; if(n) n.style.display = 'none'; }
+  function hideSet(){ hideNt(); state.set = false; var s = $('upSettings'); if(s && UpCard.role() !== 'branch') s.style.display = 'none'; }
   function setEl(r){
     var el = $('upSettings'); if(el) return el;
     var host = r === 'company' ? $('dashCompanyTab') : $('dashProfileTab'); if(!host) return null;
@@ -146,12 +147,19 @@
     applyFilters();
   }
 
-  function hideMj(){ var m = $('upMyJobs'); state.mj = false; if(m) m.style.display = 'none'; }
+  function hideMj(){ hideNt(); var m = $('upMyJobs'); state.mj = false; if(m) m.style.display = 'none'; }
   function showMj(){
     var h = $('dashProfileTab'); if(!h) return false; hideSet();
     var e = $('upEmbed'); if(e) e.style.display = 'none'; state.emb = false;
     var m = $('upMyJobs'); if(!m){ m = document.createElement('div'); m.id = 'upMyJobs'; h.parentNode.insertBefore(m, h.nextSibling); }
     h.style.display = 'none'; m.style.display = 'block'; state.mj = true; if(window.MyJobs) MyJobs.open(m); window.scrollTo(0, 0); return true;
+  }
+  function showNt(){
+    var h = $('dashProfileTab'); if(!h) return false; hideSet(); hideMj();
+    var e = $('upEmbed'); if(e) e.style.display = 'none'; state.emb = false;
+    var n = $('upNotifs'); if(!n){ n = document.createElement('div'); n.id = 'upNotifs'; h.parentNode.insertBefore(n, h.nextSibling); }
+    h.style.display = 'none'; n.style.display = 'block'; state.nt = true;
+    if(typeof window.bkNotifPage === 'function') window.bkNotifPage(n); window.scrollTo(0, 0); return true;
   }
   function hideEmbed(){
     var e = $('upEmbed'), h = $('dashProfileTab'); state.emb = false; hideMj();
@@ -168,11 +176,11 @@
     var onPage = !!$('dashProfileTab');
     function mine(){ if(onPage){ hideSet(); hideEmbed(); if(typeof switchDashTab === 'function') switchDashTab('profile'); window.scrollTo(0, 0); } else goTo('faculty'); }
     function jobs(){ hideSet(); if(onPage && showEmbed((window.PAGES && PAGES.jobs ? PAGES.jobs : '../pages/jobs.html') + '?embed=1')) return; goTo('jobs'); }
-    return { active:onPage ? (state.set ? 'set' : state.mj ? 'myjobs' : state.emb ? 'jobs' : 'profile') : '', edit:mine,
+    return { active:onPage ? (state.set ? 'set' : state.nt ? 'notif' : state.mj ? 'myjobs' : state.emb ? 'jobs' : 'profile') : '', edit:mine,
       list:[ { k:'profile', t:'My profile', i:'user', go:mine },
         { k:'jobs', t:'Browse jobs', i:'search', go:jobs },
         { k:'myjobs', t:'My jobs', i:'mark', go:function(){ if(onPage && showMj()) return; goTo('faculty'); } },
-        { k:'notif', t:'Notifications', i:'bell', go:function(){ if(typeof window.bkShowAllNotifs === 'function'){ window.bkShowAllNotifs(); return; } var b = document.querySelector('.nav-bell'); if(b) b.click(); } },
+        { k:'notif', t:'Notifications', i:'bell', go:function(){ if(onPage && showNt()) return; if(typeof window.bkShowAllNotifs === 'function'){ window.bkShowAllNotifs(); return; } var b = document.querySelector('.nav-bell'); if(b) b.click(); } },
         { k:'set', t:'Settings', i:'cog', go:function(){ openSet(); }, sub:true },
         { k:'out', t:'Log out', i:'out', go:function(){ logoutUser(); }, out:1 } ] };
   }
@@ -205,7 +213,7 @@
       if(fk.indexOf('in:') === 0){ state.og = 'profile'; var n = +fk.slice(3); hideOv(); tab('company'); if(window.IN && IN.can(n)) IN.open(n); window.scrollTo(0, 0); toggle(false); schedule(); return; }
       if(fk.indexOf('nb:') === 0){ state.og = 'profile'; var m = +fk.slice(3); if(window.NWP && NWP.can(m)) NWP.open(m); toggle(false); schedule(); return; }
       if(b.getAttribute('data-k') === '_edit'){ side._cfg.edit(); }
-      else { var it = items.filter(function(x){ return x.k === b.getAttribute('data-k'); })[0]; if(it){ it.go(); if(it.sub) state.og = it.k; else if(it.k !== 'notif' && it.k !== 'out') state.og = ''; } }
+      else { var it = items.filter(function(x){ return x.k === b.getAttribute('data-k'); })[0]; if(it){ it.go(); if(it.sub) state.og = it.k; else if(it.k !== 'out') state.og = ''; } }
       toggle(false); schedule();
     });
   }
@@ -270,5 +278,5 @@
   window.addEventListener('fp:paint', schedule);
   var go = function(){ render(); setTimeout(render, 400); setTimeout(render, 1500); };   /* pages build their state async after login */
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go); else go();
-  window.UpSide = { render:render, profile:goProfile };
+  window.UpSide = { render:render, profile:goProfile, showNotifs:function(){ if(!$('dashProfileTab')) return false; state.og = ''; var ok = showNt(); schedule(); return ok; } };
 })();
