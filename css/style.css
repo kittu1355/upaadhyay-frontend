@@ -1566,4 +1566,8 @@ html, body.page{height:auto !important; min-height:100%; overflow-y:auto !import
 #myJobsList .pj-slot b{font-size:14px; font-weight:700;}
 #myJobsList .pj-slot small{font-size:12px; color:var(--ink-faint);}
 
-.ap-card .ap-qa-none{padding:8px 12px; border:1px dashed #D5DCE9; border-radius:3px; background:#F8FAFE; font-size:12.5px; color:var(--ink-faint,#8A93A3);}
+
+.ap-card .ap-more{position:relative; flex:none;}
+.ap-card .ap-more .pj-menu{top:34px; right:0; border-radius:3px; min-width:160px;}
+.ap-card .ap-more .pj-menu button{border-radius:3px;}
+.ap-card .ap-qa-none{padding:10px 0; font-size:12.5px; color:var(--ink-faint,#8A93A3);}
