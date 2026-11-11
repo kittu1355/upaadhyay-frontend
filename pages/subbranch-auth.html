@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sub-branch Account — Upaadhyay</title>
+<title>Sub-branch Account — Upaadhyay.com</title>
 <meta name="robots" content="noindex,follow">
 <link rel="stylesheet" href="../css/style.css">
 <link rel="stylesheet" href="../css/trendz-auth.css">
@@ -33,7 +33,7 @@
 </style>
 </head>
 <body class="page page-auth">
-<header class="as-head"><a class="as-brand" href="../index.html"><img src="../assets/logo/logo-mark.png" alt="Upaadhyay"><span class="as-word">Upaadh<span>yay</span></span></a><div class="as-switch" id="asSwitchWrap"></div></header>
+<header class="as-head"><a class="as-brand" href="../index.html"><img src="../assets/logo/logo-mark.png" alt="Upaadhyay.com"><span class="as-word">Upaadh<span>yay</span>.com</span></a><div class="as-switch" id="asSwitchWrap"></div></header>
 <div class="auth-page" id="authOverlay">
   <div class="auth-card" id="authCard">
     <button class="ap-close" onclick="closeSub()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5 5L19 19M19 5L5 19" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
@@ -109,7 +109,7 @@ function view(){
   $('pw2F').style.display=r?'block':'none';
   $('swMode').innerHTML=r?'<a href="#" onclick="setMode(\'login\');return false" style="font-size:13px;font-weight:600;">Already have an account? Log in</a>':'<a href="#" onclick="setMode(\'register\');return false" style="font-size:13px;font-weight:600;">New sub-branch? Create an account</a>';
   var sw=$('asSwitchWrap');
-  sw.innerHTML=r?'Already registered? <a href="subbranch-auth.html?mode=login'+(BCODE?'&branch_code='+BCODE:'')+'" onclick="setMode(\'login\');return false">Log in</a> here':'New to Upaadhyay? <a href="subbranch-auth.html'+(BCODE?'?branch_code='+BCODE:'')+'" onclick="setMode(\'register\');return false">Register</a> here';
+  sw.innerHTML=r?'Already registered? <a href="subbranch-auth.html?mode=login'+(BCODE?'&branch_code='+BCODE:'')+'" onclick="setMode(\'login\');return false">Log in</a> here':'New to Upaadhyay.com? <a href="subbranch-auth.html'+(BCODE?'?branch_code='+BCODE:'')+'" onclick="setMode(\'register\');return false">Register</a> here';
   err('');
 }
 const BCODE=(new URLSearchParams(location.search).get('branch_code')||'').replace(/\D/g,'').slice(0,5);
