@@ -151,14 +151,14 @@
 <script src="../js/api.js"></script>
 <script src="../js/live-update.js?v=1"></script>
 <script src="../js/store.js"></script>
-<script src="../js/qa-builder.js?v=1"></script>
+<script src="../js/qa-builder.js?v=2"></script>
 <script src="../js/employer.js"></script>
 <script src="../js/profile-card.js?v=1"></script>
 <script src="../js/auth.js"></script>
 <script src="../js/faculty.js"></script>
 <script src="../js/settings.js?v=4"></script>
 <script src="../js/sidebar.js?v=10"></script>
-<script src="../js/inr-input.js?v=1"></script><script src="../js/skills-input.js?v=1"></script><script src="../js/layout.js?v=2"></script><script src="../js/faculty-view.js?v=1"></script><script src="../js/backend.js?v=10"></script>
+<script src="../js/inr-input.js?v=1"></script><script src="../js/skills-input.js?v=1"></script><script src="../js/layout.js?v=2"></script><script src="../js/faculty-view.js?v=1"></script><script src="../js/backend.js?v=11"></script>
 <script>
 mountNav(''); mountChrome({noFooter:true});
 /* ---------- mock data (UI demo only, no backend) ---------- */
@@ -400,7 +400,7 @@ function jbPreview(){const v=jbV,money=n=>'₹'+Number(n).toLocaleString('en-IN'
  sec('Salary',2,kv('Pay',sal)+(norms||!sal?'':kv('Paid',per=='year'?'Per year':'Per month')))+
  sec('Job location',3,kv('Institution',S.main.n)+kv('Campus / branch',SUB.n)+kv('City / location',loc))+
  sec('Description',4,(v('desc')?`<p class="jbp-desc">${esc(v('desc')).replace(/\n/g,'<br>')}</p>`:'<p class="jbp-none">No description added.</p>')+(sk.length?`<div class="jbp-chips">${sk.map(chip).join('')}</div>`:'')+kv('Apply before',dl))+
- sec('Ask Questions',5,JB.qaOn===false?'<p class="jbp-none">Candidate questions are turned off.</p>':kv('Contact for questions',JB.qaContact)+(qs.length?`<ol class="jbp-qs">${qs.map(q=>`<li>${esc(q.q)} <span>${q.mins} min</span></li>`).join('')}</ol>`:'<p class="jbp-none">No questions for candidates.</p>'))}
+ sec('Ask Questions',5,JB.qaOn===false?'<p class="jbp-none">Candidate questions are turned off.</p>':kv('Contact for questions',JB.qaContact)+(qs.length?`<ol class="jbp-qs">${qs.map(q=>`<li>${esc(q.q)} <span>${(function(s){return s<60?s+' sec':(s%60?Math.floor(s/60)+' min '+(s%60)+' sec':(s/60)+' min');})(+q.secs||((+q.mins||1)*60))}</span></li>`).join('')}</ol>`:'<p class="jbp-none">No questions for candidates.</p>'))}
 function jbBody(){const s=JB.step;
  if(s==2)return `<div class="in-row3">${JF[2].map(jbField).join('')}</div><label class="in-chk"><input type="checkbox" id="jb_salNeg" ${JB.d.salNeg?'checked':''}> Salary is negotiable based on experience</label><label class="in-chk"><input type="checkbox" id="jb_salNorms" ${JB.d.salNorms?'checked':''}> Pay as per UGC / AICTE norms</label>`;
  if(s==3)return `<div class="in-grid"><div class="in-f"><label>Institution</label><div style="font-weight:700;color:var(--blue-900);padding:10px 0">${esc(S.main.n)} <span class="mut">· Code ${esc(S.main.code)}</span></div></div><div class="in-f"><label>Campus / branch</label><div style="font-weight:700;color:var(--blue-900);padding:10px 0">${esc(SUB.n)} ${B(0)}</div></div>${jbField(['city','City / location',0,'text',SUB.c||'Filled from your campus if left empty','full'])}</div>`;
