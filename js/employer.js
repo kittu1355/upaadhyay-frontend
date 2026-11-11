@@ -341,6 +341,14 @@ if(typeof window.bkStatusBadge !== 'function'){
     btn.querySelector('span').textContent = (open ? 'Hide answers' : 'View answers') + btn.querySelector('span').textContent.replace(/^(View|Hide) answers/, '');
   }
   window.apToggleQa = apToggleQa;
+  function apShowAnswers(btn){
+    const card = btn.closest('.ap-card'); if(!card) return;
+    const panel = card.querySelector('.ap-qa'); if(!panel) return;
+    const open = panel.classList.toggle('open');
+    const sp = btn.querySelector('span'); if(sp) sp.textContent = sp.textContent.replace(/^(View|Hide) answers/, open ? 'Hide answers' : 'View answers');
+    if(open) panel.scrollIntoView({ block:'nearest' });
+  }
+  window.apShowAnswers = apShowAnswers;
   function pjCloseMenus(){ document.querySelectorAll('.pj-menu.open').forEach(m=>m.classList.remove('open')); }
   function pjToggleMenu(btn){
     const m = btn.parentNode.querySelector('.pj-menu'); const was = m.classList.contains('open');
@@ -665,8 +673,8 @@ if(typeof window.bkStatusBadge !== 'function'){
         + list.map((x, n)=>'<div class="ap-qa-item"><div class="ap-qa-q">' + (n+1) + '. ' + jbEsc(x.q)  + '</div><div class="ap-qa-a">' + jbEsc(x.a) + '</div></div>').join('') + '</div>';
     }).join('');
     const qaCount = keys.reduce((n,k)=>n + (((window.__apAnswers || {})[k + ':' + id] || []).length), 0);
-    const qaHtml = qaBlocks ? `<button type="button" class="ap-qa-btn" onclick="event.stopPropagation(); apToggleQa(this)"><span>View answers (${qaCount})</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button><div class="ap-qa" onclick="event.stopPropagation()">${qaBlocks}</div>`
-      : (keys.some(k=>jobsData[k] && jobsData[k].qa && (jobsData[k].qa.questions||[]).length) ? '<div class="ap-qa-none">No answers received for this application.</div>' : '');
+    const qaPanel = '<div class="ap-qa" onclick="event.stopPropagation()">' + (qaBlocks || '<div class="ap-qa-none">No answers received for this application.</div>') + '</div>';
+    const qaHtml = qaPanel;
     /* status of this application (per job), falling back to the candidate-wide status */
     const raw = (window.__apStatus || {})[jk + ':' + id];
     const st = raw !== undefined ? raw : candidateStatus[id];
@@ -689,6 +697,12 @@ if(typeof window.bkStatusBadge !== 'function'){
             <p class="ap-role">${jbEsc(roleLine)}</p>
           </div>
           <div class="ap-status">${stBadge}</div>
+          <div class="ap-more">
+            <button type="button" class="pj-dots" aria-label="More" onclick="event.stopPropagation(); pjToggleMenu(this)"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg></button>
+            <div class="pj-menu" onclick="event.stopPropagation()">
+              <button type="button" onclick="pjCloseMenus(); apShowAnswers(this)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M4 5h16v11H8l-4 4V5z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg><span>View answers${qaCount ? ' (' + qaCount + ')' : ''}</span></button>
+            </div>
+          </div>
         </div>
         <div class="ap-applied">
           <label>Applied for</label>
