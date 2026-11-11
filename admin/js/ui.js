@@ -74,7 +74,7 @@ async function openFile(fileId){
 function mountChrome(opts){
   const side = document.getElementById('adminSide'), top = document.getElementById('adminTop');
   if(side){
-    let html = '<div class="admin-side-brand"><img src="../assets/logo/logo-mark.png" alt=""><span>Upaadhyay Admin</span></div><nav class="admin-nav" aria-label="Admin">';
+    let html = '<div class="admin-side-brand"><img src="../assets/logo/logo-mark.png" alt=""><span>Upaadhyay.com Admin</span></div><nav class="admin-nav" aria-label="Admin">';
     let lastGroup = '';
     ADMIN_NAV.forEach(function(n){
       if(n[2] !== lastGroup){ html += '<div class="admin-nav-group-label">' + n[2] + '</div>'; lastGroup = n[2]; }
