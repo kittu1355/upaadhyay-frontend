@@ -20,13 +20,13 @@
              ['view','Institutions viewing my profile','Know when your profile is opened.',1,1],
              ['invite','Interview invitations & messages','Direct messages and interview requests.',1,1],
              ['remind','Profile completion reminders','A nudge when sections are missing.',1,0],
-             ['news','Tips & platform updates','Occasional news about Upaadhyay.',0,0] ],
+             ['news','Tips & platform updates','Occasional news about Upaadhyay.com.',0,0] ],
     company:[ ['apps','New applicants','When a faculty member applies to one of your jobs.',1,1],
               ['verify','Verification & approval updates','Status of your institution review.',1,1],
               ['reqs','Sub-branch requests','When a sub-branch asks to connect to your institution.',1,1],
               ['jobs','Job posting status','When a job goes live or is about to expire.',1,1],
               ['sum','Weekly hiring summary','Applicants and views, once a week.',1,0],
-              ['news','Tips & platform updates','Occasional news about Upaadhyay.',0,0] ],
+              ['news','Tips & platform updates','Occasional news about Upaadhyay.com.',0,0] ],
     branch:[ ['apps','New applicants','When a faculty member applies to one of your jobs.',1,1],
              ['link','Main institution approval','When your main institution approves or rejects your request.',1,1],
              ['verify','Verification updates','Status of your branch review.',1,1],
@@ -154,7 +154,7 @@
         ? card('Delete account', 'This permanently removes your account and everything on it. It cannot be undone.',
             '<div class="st-form"><label>Type <b>DELETE</b> to confirm<input id="stDel" class="st-in" autocomplete="off" placeholder="DELETE"></label></div><p id="stDelMsg" class="st-msg" role="alert"></p>'
             + '<div class="st-foot st-foot-l"><button type="button" class="btn st-danger" data-act="delete" id="stDelBtn" disabled>Delete my account</button></div>', 'st-dz')
-        : card('Remove this branch', '', '<p class="st-note">To disconnect or remove this branch, ask your main institution or contact Upaadhyay support.</p>', 'st-dz'));
+        : card('Remove this branch', '', '<p class="st-note">To disconnect or remove this branch, ask your main institution or contact Upaadhyay.com support.</p>', 'st-dz'));
   }
 
   var BUILD = { 'Account':account, 'Notifications':notifications, 'Job alerts':alerts, 'Privacy & visibility':privacy, 'Hiring preferences':hiring,
