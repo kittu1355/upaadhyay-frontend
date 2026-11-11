@@ -351,6 +351,18 @@ if(typeof window.bkStatusBadge !== 'function'){
 
   // Dedicated "Posted jobs" view: a card per job with its applicant count,
   // reached from the mini profile panel / "Jobs posted" stat.
+  const MAX_ACTIVE_JOBS = 5;
+  function pjActiveCount(){ return Object.keys(jobsData).filter(function(k){ return jobsData[k].status !== 'closed'; }).length; }
+  window.pjActiveCount = pjActiveCount; window.MAX_ACTIVE_JOBS = MAX_ACTIVE_JOBS;
+  function pjSlotsHTML(){
+    const free = Math.max(0, MAX_ACTIVE_JOBS - pjActiveCount()); let h = '';
+    for(let i = 0; i < free; i++){
+      const n = MAX_ACTIVE_JOBS - free + i + 1;
+      h += '<div class="pj-slot" onclick="switchEmployerTab(\'post\')" role="button" tabindex="0">'
+        + '<span class="pj-slot-plus">+</span><b>Post a job</b><small>Slot ' + n + ' of ' + MAX_ACTIVE_JOBS + ' available</small></div>';
+    }
+    return h;
+  }
   function renderMyJobsCards(){
     const wrap = document.getElementById('myJobsList');
     if(!wrap) return;
@@ -361,16 +373,7 @@ if(typeof window.bkStatusBadge !== 'function'){
     }catch(e){}
     const ids = Object.keys(jobsData);
     const countEl = document.getElementById('myJobsCount');
-    if(countEl) countEl.textContent = ids.length + (ids.length===1 ? ' job posted' : ' jobs posted');
-    if(!ids.length){
-      wrap.innerHTML = `
-        <div class="empty-state">
-          <div class="empty-state-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M17 20H7a2 2 0 01-2-2V6a2 2 0 012-2h6l6 6v8a2 2 0 01-2 2z" stroke="currentColor" stroke-width="2"/></svg></div>
-          <h4>No jobs posted yet</h4>
-          <p>Once you post a job, it'll show up here as a card with its applicant count.</p>
-        </div>`;
-      return;
-    }
+    if(countEl) countEl.textContent = pjActiveCount() + ' / ' + MAX_ACTIVE_JOBS + ' active jobs';
     wrap.innerHTML = ids.slice().reverse().map(id=>{ try{
       const job = jobsData[id];
       const count = Math.max((job.applicantIds || []).length, Number(job.applicantCount) || 0);
@@ -394,6 +397,10 @@ if(typeof window.bkStatusBadge !== 'function'){
       <div class="job-card pj-card" onclick="openApplicantsView('${id}')">
         <div class="pj-top">
           <div class="job-logo pj-logo ${hasLogo ? '' : 'pj-logo-ph'}" style="${hasLogo ? companyLogoStyle() : ''}">${hasLogo ? '' : ic.cap}</div>
+          <div class="pj-id">
+            <div class="pj-college">${jbEsc(inst)}</div>
+            <div class="pj-role">${jbEsc(job.title || job.role)}</div>
+          </div>
           <span class="pj-badge">${typeof bkStatusBadge==='function' ? bkStatusBadge(job) : ''}</span>
           <button class="pj-dots" aria-label="Job actions" onclick="event.stopPropagation(); pjToggleMenu(this)">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>
@@ -404,22 +411,23 @@ if(typeof window.bkStatusBadge !== 'function'){
             <button class="bad" onclick="pjCloseMenus(); jobDelete('${id}')">${ic.trash}Delete Job</button>
           </div>
         </div>
-        <div class="pj-college">${jbEsc(inst)}</div>
-        <div class="pj-role">${jbEsc(job.title || job.role)}</div>
-        <div class="pj-dept">${jbEsc(job.dept || job.category || '')}</div>
-        <div class="pj-loc">${ic.pin}<span>${jbEsc([place, job.type].filter(Boolean).join(' \u00b7 ') || '\u2014')}</span></div>
-        <div class="pj-price">${jbEsc(pjSalary(job))}</div>
-        <div class="pj-stat">
-          <div class="pj-num"><b>${count}</b><span>${count===1?'Applicant':'Applicants'}</span></div>
-          ${newN ? '<em class="pj-new">' + newN + ' New</em>' : ''}
+        <div class="pj-mid">
+          <div class="pj-l">
+            <div class="pj-dept">${jbEsc(job.dept || job.category || '')}</div>
+            <div class="pj-loc">${ic.pin}<span>${jbEsc([place, job.type].filter(Boolean).join(' \u00b7 ') || '\u2014')}</span></div>
+          </div>
+          <div class="pj-price">${jbEsc(pjSalary(job))}</div>
         </div>
-        <div class="pj-dates">
-          <span>${ic.cal}Posted ${jbEsc(pjAgo(job.postedAt) || '\u2014')}</span>
-          <span>Expires ${jbEsc(pjDate(job.deadline) || 'No deadline')}</span>
+        <div class="pj-stat">
+          <div class="pj-num"><b>${count}</b><span>${count===1?'Applicant':'Applicants'}</span>${newN ? '<em class="pj-new">' + newN + ' New</em>' : ''}</div>
+          <div class="pj-dates">
+            <span>${ic.cal}Posted ${jbEsc(pjAgo(job.postedAt) || '\u2014')}</span>
+            <span>Expires ${jbEsc(pjDate(job.deadline) || 'No deadline')}</span>
+          </div>
         </div>
         <button class="pj-view" onclick="event.stopPropagation(); openApplicantsView('${id}')">View Applicants \u2192</button>
       </div>`;
-    }catch(err){ console.error('Posted job card failed', id, err); return '<div class="job-card" style="color:#B3261E">Card error: '+jbEsc(err && err.message)+'</div>'; } }).join('');
+    }catch(err){ console.error('Posted job card failed', id, err); return '<div class="job-card" style="color:#B3261E">Card error: '+jbEsc(err && err.message)+'</div>'; } }).join('') + pjSlotsHTML();
   }
 
   function previewLogo(e){
@@ -810,6 +818,10 @@ if(typeof window.bkStatusBadge !== 'function'){
     const vacV = v('jbVac'), dlV = v('jbDeadline');
     const editingNow = (editingJobId && jobsData[editingJobId]) ? jobsData[editingJobId] : null;
     const todayISO = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+    if(!editingNow && pjActiveCount() >= MAX_ACTIVE_JOBS){
+      api.toast('You can have ' + MAX_ACTIVE_JOBS + ' active jobs at a time. Delete or close one under Posted jobs to post a new job.');
+      return null;
+    }
 
     let first = null;
     const bad = (k, m) => { jbErr(k, m); if(!first) first = k; };
