@@ -172,7 +172,7 @@
       list:[ { k:'profile', t:'My profile', i:'user', go:mine },
         { k:'jobs', t:'Browse jobs', i:'search', go:jobs },
         { k:'myjobs', t:'My jobs', i:'mark', go:function(){ if(onPage && showMj()) return; goTo('faculty'); } },
-        { k:'notif', t:'Notifications', i:'bell', go:function(){ var b = document.querySelector('.nav-bell'); if(b) b.click(); } },
+        { k:'notif', t:'Notifications', i:'bell', go:function(){ if(typeof window.bkShowAllNotifs === 'function'){ window.bkShowAllNotifs(); return; } var b = document.querySelector('.nav-bell'); if(b) b.click(); } },
         { k:'set', t:'Settings', i:'cog', go:function(){ openSet(); }, sub:true },
         { k:'out', t:'Log out', i:'out', go:function(){ logoutUser(); }, out:1 } ] };
   }
