@@ -253,6 +253,20 @@
   }
 
   /* Apply (seeker). */
+  /* A 500 can happen AFTER the application row was saved (e.g. a notification step crashes). Ask the server whether it really exists. */
+  async function findMyApplication(id){
+    const paths = ['/candidate/applications', '/applications'];
+    for(let i = 0; i < paths.length; i++){
+      try{
+        const r = await api.get(paths[i] + '?per_page=100', { silent403: true, noAuthRedirect: true });
+        const rows = Array.isArray(r) ? r : (r && Array.isArray(r.data) ? r.data : null);
+        if(!rows) continue;
+        const hit = rows.filter(function(a){ return String(a.job_id || (a.job && a.job.id)) === String(id); })[0];
+        if(hit) return hit;
+      }catch(e){}
+    }
+    return null;
+  }
   /* Sends the application. `answers` is null when the job has no questions. Returns { dropped } (true = applied, but the server kept no answers). */
   async function sendApplication(id, answers){
     /* The server wants `answers` as an ARRAY. If it rejects or crashes on one shape, try the next so the application never gets lost:
@@ -264,13 +278,17 @@
       { cover_letter: '[[QA]]' + JSON.stringify(A.map(function(x){ return { q: x.q, a: x.a }; })) },
       {}
     ] : [{}];
-    let sent = false, firstErr = null, usedIdx = 0;
+    let sent = false, firstErr = null, usedIdx = 0, savedRow = null;
     for(let i = 0; i < tries.length && !sent; i++){
       try{ await api.post('/jobs/' + id + '/apply', tries[i]); sent = true; usedIdx = i; if(i) console.warn('[apply] accepted with fallback shape #' + (i + 1)); }
       catch(e){
         if(!firstErr) firstErr = e;
         if(e && (e.status === 409 || /already|duplicate/i.test(String(e.message)))){ sent = true; usedIdx = -1; break; }   /* an earlier try may have created it */
         console.warn('[apply] try ' + (i + 1) + ' failed:', e && e.status, e && e.message, e && e.errors);
+        if(e && e.status >= 500){
+          const hit = await findMyApplication(id);
+          if(hit){ console.warn('[apply] server returned 500 but the application IS saved'); sent = true; usedIdx = -1; savedRow = hit; break; }
+        }
         if(!(e && (e.status >= 500 || e.status === 422)) || !answers) break;
       }
     }
@@ -279,6 +297,10 @@
       err.status = st; throw err;
     }
     if(answers) window.bkSaveLocalAnswers(id, answers);
+    if(savedRow && answers){   /* saved despite the 500: did the server keep the answers? */
+      const kept = normAnswers(savedRow.answers || savedRow.qa_answers || savedRow.screening_answers || savedRow.application_answers || savedRow.responses || (savedRow.meta && savedRow.meta.answers) || savedRow.cover_letter);
+      return { dropped: kept.length === 0 };
+    }
     return { dropped: !!answers && usedIdx === tries.length - 1 };
   }
   function markApplied(id){
