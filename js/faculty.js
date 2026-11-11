@@ -507,9 +507,11 @@
     menu.style.display = opening ? 'block' : 'none';
     if(opening){
       document.getElementById('dashBellDot').style.display = 'none';
-      document.getElementById('dashNotifList').innerHTML = dashNotifs.length
-        ? dashNotifs.map(n=>`<div style="padding:10px 14px; border-bottom:1px solid var(--line); font-size:13px; color:var(--ink-soft);">${n.text}</div>`).join('')
-        : `<div style="padding:14px; font-size:13px; color:var(--ink-faint);">No notifications yet.</div>`;
+      const fresh = dashNotifs.filter(n=>!n.read);
+      document.getElementById('dashNotifList').innerHTML = (fresh.length
+        ? fresh.map(n=>`<div style="padding:10px 14px; border-bottom:1px solid var(--line); font-size:13px; color:var(--ink-soft);">${n.text}</div>`).join('')
+        : `<div style="padding:14px; font-size:13px; color:var(--ink-faint);">No new notifications.</div>`)
+        + `<div style="padding:10px 14px; text-align:center;"><a href="#" onclick="toggleDashNotifs();if(window.bkShowAllNotifs)bkShowAllNotifs();return false;" style="font-weight:600;color:#1d4fd7;font-size:13px;">View all notifications</a></div>`;
     }
   }
   // Called once by faculty-dashboard.html (panel='search') and employer-dashboard.html (panel='post').
