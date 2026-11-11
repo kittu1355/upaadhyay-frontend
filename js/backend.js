@@ -632,8 +632,52 @@
     const dd = Math.floor(h / 24); if(dd < 7) return dd + ' day' + (dd > 1 ? 's' : '') + ' ago';
     return d.toLocaleDateString();
   }
+  /* Faculty dashboard: "Notifications" is a full page (like My jobs). Unseen ones are highlighted; the bell lists only those. */
+  window.bkNotifPage = async function(m){
+    if(!document.getElementById('ntPageStyle')){
+      const st = document.createElement('style'); st.id = 'ntPageStyle';
+      st.textContent = '#upNotifs{display:none}.ntp{max-width:860px;margin:0 auto;padding:8px 4px 60px;font-family:inherit}'
+        + '.ntp h2{font-size:26px;margin:0 0 4px;font-weight:800;color:var(--ink,#111827);letter-spacing:-.01em}.ntp-sub{margin:0 0 18px;font-size:14px;color:var(--ink-soft,#4B5566)}'
+        + '.ntp-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:14px}.ntp-tabs{display:flex;gap:8px}'
+        + '.ntp-tabs button,.ntp-read{display:inline-flex;align-items:center;gap:8px;min-height:40px;padding:0 16px;border:1px solid var(--line,#E3E8F0);border-radius:3px;background:#fff;color:var(--ink-soft,#4B5566);font:inherit;font-size:14px;font-weight:600;cursor:pointer}'
+        + '.ntp-tabs button:hover,.ntp-read:hover{background:var(--blue-50,#F3F7FF)}.ntp-tabs button.on{background:var(--blue-700,#1652C7);border-color:var(--blue-700,#1652C7);color:#fff}'
+        + '.ntp-tabs b{min-width:22px;padding:2px 7px;border-radius:3px;background:var(--blue-100,#E7EFFE);color:var(--blue-700,#1652C7);font-size:12px;text-align:center}'
+        + '.ntp-list{border:1px solid var(--line,#E3E8F0);border-radius:3px;background:#fff}.ntp-item{display:flex;gap:12px;padding:15px 18px;border-bottom:1px solid var(--line,#E3E8F0);font-size:14.5px;line-height:1.5;color:var(--ink-soft,#4B5566)}'
+        + '.ntp-item:last-child{border-bottom:0}.ntp-item.new{background:#F2F6FF}.ntp-dot{flex:none;width:9px;height:9px;margin-top:7px;border-radius:50%;background:transparent}.ntp-item.new .ntp-dot{background:var(--blue-700,#1652C7)}'
+        + '.ntp-time{display:block;margin-top:3px;font-size:12.5px;color:#8a93a6}.ntp-empty{padding:40px 20px;text-align:center;color:#8a93a6;font-size:14px}';
+      document.head.appendChild(st);
+    }
+    m.innerHTML = '<div class="ntp"><h2>Notifications</h2><p class="ntp-sub">Updates about your applications and account. New ones are highlighted.</p>'
+      + '<div class="ntp-bar"><div class="ntp-tabs"><button type="button" class="on" data-nt="all">All <b data-c="all">0</b></button><button type="button" data-nt="unread">Unread <b data-c="unread">0</b></button></div>'
+      + '<button type="button" class="ntp-read" data-nt="read">Mark all as read</button></div><div class="ntp-list"><div class="ntp-empty">Loading\u2026</div></div></div>';
+    let rows = [], tab = 'all';
+    const list = m.querySelector('.ntp-list');
+    function draw(){
+      const unread = rows.filter(function(n){ return !n.read; });
+      m.querySelector('[data-c="all"]').textContent = rows.length; m.querySelector('[data-c="unread"]').textContent = unread.length;
+      const shown = tab === 'unread' ? unread : rows;
+      list.innerHTML = shown.length ? shown.map(function(n){
+        return '<div class="ntp-item' + (n.read ? '' : ' new') + '"><span class="ntp-dot"></span><div>' + n.text + '<span class="ntp-time">' + esc(ntAgo(n.time)) + '</span></div></div>';
+      }).join('') : '<div class="ntp-empty">' + (tab === 'unread' ? 'No unread notifications.' : 'No notifications yet.') + '</div>';
+    }
+    m.onclick = function(e){
+      const b = e.target.closest && e.target.closest('[data-nt]'); if(!b) return;
+      const a = b.getAttribute('data-nt');
+      if(a === 'read'){ markRead(); rows.forEach(function(n){ n.read = true; }); draw(); return; }
+      tab = a; m.querySelectorAll('.ntp-tabs button').forEach(function(x){ x.classList.toggle('on', x === b); }); draw();
+    };
+    try{
+      const d = await api.get('/notifications?per_page=100', { silent403: true, noAuthRedirect: true });
+      rows = (d && d.notifications ? items(d.notifications) : []).map(function(n){
+        return { id: n.id, read: !!n.read_at, time: n.created_at, text: '<b>' + esc(n.title) + '</b>' + (n.message ? ' \u2014 ' + esc(n.message) : '') };
+      });
+    }catch(e){ rows = (dashNotifs || []).slice(); }
+    draw();
+    markRead();   /* opening the page counts as seeing them: the bell clears, the highlights stay until you leave */
+  };
   window.bkShowAllNotifs = async function(){
     if(!api.hasToken()) return;
+    if(window.UpSide && UpSide.showNotifs && UpSide.showNotifs()) return;   /* faculty dashboard: full page */
     if(!document.getElementById('ntAllStyle')){
       const st = document.createElement('style'); st.id = 'ntAllStyle';
       st.textContent = '.nt-all{position:fixed;inset:0;z-index:2100;background:rgba(11,29,58,.45);display:flex;align-items:center;justify-content:center;padding:16px}'
