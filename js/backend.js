@@ -186,20 +186,21 @@
       const ta = $('textarea'), err = $('.qa-ap-err'), bar = $('.qa-ap-bar i'), timer = $('.qa-ap-timer'), clock = $('.qa-ap-time');
       const out = []; let idx = 0, left = 0, total = 0, tick = null;
       function fmt(s){ return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); }
+      function lenTxt(s){ const m = Math.floor(s / 60), r = s % 60; return s < 60 ? s + ' sec' : (r ? m + ' min ' + r + ' sec' : m + ' min'); }
       function stop(){ if(tick){ clearInterval(tick); tick = null; } }
       function close(v){ stop(); document.removeEventListener('keydown', onKey); box.remove(); resolve(v); }
       function onKey(e){ if(e.key === 'Escape') close(null); }
       function paint(){
         clock.textContent = fmt(left);
-        const low = left <= 10;
+        const low = left <= Math.min(10, Math.ceil(total / 4));
         timer.classList.toggle('low', low); bar.classList.toggle('low', low);
         bar.style.width = (total ? Math.max(0, left / total * 100) : 0) + '%';
       }
       function show(){
         const x = qs[idx];
-        total = left = Math.max(1, +x.mins || 1) * 60;
+        total = left = Math.max(5, +x.secs || (Math.max(1, +x.mins || 1) * 60));
         $('.qa-ap-step').textContent = 'Question ' + (idx + 1) + ' of ' + qs.length;
-        $('.qa-ap-sub').textContent = (title ? title + ' · ' : '') + 'You have ' + (+x.mins || 1) + ' min for this question';
+        $('.qa-ap-sub').textContent = (title ? title + ' · ' : '') + 'You have ' + lenTxt(total) + ' for this question';
         $('.qa-ap-q').textContent = x.q;
         $('.qa-ap-go').textContent = idx === qs.length - 1 ? 'Submit application' : 'Next';
         ta.value = ''; ta.classList.remove('bad'); err.textContent = '';
@@ -212,7 +213,7 @@
         const a = ta.value.trim();
         if(!timedOut && a.length < 2){ ta.classList.add('bad'); err.textContent = 'Please answer this question.'; ta.focus(); return; }
         stop();
-        out.push({ q: qs[idx].q, mins: +qs[idx].mins || 1, a: a.length >= 2 ? a : '(No answer \u2014 time ran out)' });
+        out.push({ q: qs[idx].q, mins: Math.max(1, Math.ceil(total / 60)), a: a.length >= 2 ? a : '(No answer \u2014 time ran out)' });
         idx++;
         if(idx >= qs.length){ close(out); return; }
         show();
@@ -235,10 +236,18 @@
       const qs = await jobQuestions(id);
       let body = {};
       if(qs.length){ const ans = await askQuestions(qs, title); if(!ans) return; body = { answers: ans }; }
-      await api.post('/jobs/' + id + '/apply', body);
+      /* Send the answers; if the server answers with a 5xx, retry in a simpler shape so the application is never lost. */
+      const tries = body.answers ? [{ answers: body.answers }, { answers: JSON.stringify(body.answers) }, {}] : [{}];
+      let sent = false, lastErr = null, dropped = false;
+      for(let i = 0; i < tries.length && !sent; i++){
+        try{ await api.post('/jobs/' + id + '/apply', tries[i]); sent = true; dropped = !!body.answers && i === tries.length - 1; if(i) console.warn('[apply] accepted on retry', i + 1); }
+        catch(e){ lastErr = e; if(/already/i.test(String(e && e.message))){ sent = true; break; } if(!(e && e.status >= 500)) throw e; console.warn('[apply] server error', e.status, 'attempt', i + 1); }
+      }
+      if(!sent) throw lastErr;
       if(body.answers) window.bkSaveLocalAnswers(id, body.answers);
+      if(dropped) api.toast('Application sent, but the server could not save your answers. Please tell the institution.');
       try{ currentUser.appliedIds = currentUser.appliedIds || []; if(currentUser.appliedIds.indexOf(String(id)) < 0){ currentUser.appliedIds.push(String(id)); saveState(); } }catch(e){}
-      api.toast('Application sent' + (title ? ' for ' + title : ''));
+      if(!dropped) api.toast('Application sent' + (title ? ' for ' + title : ''));
       document.querySelectorAll('[data-apply-job="' + id + '"]').forEach(function(b){ b.textContent = 'Applied ✓'; b.disabled = true; });
     }catch(e){ api.toast(e.message); }
   };
